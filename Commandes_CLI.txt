@@ -1,0 +1,4 @@
+scp sumbre@213.57.82.196:/users/zfne/sumbre/Desktop/Recordings/2023/Exp_12_Oct_2023_1245_cam_all.mp4 /home/alexis/Desktop/
+
+ffmpeg -ss 00:23:00 -i /home/alexis/Desktop/testvidéo.mp4 -to 00:24:00 -vf "crop=1920:1080:0:1080" -c:a copy /home/alexis/Desktop/short.mp4
+
