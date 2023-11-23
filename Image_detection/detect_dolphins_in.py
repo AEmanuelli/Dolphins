@@ -83,3 +83,6 @@ def find_dolphins_in(video_path, duration_threshold=1.71, contour_threshold=1850
 video_path = "/home/alexis/Desktop/video/output.mp4"
 motion_df = find_dolphins_in(video_path)
 print(motion_df)
+
+
+# Prochaine etape : ameliorer la fonction pour la generaluiser a dautre videos 

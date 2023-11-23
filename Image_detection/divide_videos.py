@@ -18,9 +18,7 @@ for nom_fichier in os.listdir(repertoire_videos):
     # Ignorer les fichiers qui ne sont pas des vidéos
     if not nom_fichier.endswith('.mp4'):
         continue
-    if os.path.isfile(chemin_fichier):
-        print(f"Le fichier {nom_fichier} existe déjà. Passage à l'étape suivante.")
-        continue
+    
     else :
         # Liste des positions et des numéros correspondants
         positions = ['supérieur gauche', 'supérieur droit', 'inférieur gauche', 'inférieur droit']
@@ -30,7 +28,9 @@ for nom_fichier in os.listdir(repertoire_videos):
         for position, numero in zip(positions, numeros):
             nom_sortie = f'{nom_fichier.split(".")[0]}_{numero}.mp4'
             chemin_sortie = os.path.join(sous_repertoire_divisees, nom_sortie)
-            
+            if os.path.isfile(chemin_sortie):
+                print(f"Le fichier {nom_sortie} existe déjà. Passage à l'étape suivante.")
+                continue
             # Utilisation de ffmpeg pour découper la vidéo en utilisant crop
             crop_value = '1920:1080:0:0' if 'supérieur gauche' in position else '1920:1080:1920:0' if 'supérieur droit' in position else '1920:1080:0:1080' if 'inférieur gauche' in position else '1920:1080:1920:1080'
             subprocess.run([
