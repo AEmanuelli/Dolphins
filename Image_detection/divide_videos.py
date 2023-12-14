@@ -1,44 +1,58 @@
 import os
 import subprocess
-from utils import Checkpoint
+from multiprocessing import Pool
+
+def process_video_segment(args):
+    file_path, out_path, position, number = args
+    output_name = f'{os.path.basename(file_path).rsplit(".", 1)[0]}_{number}.mp4'
+    output_path = os.path.join(out_path, output_name)
+    if os.path.isfile(output_path):
+        print(f"File {output_name} already exists. Skipping.")
+        return
+
+    crop_value = {
+        'upper left': '1920:1080:0:0',
+        'upper right': '1920:1080:1920:0',
+        'lower left': '1920:1080:0:1080',
+        'lower right': '1920:1080:1920:1080'
+    }[position]
+
+    command = [
+    'ffmpeg',
+    '-i', file_path,
+    '-vf', f"crop={crop_value}",
+    '-b:v', '2676k',
+    '-c:v', 'libx264',  # Using libx264 instead of hardware acceleration
+    '-preset', 'fast',
+    '-threads', '3',
+    output_path
+    ]
 
 
-repertoire_videos = '/home/alexis/Desktop/test-divide-vids'
+    subprocess.run(command, check=True)
 
-# Créer un sous-répertoire pour les vidéos divisées
-sous_repertoire_divisees = os.path.join(repertoire_videos, 'video_divided_"')
+def split_videos_in_directory(directory, out_dir, pool_size=4):
+    positions = ['upper left', 'upper right', 'lower left']
+    numbers = ['11', '12', '21']
 
-os.makedirs(sous_repertoire_divisees, exist_ok=True)
+    tasks = []
+    for file_name in os.listdir(directory):
+        if not file_name.endswith('.mp4'):
+            continue
 
+        file_path = os.path.join(directory, file_name)
+        out_path = os.path.join(out_dir, file_name.rsplit(".", 1)[0])
+        os.makedirs(out_path, exist_ok=True)
 
-# Parcours de tous les fichiers vidéo dans le répertoire
-for nom_fichier in os.listdir(repertoire_videos):
-    chemin_fichier = os.path.join(repertoire_videos, nom_fichier)
-    
-    # Ignorer les fichiers qui ne sont pas des vidéos
-    if not nom_fichier.endswith('.mp4'):
-        continue
-    
-    else :
-        # Liste des positions et des numéros correspondants
-        positions = ['supérieur gauche', 'supérieur droit', 'inférieur gauche', 'inférieur droit']
-        numeros = ['11', '12', '21', '22']
-        
-        # Diviser la vidéo d'origine en quatre sous-vidéos en utilisant crop
-        for position, numero in zip(positions, numeros):
-            nom_sortie = f'{nom_fichier.split(".")[0]}_{numero}.mp4'
-            chemin_sortie = os.path.join(sous_repertoire_divisees, nom_sortie)
-            if os.path.isfile(chemin_sortie):
-                print(f"Le fichier {nom_sortie} existe déjà. Passage à l'étape suivante.")
-                continue
-            # Utilisation de ffmpeg pour découper la vidéo en utilisant crop
-            crop_value = '1920:1080:0:0' if 'supérieur gauche' in position else '1920:1080:1920:0' if 'supérieur droit' in position else '1920:1080:0:1080' if 'inférieur gauche' in position else '1920:1080:1920:1080'
-            subprocess.run([
-                'ffmpeg',
-                '-i', chemin_fichier,
-                '-vf', f"crop={crop_value}",
-                '-c:a', 'copy',
-                chemin_sortie
-            ])
+        for position, number in zip(positions, numbers):
+            tasks.append((file_path, out_path, position, number))
 
-print("Toutes les sous-vidéos ont été créées en utilisant crop sans augmenter la taille finale.")
+    with Pool(pool_size) as p:
+        p.map(process_video_segment, tasks)
+
+    print("All videos have been split and saved.")
+
+# Example usage
+video_directory = '/home/alexis/Desktop/Test_combo_launch/step 0/'
+out_dir = '/home/alexis/Desktop/Test_combo_launch/step 1/'
+split_videos_in_directory(video_directory, out_dir=out_dir)
