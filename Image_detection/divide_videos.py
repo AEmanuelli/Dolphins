@@ -1,8 +1,9 @@
 import os
 import subprocess
 from multiprocessing import Pool
+import pandas as pd
 
-def process_video_segment(args):
+def splitin4(args):
     file_path, out_path, position, number = args
     output_name = f'{os.path.basename(file_path).rsplit(".", 1)[0]}_{number}.mp4'
     output_path = os.path.join(out_path, output_name)
@@ -23,12 +24,11 @@ def process_video_segment(args):
     '-vf', f"crop={crop_value}",
     '-b:v', '2676k',
     '-c:v', 'libx264',  # Using libx264 instead of hardware acceleration
-    '-preset', 'fast',
-    '-threads', '3',
+    '-preset', 'ultrafast',
+    '-threads', '2',
     output_path
     ]
-
-
+   
     subprocess.run(command, check=True)
 
 def split_videos_in_directory(directory, out_dir, pool_size=4):
@@ -36,8 +36,8 @@ def split_videos_in_directory(directory, out_dir, pool_size=4):
     numbers = ['11', '12', '21']
 
     tasks = []
-    for file_name in os.listdir(directory):
-        if not file_name.endswith('.mp4'):
+    for i, file_name in enumerate(os.listdir(directory)):
+        if not file_name.endswith('.mp4') or i >50:
             continue
 
         file_path = os.path.join(directory, file_name)
@@ -48,11 +48,13 @@ def split_videos_in_directory(directory, out_dir, pool_size=4):
             tasks.append((file_path, out_path, position, number))
 
     with Pool(pool_size) as p:
-        p.map(process_video_segment, tasks)
+        p.map(splitin4, tasks)
 
     print("All videos have been split and saved.")
 
-# Example usage
-video_directory = '/home/alexis/Desktop/Test_combo_launch/step 0/'
-out_dir = '/home/alexis/Desktop/Test_combo_launch/step 1/'
-split_videos_in_directory(video_directory, out_dir=out_dir)
+# # Example usage
+# video_directory = '/home/alexis/Desktop/Test_combo_launch/step 0/'
+# out_dir = '/home/alexis/Desktop/Test_combo_launch/step 1/'
+# split_videos_in_directory(video_directory, out_dir=out_dir)
+
+

@@ -126,7 +126,7 @@ def find_dolphins_in(video_path, duration_threshold=1.71, contour_threshold=1850
                 if (motion_times[-1] - motion_times[-2]) > duration_threshold:
                     rows_list.append({"Segment": len(rows_list) + 1, "Start": motion_times[-2], "End": motion_times[-1], "File": current_output_path})
 
-            frame_count += 1
+            frame_count += 1,juj_
             pbar.update(1)
 
     if video_writer is not None:

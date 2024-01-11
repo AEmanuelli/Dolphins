@@ -240,92 +240,84 @@ def process_frame(frame):
     blurred = cv2.GaussianBlur(gray, (21, 21), 0)  # Apply Gaussian blur
     return blurred
 
-import cv2
-import pandas as pd
-import numpy as np
-from tqdm import tqdm
-import os
-
-def initialize_video_capture(video_path):
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        raise IOError(f"Failed to read the video: {video_path}")
-    return cap
-
-def process_frame(frame):
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (21, 21), 0)
-    return blurred
-
-def detect_motion(frame, background, contour_threshold):
-    diff_frame = cv2.absdiff(frame, background)
-    _, thresh_frame = cv2.threshold(diff_frame, 3, 255, cv2.THRESH_BINARY)
-    thresh_frame = cv2.dilate(thresh_frame, None, iterations=2)
-
-    contours, _ = cv2.findContours(thresh_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
-        if cv2.contourArea(contour) >= contour_threshold:
-            return True
-    return False
-
 def find_dolphins_in(video_path, duration_threshold=1.0, contour_threshold=1000, skip_frames=5):
     cap = initialize_video_capture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fps, frame_width, frame_height, total_frames = get_video_properties(cap)
 
     output_dir = os.path.join(os.path.dirname(video_path), "detected_dolphins")
     os.makedirs(output_dir, exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
     motion_times, rows_list = [], []
     frame_count, motion_frame_count = 0, 0
-    video_writer = None
-
+    video_writer, current_output_path = None, ""
+    motion_detected = False
     ret, frame = cap.read()
-    background_frame = process_frame(frame)
-
-    pbar = tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) // skip_frames, desc=f"Processing Video {video_path}")
-    while ret:
-        if frame_count % skip_frames == 0:
+    background_frame = frame
+    background_frame = process_frame(background_frame)
+    with tqdm(total=total_frames // skip_frames, desc=f"Processing Video {video_path}") as pbar:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            if frame_count % skip_frames != 0:
+                frame_count += 1
+                continue
+            # print(frame.shape, background_frame.shape)
             frame_pro = process_frame(frame)
-            motion_detected = detect_motion(frame_pro, background_frame, contour_threshold)
+            # print(frame.shape, background_frame.shape)
+            motion_detected_in_frame = False
+            if detect_motion(frame_pro, background_frame, contour_threshold, frame_height, frame_width):
+                motion_detected_in_frame = True
+                cv2.accumulateWeighted(frame_pro.astype(np.float32), background_frame.astype(np.float32), 0.01)
 
-            if motion_detected:
-                if video_writer is None:
-                    motion_times.append(frame_count / fps)
+            if motion_detected_in_frame:
+                if not motion_detected:
+                    motion_detected = True
+                    motion_times.append(frame_count / fps)  # Start time
                     current_output_path = os.path.join(output_dir, f"segment_{len(rows_list) + 1}.mp4")
                     video_writer = cv2.VideoWriter(current_output_path, fourcc, fps, (frame_width, frame_height))
-
-                video_writer.write(frame)
-                motion_frame_count += 1
-            elif video_writer is not None:
+                if video_writer is not None:
+                    video_writer.write(frame)
+            elif motion_detected:
+                motion_detected = False
+                motion_times.append(frame_count / fps)  # End time
                 video_writer.release()
                 video_writer = None
-                end_time = frame_count / fps
-                if (end_time - motion_times[-1]) >= duration_threshold:
-                    rows_list.append({"Segment": len(rows_list) + 1, "Start": motion_times[-1], "End": end_time, "File": current_output_path})
-                
-                motion_times = []
+                if (motion_times[-1] - motion_times[-2]) >= duration_threshold:
+                    rows_list.append({"Segment": len(rows_list) + 1, "Start": motion_times[-2], "End": motion_times[-1], "File": current_output_path})
 
-            cv2.accumulateWeighted(frame_pro.astype(np.float32), background_frame.astype(np.float32), 0.01)
+            frame_count += 1
+            pbar.update(1)
 
-        ret, frame = cap.read()
-        frame_count += 1
-        pbar.update(1)
-
-    pbar.close()
     if video_writer is not None:
         video_writer.release()
-    
+        motion_times.append(frame_count / fps)  # End time
+        if (motion_times[-1] - motion_times[-2]) > duration_threshold:
+            rows_list.append({"Segment": len(rows_list) + 1, "Start": motion_times[-2], "End": motion_times[-1], "File": current_output_path})
+        video_writer = None
+
     cap.release()
     return pd.DataFrame(rows_list)
 
-# Usage example
+def detect_motion(sub_frame, background, contour_threshold, frame_height, frame_width):
+    motions_detected = []
+    diff_frame = cv2.absdiff(sub_frame, background)
+    _, thresh_frame = cv2.threshold(diff_frame, 3, 255, cv2.THRESH_BINARY)
+    thresh_frame = cv2.dilate(thresh_frame, None, iterations=2)
+    thresh_frames = split_frame_into_quadrants(thresh_frame, frame_height=frame_height, frame_width=frame_width)
+    for thresh in thresh_frames:
+
+        cnts, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        motion_detected = any(cv2.contourArea(contour) >= contour_threshold for contour in cnts)
+        motions_detected.append(motion_detected)
+    return any(motions_detected)
+
+
+
 video_path = "/home/alexis/Desktop/testvideo_2min.mp4"
 motion_df = find_dolphins_in(video_path)
-print(motion_df)
-
+print(motion_df.head())
 # mf = calculate_subframe_variances(video_path=video_path)
 
 def analyze_videos_in_folder(folder_path):

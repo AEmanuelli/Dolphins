@@ -4,95 +4,197 @@ import os
 from tqdm import tqdm
 import numpy as np
 from multiprocessing import Pool
+import cProfile
+import pstats
 
-def process_frame_quadrants(frame, contour_threshold, fps, frame_count, skip_frames, fourcc, frame_width, frame_height, output_dir):
-    """
-    Process each quadrant of the frame and return a list of detected motions
-    """
-    quadrants = {
-        'upper left': frame[:frame_height // 2, :frame_width // 2],
-        'upper right': frame[:frame_height // 2, frame_width // 2:],
-        'lower left': frame[frame_height // 2:, :frame_width // 2],
-        'lower right': frame[frame_height // 2:, frame_width // 2:]
-    }
-    if frame.shape[0] != frame_height or frame.shape[1] != frame_width:
-        return  # Skip processing if frame size does not match
-    for position, quadrant in quadrants.items():
-        gray = cv2.cvtColor(quadrant, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (21, 21), 0)
-        
-        if position not in process_frame_quadrants.background_frames:
-            process_frame_quadrants.background_frames[position] = gray
-            continue
+def split_frame_into_quadrants(frame, frame_width, frame_height):
+    """This function divides a given video frame into four equal quadrants: 
+    upper left, upper right, lower left, and lower right. It takes the entire frame 
+    and its dimensions as input and returns a list of four sub-frames (quadrants)."""
 
-        diff_frame = cv2.absdiff(process_frame_quadrants.background_frames[position], gray)
-        thresh_frame = cv2.threshold(diff_frame, 30, 255, cv2.THRESH_BINARY)[1]
-        thresh_frame = cv2.dilate(thresh_frame, None, iterations=2)
+    upper_left = frame[0:frame_height//2, 0:frame_width//2]
+    upper_right = frame[0:frame_height//2, frame_width//2:]
+    lower_left = frame[frame_height//2:, 0:frame_width//2]
+    lower_right = frame[frame_height//2:, frame_width//2:]
 
-        cnts, _ = cv2.findContours(thresh_frame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        motion_detected = any(cv2.contourArea(contour) >= contour_threshold for contour in cnts)
-        
-        if motion_detected:
-            if position not in process_frame_quadrants.video_writers:
-                segment_file = os.path.join(output_dir, f"{position}_segment_{frame_count // fps}.mp4")
-                process_frame_quadrants.video_writers[position] = cv2.VideoWriter(segment_file, fourcc, fps, (frame_width // 2, frame_height // 2))
-            process_frame_quadrants.video_writers[position].write(quadrant)
-        elif position in process_frame_quadrants.video_writers:
-            process_frame_quadrants.video_writers[position].release()
-            del process_frame_quadrants.video_writers[position]
+    return [upper_left, upper_right, lower_left, lower_right]
 
-        process_frame_quadrants.background_frames[position] = gray
+# def process_quadrant(quadrant, background, contour_threshold):
+#     """processes a single quadrant of a video frame to detect motion. It first converts the quadrant to grayscale and applies Gaussian blurring. 
+#     Then, it calculates the absolute difference between the quadrant and a background reference frame, 
+#     thresholds the difference to identify significant changes, and dilates the result. 
+#     Motion detection is based on finding contours in the thresholded image that exceed a specified size (contour_threshold). It returns a boolean indicating whether 
+#     motion was detected in the quadrant."""
+    
 
-# Initialize static variables for background frames and video writers
-process_frame_quadrants.background_frames = {}
-process_frame_quadrants.video_writers = {}
+#     # Convert to grayscale and blur
+#     quadrant = cv2.cvtColor(quadrant, cv2.COLOR_BGR2GRAY)
+#     quadrant = cv2.GaussianBlur(quadrant, (21, 21), 0)
+#         # print(f"Quadrant Shape: {quadrant.shape}")
+#         # print(f"Background Shape: {background.shape}")
+#     # Check if the dimensions (size) match
+#     if quadrant.shape[:2] != background.shape[:2]:
+#         raise ValueError("Quadrant and background should have the same dimensions")
+#     # Detect motion
+#     diff_frame = cv2.absdiff(quadrant, background)
+#     _, thresh_frame = cv2.threshold(diff_frame, 3, 255, cv2.THRESH_BINARY)
+#     thresh_frame = cv2.dilate(thresh_frame, None, iterations=2)
 
-def find_dolphins_in(video_path, duration_threshold=1.71, contour_threshold=1850, skip_frames=3):
+#     cnts, _ = cv2.findContours(thresh_frame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#     motion_detected = any(cv2.contourArea(contour) >= contour_threshold for contour in cnts)
+
+#     return motion_detected
+def process_quadrant(quadrant, background, contour_threshold):
+    # Convert to grayscale and blur
+    quadrant = cv2.cvtColor(quadrant, cv2.COLOR_BGR2GRAY)
+    quadrant = cv2.GaussianBlur(quadrant, (7, 7), 0)
+
+    if quadrant.shape[:2] != background.shape[:2]:
+        raise ValueError("Quadrant and background should have the same dimensions")
+
+    # Detect motion
+    diff_frame = cv2.absdiff(quadrant, background)
+    _, thresh_frame = cv2.threshold(diff_frame, 3, 255, cv2.THRESH_BINARY)
+    thresh_frame = cv2.dilate(thresh_frame, None, iterations=1)
+
+    cnts, _ = cv2.findContours(thresh_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for contour in cnts:
+        if cv2.contourArea(contour) >= contour_threshold:
+            return True  # Early termination if large contour is found
+
+    return False  # No large contour found
+
+def find_dolphins_in(video_path, duration_threshold=2.0, contour_threshold=100, skip_frames=1):
+
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Failed to read the video: {video_path}")
         return pd.DataFrame()
 
     fps = cap.get(cv2.CAP_PROP_FPS)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fourcc = cv2.VideoWriter_fourcc(*'x264')
     output_dir = os.path.join(os.path.dirname(video_path), "detected_dolphins")
     os.makedirs(output_dir, exist_ok=True)
 
-    with tqdm(total=total_frames // skip_frames, desc=f"Processing Video {video_path}") as pbar:
-        frame_count = 0
+    motion_detected = [False, False, False, False]  # For each quadrant
+    motion_before = [False, False, False, False]  # For each quadrant
+    motion_times = [[0, 0], [0, 0], [0, 0], [0, 0]]  # Start and end times for motion in each quadrant
+    video_writer = None
+    frame_count = 0
+    current_output_path = ""
+    ret, first_frame = cap.read()
+    if not ret:
+        print(f"Failed to read the first frame of the video: {video_path}")
+        cap.release()
+        return pd.DataFrame()
+    quadrants = split_frame_into_quadrants(first_frame, frame_width, frame_height)
+    backgrounds = [cv2.cvtColor(q, cv2.COLOR_BGR2GRAY) for q in quadrants]
+
+    rows_list = []  # To store the details of each motion segment
+    motion_in_frame = False
+    frame_buffer = []  # Buffer to store frames
+    motion_segment_started = False
+    with tqdm(total=total_frames, desc=f"Processing Video {video_path}") as pbar:
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
-            if frame_count % skip_frames != 0:
-                frame_count += 1
-                continue
+            quadrants = split_frame_into_quadrants(frame, frame_width, frame_height)
+            # for each quadrants looks if there is a motion 
+            for i, quadrant in enumerate(quadrants):
+                motion_detected[i] = process_quadrant(quadrant, backgrounds[i], contour_threshold)
+                # if there is a motion the start time is set 
+                if motion_detected[i]:
+                    if not motion_before[i]:
+                        motion_times[i][0] = frame_count / fps
+                        motion_times[i][1] = frame_count / fps
+                        motion_before[i] = True
+                    if motion_before[i]:
+                        motion_times[i][1] = frame_count / fps
+                else : 
+                    if motion_before[i]:
+                        motion_times[i][0] = 0
+                        motion_times[i][1] = 0
+                        motion_before[i] = False
+            
 
-            process_frame_quadrants(frame, contour_threshold, fps, frame_count, skip_frames, fourcc, frame_width, frame_height, output_dir)
+                # Check if any quadrant has motion duration exceeding the threshold
+                for start, end in motion_times:
+                    if (end - start) >= duration_threshold:
+                        motion_in_frame = True
+                        break
+
+                if motion_in_frame:
+                    if not motion_segment_started:
+                        motion_segment_started = True
+                        frame_buffer = []  # Reset buffer
+
+                    frame_buffer.append(frame)  # Add frame to buffer
+                else:
+                    if motion_segment_started:
+                        # Motion segment ended, write buffer to file
+                        current_output_path = os.path.join(output_dir, f"segment_{frame_count}.mp4")
+                        video_writer = cv2.VideoWriter(current_output_path, fourcc, fps, (frame_width, frame_height))
+
+                        for buffered_frame in frame_buffer:
+                            video_writer.write(buffered_frame)
+
+                        video_writer.release()
+                        video_writer = None
+
+                        # Append segment info to rows_list
+                        for start, end in motion_times:
+                            if (end - start) >= duration_threshold:
+                                rows_list.append({"Segment": len(rows_list) + 1, "Start": start, "End": end, "File": current_output_path})
+
+                        motion_times = [[0, 0] for _ in range(4)]  # Reset motion times
+                        motion_segment_started = False
 
             frame_count += 1
             pbar.update(1)
 
-    # Release all video writers
-    for writer in process_frame_quadrants.video_writers.values():
-        writer.release()
+    if video_writer is not None:
+        video_writer.release()
 
     cap.release()
 
+    return pd.DataFrame(rows_list)
+
+
 def analyze_videos_in_folder(folder_path):
+
+    """
+    This function iterates through all the MP4 video files in a given directory, 
+    applies the find_dolphins_in function to each video, and aggregates the results. 
+    For each video, it generates a CSV file with the analysis results, which includes information 
+    about detected motion segments. 
+    Finally, it compiles all individual video analyses into a single DataFrame and saves it as a CSV file. 
+    This function provides a comprehensive analysis of all video files in a specified folder.
+    """
+
     global_df = pd.DataFrame()
 
     for root, dirs, files in os.walk(folder_path):
         for file in files:
             if file.endswith('.mp4'):
                 video_path = os.path.join(root, file)
-
-                try:
+                try :
+                    # Profiling
+                    profile = cProfile.Profile()
+                    profile.enable()
+                    
                     motion_df = find_dolphins_in(video_path)
+
+                    profile.disable()
+                    profile_output_file = os.path.join(root, file.rsplit('.', 1)[0] + '_profile_stats.prof')
+                    with open(profile_output_file, 'w') as f:
+                        ps = pstats.Stats(profile, stream=f)
+                        ps.sort_stats('cumulative').print_stats()
                     if not motion_df.empty:
                         # Create a CSV file in the same directory as the video, with a similar name
                         csv_file_name = file.rsplit('.', 1)[0] + '_analyzed.csv'
@@ -112,9 +214,17 @@ def analyze_videos_in_folder(folder_path):
 
     return global_df
 
-# Main execution (remains unchanged)
-video_directory = '/media/DOLPHIN/2023/'
-out_dir = '/media/DOLPHIN/Test_alexis/'
-folder_path = out_dir
+# Main execution
+video_directory = '/home/alexis/Desktop/video'
+out_dir = '/home/alexis/Desktop/video_out'
+folder_path = video_directory
 global_motion_df = analyze_videos_in_folder(folder_path)
 print(global_motion_df)
+
+
+
+# Replace with your .prof file path
+prof_file_path = '/home/alexis/Desktop/video/testvideo_2min_profile_stats.prof'
+
+p = pstats.Stats(prof_file_path)
+p.sort_stats('cumulative').print_stats(10)  # Adjust the number to display more or fewer lines
