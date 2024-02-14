@@ -1,5 +1,6 @@
+# =============================================================================
 #********************* IMPORTS
-
+# =============================================================================
 import tensorflow as tf 
 import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
@@ -8,11 +9,16 @@ from os.path import isfile, join
 import cv2
 import shutil
 import pandas as pd
+import os 
+from tqdm import tqdm 
+from datetime import datetime
 
 
 #%%
-
+# =============================================================================
 #********************* FUNCTIONS
+# =============================================================================
+
 
 def predict(model, images_path, file_path):
     image = cv2.imread(join(images_path, file_path))
@@ -28,9 +34,9 @@ def move_file(images_path, file_path, dst_dir):
     shutil.move(src_dir,dst_dir)
 
 def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
-    part = file_path.split('c-')
+    part = file_path.split('wav-')
 
-    name = part[0] + "c"
+    name = part[0] + "wav"
     record_names.append(name)
     
     ini = part[1].replace(".jpg", "")
@@ -54,14 +60,15 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     df.to_csv(csv_path, index=False)
 
 #%%
-
+# =============================================================================
 #********************* MAIN
-
-model_path = "models\\model_vgg.h5"
-images_path = "images\\"
-positive_dir = "predicted_images\\positive"
-negative_dir = "predicted_images\\negative"
-csv_path = "whistles.csv"
+# =============================================================================
+    
+model_path = "models/model_vgg.h5"
+images_path = "images/"
+positive_dir = "predicted_images/positive"
+negative_dir = "predicted_images/negative"
+csv_path = "whistles"+ datetime.now().strftime("%Y%m%d-%H%M%S") +".csv "
 
 # the model
 model = tf.keras.models.load_model(model_path)
@@ -79,7 +86,7 @@ class_1_scores = []
 predictions = []
 
 # reading file paths 1 by 1
-for file_path in all_files_path:
+for file_path in tqdm(all_files_path):
     
     # prediction on the given image
     prediction = predict(model, images_path, file_path)
@@ -108,19 +115,3 @@ for file_path in all_files_path:
 
 #saving the csv
 save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

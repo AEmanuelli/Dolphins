@@ -1,3 +1,4 @@
 
 DNN_whistle_detection/models/model_vgg.h5
 Image_detection/yolov5/
+DNN_whistle_detection/recordings/Exp_01_Feb_2024_1145_channel_0.wav

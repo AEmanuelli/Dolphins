@@ -65,7 +65,7 @@ def split_frame_into_quadrants(frame, frame_width, frame_height):
             return True  # Early termination if large contour is found
 
     return False  # No large contour found
-def process_quadrant(quadrant, background, threshold):
+def process_quadrant(quadrant, background, contour_threshold,threshold =30 ):
     """
     Process each quadrant to detect motion. Modified to check the number of channels before converting to grayscale.
     """
@@ -74,11 +74,11 @@ def process_quadrant(quadrant, background, threshold):
         quadrant = cv2.cvtColor(quadrant, cv2.COLOR_BGR2GRAY)
 
     diff = cv2.absdiff(quadrant, background)
-    _, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
+    _, thresh = cv2.threshold(diff, threshold, 255, cv2.THRESH_BINARY)
     contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     motion = False
     for contour in contours:
-        if cv2.contourArea(contour) > threshold:
+        if cv2.contourArea(contour) > contour_threshold:
             motion = True
             break
     return motion
@@ -183,7 +183,7 @@ def process_quadrant(quadrant, background, threshold):
 #     return  pd.DataFrame(rows_list) 
 
 
-def find_motion_in_video_matrix(video_path, contour_threshold=1900, skip_frames=3, bf_size = 5):
+def find_motion_in_video_matrix(video_path, contour_threshold=1900, threshold = 30, skip_frames=3, bf_size = 5):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         print(f"Failed to read the video: {video_path}")
@@ -226,7 +226,7 @@ def find_motion_in_video_matrix(video_path, contour_threshold=1900, skip_frames=
                 # Compute the running mean for the background
                 updated_background = np.mean(buffers[i], axis=0).astype(np.uint8)
                 
-                motion_matrix[frame_processed, i] = process_quadrant(gray_quadrant, updated_background, contour_threshold)
+                motion_matrix[frame_processed, i] = process_quadrant(gray_quadrant, updated_background, contour_threshold, threshold = threshold)
                 if motion_matrix[frame_processed, i]:
                     break
 
@@ -328,28 +328,29 @@ def convert_matrix_to_motion_times(motion_matrix, fps=10, sf=3, duration_thresho
 
 
 
-# Créer un objet de profilage
-profiler = cProfile.Profile()
-profiler.enable()
+# # Créer un objet de profilage
+# profiler = cProfile.Profile()
+# profiler.enable()
 
-sf = 3
-bf = 2
-thresh = 1800
-# Example usage (commented out as it requires a video file):
-video_path = "/home/alexis/Desktop/video/testvideo_2min.mp4"
-motion_matrix = find_motion_in_video_matrix(video_path,contour_threshold=thresh, bf_size = bf, skip_frames=sf)
-print(motion_matrix)
+# sf = 3
+# bf = 8
+# thresh = 1800
+# threshold = 30
+# # Example usage (commented out as it requires a video file):
+# video_path = "/home/alexis/Desktop/video/testvideo_2min.mp4"
+# motion_matrix = find_motion_in_video_matrix(video_path,contour_threshold=thresh, bf_size = bf, skip_frames=sf)
+# print(motion_matrix)
 
-np.save("/home/alexis/Desktop/video/mm.npy", motion_matrix)
+# np.save("/home/alexis/Desktop/video/mm.npy", motion_matrix)
 
-mm = np.load("/home/alexis/Desktop/video/mm.npy")
-mt = convert_matrix_to_motion_times(mm, 10, sf=sf)
-print(mt)
-profiler.disable()
+# mm = np.load("/home/alexis/Desktop/video/mm.npy")
+# mt = convert_matrix_to_motion_times(mm, 10, sf=sf)
+# print(mt)
+# profiler.disable()
 
-# Créer des statistiques à partir des données profilées
-stats = pstats.Stats(profiler).sort_stats('cumtime')
-stats.print_stats()
+# # Créer des statistiques à partir des données profilées
+# stats = pstats.Stats(profiler).sort_stats('cumtime')
+# stats.print_stats()
 
 
 
@@ -408,4 +409,57 @@ def analyze_videos_in_folder(folder_path):
 # global_motion_df = analyze_videos_in_folder(folder_path)
 # print(global_motion_df)
 
+import cProfile
+import pstats
+import numpy as np
+import cv2  # Assurez-vous que OpenCV est installé
+from tqdm import tqdm
 
+# Assurez-vous que les fonctions find_motion_in_video_matrix et convert_matrix_to_motion_times sont définies
+
+# Valeurs de paramètres à tester
+contour_thresholds = [1500, 1800, 2100, 2400, 2700]
+bf_sizes = [3, 5, 8, 10, 12]
+skip_frames_values = [1, 2, 3, 4, 5]
+thresholds = [20, 30, 40, 50, 60]
+
+# Chemin vers la vidéo
+video_path = "/home/alexis/Desktop/video/testvideo_2min.mp4"
+
+# Fichier pour sauvegarder les résultats
+results_file = "/home/alexis/Desktop/video/results.txt"
+
+with open(results_file, "w") as file:
+    for thresh in contour_thresholds:
+        for bf in bf_sizes:
+            for sf in skip_frames_values:
+                for threshold in thresholds:
+                    profiler = cProfile.Profile()
+                    profiler.enable()
+
+                    # Exécuter la détection de mouvement
+                    motion_matrix = find_motion_in_video_matrix(video_path, contour_threshold=thresh, bf_size=bf, skip_frames=sf, threshold=threshold)
+
+                    # Sauvegarder et charger la matrice de mouvement
+                    filename = f"/home/alexis/Desktop/video/mm_thresh{thresh}_bf{bf}_sf{sf}_threshold{threshold}.npy"
+                    np.save(filename, motion_matrix)
+                    mm = np.load(filename)
+
+                    # Convertir en temps de mouvement
+                    mt = convert_matrix_to_motion_times(mm, 10, sf=sf)
+
+                    profiler.disable()
+
+                    # Calculer le nombre d'instants dans le quadrant 1
+                    num_instants_quadrant_1 = len(mt[0])
+
+                    # Écrire les résultats dans le fichier
+                    file.write(f"thresh={thresh}, bf={bf}, sf={sf}, threshold={threshold}, Instants Quadrant 1: {num_instants_quadrant_1}\n")
+
+                    # Profilage
+                    stats = pstats.Stats(profiler)
+                    stats.sort_stats('cumtime')
+                    stats.dump_stats(filename.replace('.npy', '.prof'))
+
+                    # Écrire les détails des temps de mouvement
+                    file.write(str(mt) + "\n\n")
