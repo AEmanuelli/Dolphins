@@ -12,6 +12,7 @@ import pandas as pd
 import os 
 from tqdm import tqdm 
 from datetime import datetime
+import sys
 
 
 #%%
@@ -30,8 +31,13 @@ def predict(model, images_path, file_path):
     return prediction
 
 def move_file(images_path, file_path, dst_dir):
-    src_dir = join(images_path, file_path)
-    shutil.move(src_dir,dst_dir)
+    src_dir = os.path.join(images_path, file_path)
+    dst_path = os.path.join(dst_dir, os.path.basename(src_dir))
+    
+    if not os.path.exists(dst_path):
+        shutil.move(src_dir, dst_dir)
+    else:
+        print(f"File '{os.path.basename(src_dir)}' already exists in the destination directory.")
 
 def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
     part = file_path.split('wav-')
@@ -63,9 +69,11 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
 # =============================================================================
 #********************* MAIN
 # =============================================================================
-    
+
+import time
+
 model_path = "models/model_vgg.h5"
-images_path = "images/"
+images_path = "image_test_without_mat_blackman/"
 positive_dir = "predicted_images/positive"
 negative_dir = "predicted_images/negative"
 csv_path = "whistles"+ datetime.now().strftime("%Y%m%d-%H%M%S") +".csv "
@@ -85,8 +93,10 @@ class_1_scores = []
 # all predictions results
 predictions = []
 
+# Rediriger la sortie standard vers os.devnull
+sys.stdout = open(os.devnull, 'w')
 # reading file paths 1 by 1
-for file_path in tqdm(all_files_path):
+for file_path in tqdm(all_files_path, desc='Processing'):
     
     # prediction on the given image
     prediction = predict(model, images_path, file_path)
@@ -110,8 +120,10 @@ for file_path in tqdm(all_files_path):
         
         # carry the negative image to its folder.
         move_file(images_path, file_path, negative_dir)
-        
-    
+sys.stdout = sys.__stdout__
 
 #saving the csv
 save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path)
+
+
+# export PATH=/users/zfne/emanuell/.local/bin:$PATH
