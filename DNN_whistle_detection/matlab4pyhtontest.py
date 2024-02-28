@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+import sys
 import os
 import pandas as pd
 import numpy as np
@@ -56,7 +59,7 @@ def process_audio_file(file_path, saving_folder="", batch_size =50, start_time=0
     low = int(start_time * fs)
     up = low + int(0.8 * fs)
     file_name_ex = start_time  # the start in second
-    file_name = file_path.split
+    file_name = os.path.splitext(os.path.basename(file_path))[0]
     # Calculate total number of iterations for the while loop
     total_iterations = int(np.ceil((N / fs - start_time - 0.8) / sliding_w))
 
@@ -76,7 +79,9 @@ def process_audio_file(file_path, saving_folder="", batch_size =50, start_time=0
         ax.set_axis_off()  # Turn off axis
         # Resize the figure directly before saving
         fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
-
+        # Create the saving folder if it doesn't exist
+        if save and not os.path.exists(saving_folder):
+            os.makedirs(saving_folder)
         # Save the spectrogram as a JPG image without borders
         if save: 
             image_name = os.path.join(saving_folder, file_name + '-' + str(file_name_ex) + '.jpg')
@@ -116,7 +121,8 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
             batch_duration = batch_size*0.4
             for start in np.arange(0, total_duration, batch_duration):  # Divisez le fichier en tranches de 40 secondes
                 images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, save=save)
-                
+                sys.stdout = open(os.devnull, 'w')
+
                 for idx, image in enumerate(images):
                     image_start_time = start + idx * 0.4
                     image_end_time = image_start_time + 0.4
@@ -131,7 +137,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
                         positive_initial.append(image_start_time)
                         positive_finish.append(image_end_time)
                         class_1_scores.append(prediction[0][1])
-
+                sys.stdout = sys.__stdout__
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path)
 
 
