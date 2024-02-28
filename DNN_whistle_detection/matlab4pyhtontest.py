@@ -40,7 +40,7 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     
     df.to_csv(csv_path, index=False)
 
-def process_audio_file(file_path, saving_folder="", batch_size = 10, start_time=0, save=False, wlen=2048, 
+def process_audio_file(file_path, saving_folder="", batch_size =50, start_time=0, save=False, wlen=2048, 
                        nfft= 2048, sliding_w= 0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px= 1166, 
                        target_height_px= 880):
     # Calculate the spectrogram parameters
@@ -81,17 +81,15 @@ def process_audio_file(file_path, saving_folder="", batch_size = 10, start_time=
         if save: 
             image_name = os.path.join(saving_folder, file_name + '-' + str(file_name_ex) + '.jpg')
             fig.savefig(image_name, bbox_inches='tight', pad_inches=0, dpi=plt.rcParams['figure.dpi'])  # Save without borders
-            plt.close(fig)
-        else: 
-            fig.canvas.draw()
-            
-            image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-            image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            images.append(image)
-            if len(images) >= batch_size:
-                # Fermer les figures pour libérer la mémoire
-                plt.close('all')
-                return images
+         
+        fig.canvas.draw()   
+        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        images.append(image)
+        if len(images) >= batch_size:
+            # Fermer les figures pour libérer la mémoire
+            plt.close('all')
+            return images
 
         low += int(sliding_w * fs)
         file_name_ex += sliding_w
@@ -101,7 +99,7 @@ def process_audio_file(file_path, saving_folder="", batch_size = 10, start_time=
 
 import concurrent.futures
 
-def process_and_predict(recording_folder_path, saving_folder, start_time=0, save=False, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
+def process_and_predict(recording_folder_path, saving_folder, start_time=0, batch_size =50, save=False, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
     files = os.listdir(recording_folder_path)
     model = tf.keras.models.load_model(model_path)
     
@@ -110,31 +108,29 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, save
     positive_finish = []
     class_1_scores = []
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
-        
-        for file_name in files:
-            if not os.path.isdir(os.path.join(recording_folder_path, file_name)):
-                future = executor.submit(process_audio_file, os.path.join(recording_folder_path, file_name), saving_folder, start_time, save)
-                futures.append(future)
-        
-        for future in concurrent.futures.as_completed(futures):
-            images = future.result()
-            
-            for idx, image in enumerate(images):
-                image_start_time = start_time + idx * 0.4
-                image_end_time = image_start_time + 0.8
+    for file_name in tqdm(files, desc="Generating spectrograms"):
+        if not os.path.isdir(os.path.join(recording_folder_path, file_name)):
+            fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
+            N = len(x)  # Longueur du signal
+            total_duration = (N / fs) - start_time  # Durée totale du fichier audio à partir du temps de départ
+            batch_duration = batch_size*0.4
+            for start in np.arange(0, total_duration, batch_duration):  # Divisez le fichier en tranches de 40 secondes
+                images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, save=save)
                 
-                image = cv2.resize(image, (224, 224))
-                image = np.expand_dims(image, axis=0)
-                image = preprocess_input(image)
-                prediction = model.predict(image)
-                
-                if prediction[0][1] > prediction[0][0]:
-                    record_names.append(file_name)
-                    positive_initial.append(image_start_time)
-                    positive_finish.append(image_end_time)
-                    class_1_scores.append(prediction[0][1])
+                for idx, image in enumerate(images):
+                    image_start_time = start + idx * 0.4
+                    image_end_time = image_start_time + 0.4
+                    
+                    image = cv2.resize(image, (224, 224))
+                    image = np.expand_dims(image, axis=0)
+                    image = preprocess_input(image)
+                    prediction = model.predict(image)
+                    
+                    if prediction[0][1] > prediction[0][0]:
+                        record_names.append(file_name)
+                        positive_initial.append(image_start_time)
+                        positive_finish.append(image_end_time)
+                        class_1_scores.append(prediction[0][1])
 
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path)
 
@@ -150,7 +146,7 @@ if __name__ == "__main__":
 
     profiler = cProfile.Profile()
     profiler.enable()
-    process_and_predict(recording_folder_path, saving_folder)
+    process_and_predict(recording_folder_path, saving_folder, save=True)
 
 
     # images = process_audio_file(file_path=filepath, saving_folder=saving_folder, save = False, start_time=10)
