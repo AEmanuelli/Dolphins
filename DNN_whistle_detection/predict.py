@@ -1,6 +1,8 @@
 # =============================================================================
 #********************* IMPORTS
 # =============================================================================
+import matplotlib
+matplotlib.use('Agg')
 import tensorflow as tf 
 import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
@@ -23,6 +25,14 @@ import sys
 
 def predict(model, images_path, file_path):
     image = cv2.imread(join(images_path, file_path))
+    image = cv2.resize(image, (224, 224))
+    image = np.resize(image,(1,224,224,3))
+    image = preprocess_input(image)
+    prediction = model.predict(image)
+    
+    return prediction
+
+def predict_online(model, image):
     image = cv2.resize(image, (224, 224))
     image = np.resize(image,(1,224,224,3))
     image = preprocess_input(image)
