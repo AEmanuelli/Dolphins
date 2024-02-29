@@ -15,7 +15,7 @@ import cProfile
 import cv2
 from tensorflow.keras.applications.vgg16 import preprocess_input
 import tensorflow as tf 
-
+import cv2
 
 def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
     part = file_path.split('wav-')
@@ -43,9 +43,18 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     
     df.to_csv(csv_path, index=False)
 
-def process_audio_file(file_path, saving_folder="", batch_size =50, start_time=0, save=False, wlen=2048, 
-                       nfft= 2048, sliding_w= 0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px= 1166, 
-                       target_height_px= 880):
+def buffer_to_image(buffer):
+    image = np.frombuffer(buffer, dtype=np.uint8)
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    return image
+
+# Redimensionner l'image à la taille souhaitée
+def resize_image(image, width, height):
+    return cv2.resize(image, (width, height))
+
+def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0, save=False, wlen=2048,
+                       nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20,
+                       target_width_px=1166, target_height_px=880):
     # Calculate the spectrogram parameters
     hop = round(0.8 * wlen)  # window hop size
     win = blackman(wlen, sym=False)
@@ -59,13 +68,16 @@ def process_audio_file(file_path, saving_folder="", batch_size =50, start_time=0
     low = int(start_time * fs)
     up = low + int(0.8 * fs)
     file_name_ex = start_time  # the start in second
+
+    # Extract the file name without extension
     file_name = os.path.splitext(os.path.basename(file_path))[0]
+
     # Calculate total number of iterations for the while loop
     total_iterations = int(np.ceil((N / fs - start_time - 0.8) / sliding_w))
 
     for _ in tqdm(range(total_iterations), desc=f"Processing frames for file: {file_name}", leave=False):
         x_w = x[low:up]
-        
+
         # Calculate the spectrogram
         f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
         Sxx = 20 * np.log10(np.abs(Sxx))  # Convert to dB
@@ -79,27 +91,43 @@ def process_audio_file(file_path, saving_folder="", batch_size =50, start_time=0
         ax.set_axis_off()  # Turn off axis
         # Resize the figure directly before saving
         fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
-        # Create the saving folder if it doesn't exist
-        if save and not os.path.exists(saving_folder):
-            os.makedirs(saving_folder)
+
         # Save the spectrogram as a JPG image without borders
-        if save: 
-            image_name = os.path.join(saving_folder, file_name + '-' + str(file_name_ex) + '.jpg')
+        if save:
+            image_name = os.path.join(saving_folder, f"{file_name}-{file_name_ex}.jpg")
             fig.savefig(image_name, bbox_inches='tight', pad_inches=0, dpi=plt.rcParams['figure.dpi'])  # Save without borders
-         
-        fig.canvas.draw()   
-        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+        # Convert the canvas to an image using cv2 directly
+        # Convert the canvas to an image using cv2 directly
+        fig.canvas.draw()
+        image = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
+        image = cv2.imdecode(image, cv2.IMREAD_COLOR)  # Convert image buffer to OpenCV format
+
+        # Check if the image is not empty before resizing
+        if image is not None and not image.size == 0:
+            image = cv2.resize(image, (224, 224))  # Resize the image
+            images.append(image)
+        else:
+            print(f"Skipping empty or invalid image for file: {file_name}-{file_name_ex}")
+            
+        plt.close(fig)  # Close the figure to release memory
+        
         images.append(image)
         if len(images) >= batch_size:
             # Fermer les figures pour libérer la mémoire
             plt.close('all')
             return images
-
+        fig.canvas.draw()
+        buffer = fig.canvas.buffer_rgba()
+        image = buffer_to_image(buffer)
+        resized_image = resize_image(image, 224, 224)
+        cv2.imshow("Resized Image", resized_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         low += int(sliding_w * fs)
         file_name_ex += sliding_w
         up = low + int(0.8 * fs)
-
+        plt.close(fig)  # Close the figure to release memory
     return images
 
 import concurrent.futures
@@ -139,6 +167,8 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
                         class_1_scores.append(prediction[0][1])
                 sys.stdout = sys.__stdout__
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path)
+
+
 
 
 model_path = "models/model_vgg.h5"
