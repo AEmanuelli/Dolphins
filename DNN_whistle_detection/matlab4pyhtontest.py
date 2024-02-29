@@ -1,5 +1,7 @@
+# =============================================================================
+#********************* IMPORTS
+# =============================================================================
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
 import sys
 import os
 import pandas as pd
@@ -10,12 +12,18 @@ import matplotlib.pyplot as plt
 from scipy.signal import spectrogram
 from scipy.signal.windows import blackman
 from scipy.io import wavfile
-from tqdm import tqdm
+from tqdm import tqdm 
 import cProfile
 import cv2
+import concurrent.futures
 from tensorflow.keras.applications.vgg16 import preprocess_input
 import tensorflow as tf 
-import cv2
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+# =============================================================================
+#********************* FUNCTIONS
+# =============================================================================
 
 def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
     part = file_path.split('wav-')
@@ -43,18 +51,9 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     
     df.to_csv(csv_path, index=False)
 
-def buffer_to_image(buffer):
-    image = np.frombuffer(buffer, dtype=np.uint8)
-    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    return image
-
-# Redimensionner l'image à la taille souhaitée
-def resize_image(image, width, height):
-    return cv2.resize(image, (width, height))
-
-def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0, save=False, wlen=2048,
-                       nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20,
-                       target_width_px=1166, target_height_px=880):
+def process_audio_file(file_path, saving_folder="", batch_size = 50, start_time=0, save=False, wlen=2048, 
+                       nfft= 2048, sliding_w= 0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px= 1166, 
+                       target_height_px= 880):
     # Calculate the spectrogram parameters
     hop = round(0.8 * wlen)  # window hop size
     win = blackman(wlen, sym=False)
@@ -68,16 +67,12 @@ def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0,
     low = int(start_time * fs)
     up = low + int(0.8 * fs)
     file_name_ex = start_time  # the start in second
-
-    # Extract the file name without extension
     file_name = os.path.splitext(os.path.basename(file_path))[0]
-
     # Calculate total number of iterations for the while loop
     total_iterations = int(np.ceil((N / fs - start_time - 0.8) / sliding_w))
 
-    for _ in tqdm(range(total_iterations), desc=f"Processing frames for file: {file_name}", leave=False):
+    for _ in tqdm(range(batch_size), desc=f"Processing batch : {start_time} to {start_time+batch_size*.4}" , leave=False):
         x_w = x[low:up]
-
         # Calculate the spectrogram
         f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
         Sxx = 20 * np.log10(np.abs(Sxx))  # Convert to dB
@@ -91,48 +86,30 @@ def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0,
         ax.set_axis_off()  # Turn off axis
         # Resize the figure directly before saving
         fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
-
+        # Create the saving folder if it doesn't exist
+        if save and not os.path.exists(saving_folder):
+            os.makedirs(saving_folder)
         # Save the spectrogram as a JPG image without borders
-        if save:
-            image_name = os.path.join(saving_folder, f"{file_name}-{file_name_ex}.jpg")
+        if save: 
+            image_name = os.path.join(saving_folder, file_name + '-' + str(file_name_ex) + '.jpg')
             fig.savefig(image_name, bbox_inches='tight', pad_inches=0, dpi=plt.rcParams['figure.dpi'])  # Save without borders
-
-        # Convert the canvas to an image using cv2 directly
-        # Convert the canvas to an image using cv2 directly
-        fig.canvas.draw()
-        image = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
-        image = cv2.imdecode(image, cv2.IMREAD_COLOR)  # Convert image buffer to OpenCV format
-
-        # Check if the image is not empty before resizing
-        if image is not None and not image.size == 0:
-            image = cv2.resize(image, (224, 224))  # Resize the image
-            images.append(image)
-        else:
-            print(f"Skipping empty or invalid image for file: {file_name}-{file_name_ex}")
-            
-        plt.close(fig)  # Close the figure to release memory
-        
+         
+        fig.canvas.draw()   
+        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
         images.append(image)
         if len(images) >= batch_size:
             # Fermer les figures pour libérer la mémoire
             plt.close('all')
             return images
-        fig.canvas.draw()
-        buffer = fig.canvas.buffer_rgba()
-        image = buffer_to_image(buffer)
-        resized_image = resize_image(image, 224, 224)
-        cv2.imshow("Resized Image", resized_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+
         low += int(sliding_w * fs)
         file_name_ex += sliding_w
         up = low + int(0.8 * fs)
-        plt.close(fig)  # Close the figure to release memory
+
     return images
 
-import concurrent.futures
-
-def process_and_predict(recording_folder_path, saving_folder, start_time=0, batch_size =50, save=False, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
+def process_and_predict(recording_folder_path, saving_folder, start_time=0, batch_size=50, save=False, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
     files = os.listdir(recording_folder_path)
     model = tf.keras.models.load_model(model_path)
     
@@ -140,41 +117,46 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
     positive_initial = []
     positive_finish = []
     class_1_scores = []
-
-    for file_name in tqdm(files, desc="Generating spectrograms"):
+    
+    # with tqdm(files, desc="Files", position=0, leave=False, bar_format='{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} {elapsed}<{remaining}') as pbar:
+    for file_name in tqdm(files, desc="Processing Files", position=0, leave=False, colour='green'):
         if not os.path.isdir(os.path.join(recording_folder_path, file_name)):
             fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
             N = len(x)  # Longueur du signal
             total_duration = (N / fs) - start_time  # Durée totale du fichier audio à partir du temps de départ
-            batch_duration = batch_size*0.4
-            for start in np.arange(0, total_duration, batch_duration):  # Divisez le fichier en tranches de 40 secondes
-                images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, save=save)
-                sys.stdout = open(os.devnull, 'w')
+            batch_duration = batch_size * 0.4
+            
+            num_batches = int(np.ceil(total_duration / batch_duration))
+            for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):  # Divisez le fichier en tranches de 40 secondes
+                    start = batch*batch_duration
+                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, save=save)
+                    sys.stdout = open(os.devnull, 'w')
 
-                for idx, image in enumerate(images):
-                    image_start_time = start + idx * 0.4
-                    image_end_time = image_start_time + 0.4
+                    for idx, image in enumerate(images):
+                        image_start_time = start_time + idx * 0.4  # Correction ici : utiliser start_time au lieu de start
+                        image_end_time = image_start_time + 0.4
+                        
+                        image = cv2.resize(image, (224, 224))
+                        image = np.expand_dims(image, axis=0)
+                        image = preprocess_input(image)
+                        prediction = model.predict(image)
+                        
+                        if prediction[0][1] > prediction[0][0]:
+                            record_names.append(file_name)
+                            positive_initial.append(image_start_time)
+                            positive_finish.append(image_end_time)
+                            class_1_scores.append(prediction[0][1])
+                    sys.stdout = sys.__stdout__
                     
-                    image = cv2.resize(image, (224, 224))
-                    image = np.expand_dims(image, axis=0)
-                    image = preprocess_input(image)
-                    prediction = model.predict(image)
-                    
-                    if prediction[0][1] > prediction[0][0]:
-                        record_names.append(file_name)
-                        positive_initial.append(image_start_time)
-                        positive_finish.append(image_end_time)
-                        class_1_scores.append(prediction[0][1])
-                sys.stdout = sys.__stdout__
+            # pbar.update(1)
+    
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path)
 
-
-
-
+# =============================================================================
+#********************* MAIN
+# =============================================================================
 model_path = "models/model_vgg.h5"
 model = tf.keras.models.load_model(model_path)
-
-
 if __name__ == "__main__":
     recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings'
     filepath ="/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings/Exp_01_Aug_2023_0845_channel_1.wav"
@@ -182,18 +164,6 @@ if __name__ == "__main__":
 
     profiler = cProfile.Profile()
     profiler.enable()
-    process_and_predict(recording_folder_path, saving_folder, save=True)
-
-
-    # images = process_audio_file(file_path=filepath, saving_folder=saving_folder, save = False, start_time=10)
-    # predictions = []
-    # for image in images :
-    #     image = cv2.resize(image, (224, 224))
-    #     image = np.resize(image,(1,224,224,3))
-    #     image = preprocess_input(image)
-    #     predictions.append(model.predict(image))
-    # filtered_predictions = [prediction for prediction in predictions if prediction[0][1] > prediction[0][0]]
-    # print(filtered_predictions)
-    
+    process_and_predict(recording_folder_path, saving_folder, save=False)
     profiler.disable()
-    # profiler.print_stats()
+    profiler.print_stats()
