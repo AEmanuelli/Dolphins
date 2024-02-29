@@ -68,10 +68,9 @@ def process_audio_file(file_path, saving_folder="", batch_size = 50, start_time=
     up = low + int(0.8 * fs)
     file_name_ex = start_time  # the start in second
     file_name = os.path.splitext(os.path.basename(file_path))[0]
-    # Calculate total number of iterations for the while loop
-    total_iterations = int(np.ceil((N / fs - start_time - 0.8) / sliding_w))
-
-    for _ in tqdm(range(batch_size), desc=f"Processing batch : {start_time} to {start_time+batch_size*.4}" , leave=False):
+    for _ in tqdm(range(batch_size), desc=f"Processing batch : second {start_time} to {start_time+batch_size*.4}" , leave=False):
+        if up > N:  # Check if the upper index exceeds the signal length
+            break
         x_w = x[low:up]
         # Calculate the spectrogram
         f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
@@ -118,7 +117,6 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
     positive_finish = []
     class_1_scores = []
     
-    # with tqdm(files, desc="Files", position=0, leave=False, bar_format='{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} {elapsed}<{remaining}') as pbar:
     for file_name in tqdm(files, desc="Processing Files", position=0, leave=False, colour='green'):
         if not os.path.isdir(os.path.join(recording_folder_path, file_name)):
             fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
@@ -133,7 +131,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
                     sys.stdout = open(os.devnull, 'w')
 
                     for idx, image in enumerate(images):
-                        image_start_time = start_time + idx * 0.4  # Correction ici : utiliser start_time au lieu de start
+                        image_start_time = start + idx * 0.4
                         image_end_time = image_start_time + 0.4
                         
                         image = cv2.resize(image, (224, 224))
@@ -148,7 +146,6 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
                             class_1_scores.append(prediction[0][1])
                     sys.stdout = sys.__stdout__
                     
-            # pbar.update(1)
     
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path)
 
@@ -158,7 +155,9 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
 model_path = "models/model_vgg.h5"
 model = tf.keras.models.load_model(model_path)
 if __name__ == "__main__":
+    
     recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings'
+    # recording_folder_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/Eval model /" #petit fichier
     filepath ="/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings/Exp_01_Aug_2023_0845_channel_1.wav"
     saving_folder = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/test_fullpipeline'
 
