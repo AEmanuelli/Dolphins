@@ -105,6 +105,7 @@ predictions = []
 
 # Rediriger la sortie standard vers os.devnull
 sys.stdout = open(os.devnull, 'w')
+
 # reading file paths 1 by 1
 for file_path in tqdm(all_files_path, desc='Processing'):
     

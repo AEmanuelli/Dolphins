@@ -128,7 +128,10 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
         if not os.path.isdir(os.path.join(recording_folder_path, file_name)):
             fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
             N = len(x)  # Longueur du signal
+            if end_time is not None:
+                N = min(N, int(end_time * fs))
             total_duration = (N / fs) - start_time  # Durée totale du fichier audio à partir du temps de départ
+            print(total_duration)
             record_names = []
             positive_initial = []
             positive_finish = []
@@ -156,7 +159,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
                             class_1_scores.append(prediction[0][1])
 
                     sys.stdout = sys.__stdout__
-                    
+
             save_csv(record_names, positive_initial, positive_finish, class_1_scores, f"{file_name}_predictions.csv")
 
 # =============================================================================
@@ -166,14 +169,14 @@ def main():
     model_path = "models/model_vgg.h5"
     model = tf.keras.models.load_model(model_path)
 
-    recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings'
+    recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings_'
     # recording_folder_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/Eval model /" #petit fichier
     filepath = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings/Exp_01_Aug_2023_0845_channel_1.wav"
     saving_folder = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/test_fullpipeline'
 
     profiler = cProfile.Profile()
     profiler.enable()
-    process_and_predict(recording_folder_path, saving_folder, save=True, start_time=1)
+    process_and_predict(recording_folder_path, saving_folder, save=True, start_time=1, end_time=1800)
     profiler.disable()
     
     # Créez l'objet pstats à partir du profiler

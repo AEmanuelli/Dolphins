@@ -37,16 +37,6 @@ def prepare_csv_data(file_path, record_names, positive_initial, positive_finish)
     ini = float(ini)
     positive_initial.append(ini)
     
-def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
-    part = file_path.split('wav-')
-
-    name = part[0] + "wav"
-    record_names.append(name)
-    
-    ini = part[1].replace(".jpg", "")
-    ini = float(ini)
-    positive_initial.append(ini)
-    
     fin = ini + 0.8
     fin = round(fin, 1)
     positive_finish.append(fin)
@@ -80,11 +70,11 @@ def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0,
     file_name = os.path.splitext(os.path.basename(file_path))[0]
     N = len(x)  # signal length
 
-    low = int(start_time * fs)
     if end_time is not None:
-        up = min(int(end_time * fs), N)
-    else:
-        up = low + int(0.8 * fs)
+        N = min(N, int(end_time * fs))
+
+    low = int(start_time * fs)
+    up = low + int(0.8 * fs)
     file_name_ex = start_time  # the start in second
     for _ in tqdm(range(batch_size), desc=f"Processing batch : second {start_time} to {start_time+batch_size*.4}", leave=False):
         if up > N:  # Check if the upper index exceeds the signal length
@@ -138,6 +128,8 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
         if not os.path.isdir(os.path.join(recording_folder_path, file_name)):
             fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
             N = len(x)  # Longueur du signal
+            if end_time is not None:
+                N = min(N, int(end_time * fs))
             total_duration = (N / fs) - start_time  # Durée totale du fichier audio à partir du temps de départ
             record_names = []
             positive_initial = []
@@ -146,7 +138,8 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
             num_batches = int(np.ceil(total_duration / batch_duration))
             for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):  # Divisez le fichier en tranches de 40 secondes
                     start = batch*batch_duration + start_time
-                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, end_time=end_time, save=save)
+                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, 
+                                                start_time=start, end_time=end_time, save=save)
                     sys.stdout = open(os.devnull, 'w')
 
                     for idx, image in enumerate(images):
@@ -163,8 +156,10 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
                             positive_initial.append(image_start_time)
                             positive_finish.append(image_end_time)
                             class_1_scores.append(prediction[0][1])
+
                     sys.stdout = sys.__stdout__
-            save_csv(record_names, positive_initial, positive_finish, class_1_scores, f"{file_name}_predictions.csv")
+
+            save_csv(record_names, positive_initial, positive_finish, class_1_scores, f"predictions/{file_name}_predictions.csv")
 
 # =============================================================================
 #********************* MAIN
@@ -173,14 +168,14 @@ def main():
     model_path = "models/model_vgg.h5"
     model = tf.keras.models.load_model(model_path)
 
-    recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings'
+    recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings_'
     # recording_folder_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/Eval model /" #petit fichier
     filepath = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings/Exp_01_Aug_2023_0845_channel_1.wav"
     saving_folder = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/test_fullpipeline'
 
     profiler = cProfile.Profile()
     profiler.enable()
-    process_and_predict(recording_folder_path, saving_folder, save=True, start_time=1)
+    process_and_predict(recording_folder_path, saving_folder, save=False, start_time=1, end_time=1800)
     profiler.disable()
     
     # Créez l'objet pstats à partir du profiler
