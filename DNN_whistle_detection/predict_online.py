@@ -124,8 +124,11 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
     model = tf.keras.models.load_model(model_path)
     batch_duration = batch_size * 0.4
     for file_name in tqdm(files, desc="Processing Files", position=0, leave=False, colour='green'):
-        
-        if not os.path.isdir(os.path.join(recording_folder_path, file_name)):
+        file_path = os.path.join(recording_folder_path, file_name)
+        # Check if the file is a directory or not an audio file
+        if os.path.isdir(file_path) or not file_name.lower().endswith(('.wav', '.wave')):
+            continue  # Skip directories and non-audio files
+        if not os.path.isdir(file_path):
             fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
             N = len(x)  # Longueur du signal
             if end_time is not None:
@@ -161,27 +164,4 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
 
             save_csv(record_names, positive_initial, positive_finish, class_1_scores, f"predictions/{file_name}_predictions.csv")
 
-# =============================================================================
-#********************* MAIN
-# =============================================================================
-def main():
-    model_path = "models/model_vgg.h5"
-    model = tf.keras.models.load_model(model_path)
 
-    recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings_'
-    # recording_folder_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/Eval model /" #petit fichier
-    filepath = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings/Exp_01_Aug_2023_0845_channel_1.wav"
-    saving_folder = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/test_fullpipeline'
-
-    profiler = cProfile.Profile()
-    profiler.enable()
-    process_and_predict(recording_folder_path, saving_folder, save=False, start_time=1, end_time=1800)
-    profiler.disable()
-    
-    # Créez l'objet pstats à partir du profiler
-    stats = pstats.Stats(profiler)
-    # Imprimez les 10 fonctions les plus importantes en termes de temps cumulé
-    stats.strip_dirs().sort_stats('cumulative').print_stats(15)
-
-if __name__ == "__main__":
-    main()
