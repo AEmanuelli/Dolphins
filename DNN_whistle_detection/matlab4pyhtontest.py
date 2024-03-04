@@ -7,20 +7,21 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.signal import spectrogram
 from scipy.signal.windows import blackman
 from scipy.io import wavfile
 from tqdm import tqdm 
 import cProfile
+import pstats
 import cv2
 import concurrent.futures
 from tensorflow.keras.applications.vgg16 import preprocess_input
 import tensorflow as tf 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
-
+matplotlib.use('Agg')
+from PIL import Image
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
@@ -52,8 +53,8 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     df.to_csv(csv_path, index=False)
 
 def process_audio_file(file_path, saving_folder="", batch_size = 50, start_time=0, save=False, wlen=2048, 
-                       nfft= 2048, sliding_w= 0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px= 1166, 
-                       target_height_px= 880):
+                       nfft= 2048, sliding_w= 0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px= 1167, 
+                       target_height_px= 875):
     # Calculate the spectrogram parameters
     hop = round(0.8 * wlen)  # window hop size
     win = blackman(wlen, sym=False)
@@ -93,10 +94,17 @@ def process_audio_file(file_path, saving_folder="", batch_size = 50, start_time=
             image_name = os.path.join(saving_folder, file_name + '-' + str(file_name_ex) + '.jpg')
             fig.savefig(image_name, bbox_inches='tight', pad_inches=0, dpi=plt.rcParams['figure.dpi'])  # Save without borders
          
-        fig.canvas.draw()   
+        fig.canvas.draw()
         image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
         image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-        images.append(image)
+        # Convertir l'array NumPy en image PIL
+        # pil_image = Image.fromarray(image)
+
+        # # Afficher l'image
+        # pil_image.show()
+        # break
+        
+        images.append(Sxx.reshape(fig.canvas.get_width_height()[::-1] + (3,)))
         if len(images) >= batch_size:
             # Fermer les figures pour libérer la mémoire
             plt.close('all')
@@ -126,7 +134,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
             
             num_batches = int(np.ceil(total_duration / batch_duration))
             for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):  # Divisez le fichier en tranches de 40 secondes
-                    start = batch*batch_duration
+                    start = batch*batch_duration + start_time
                     images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, save=save)
                     sys.stdout = open(os.devnull, 'w')
 
@@ -152,18 +160,24 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
 # =============================================================================
 #********************* MAIN
 # =============================================================================
-model_path = "models/model_vgg.h5"
-model = tf.keras.models.load_model(model_path)
-if __name__ == "__main__":
-    
+def main():
+    model_path = "models/model_vgg.h5"
+    model = tf.keras.models.load_model(model_path)
+
     recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings'
     # recording_folder_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/Eval model /" #petit fichier
-    filepath ="/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings/Exp_01_Aug_2023_0845_channel_1.wav"
+    filepath = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings/Exp_01_Aug_2023_0845_channel_1.wav"
     saving_folder = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/test_fullpipeline'
 
     profiler = cProfile.Profile()
     profiler.enable()
-    process_and_predict(recording_folder_path, saving_folder, save=False)
+    process_and_predict(recording_folder_path, saving_folder, save=False, start_time=1)
     profiler.disable()
-    profiler.print_stats()
-    # change
+    
+    # Créez l'objet pstats à partir du profiler
+    stats = pstats.Stats(profiler)
+    # Imprimez les 10 fonctions les plus importantes en termes de temps cumulé
+    stats.strip_dirs().sort_stats('cumulative').print_stats(15)
+
+if __name__ == "__main__":
+    main()
