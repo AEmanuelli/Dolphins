@@ -22,6 +22,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 matplotlib.use('Agg')
 from PIL import Image
+
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
@@ -52,90 +53,91 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     
     df.to_csv(csv_path, index=False)
 
-def process_audio_file(file_path, saving_folder="", batch_size = 50, start_time=0, save=False, wlen=2048, 
-                       nfft= 2048, sliding_w= 0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px= 1167, 
-                       target_height_px= 875):
+def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
+                       nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px=903,
+                       target_height_px=677):
+    try:
+        # Load sound recording
+        fs, x = wavfile.read(file_path)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File {file_path} not found.")
+
     # Calculate the spectrogram parameters
     hop = round(0.8 * wlen)  # window hop size
     win = blackman(wlen, sym=False)
 
     images = []
-    # Load sound recording
-    fs, x = wavfile.read(file_path)
-    x = np.float32(x)  # convert to single precision to save memory
+    file_name = os.path.splitext(os.path.basename(file_path))[0]
     N = len(x)  # signal length
+
+    if end_time is not None:
+        N = min(N, int(end_time * fs))
 
     low = int(start_time * fs)
     up = low + int(0.8 * fs)
     file_name_ex = start_time  # the start in second
-    file_name = os.path.splitext(os.path.basename(file_path))[0]
-    for _ in tqdm(range(batch_size), desc=f"Processing batch : second {start_time} to {start_time+batch_size*.4}" , leave=False):
+    for _ in tqdm(range(batch_size), desc=f"Processing batch : second {start_time} to {start_time+batch_size*.4}", leave=False):
         if up > N:  # Check if the upper index exceeds the signal length
             break
         x_w = x[low:up]
+        
         # Calculate the spectrogram
         f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
         Sxx = 20 * np.log10(np.abs(Sxx))  # Convert to dB
 
         # Create the spectrogram plot
-        # fig, ax = plt.subplots()
-        # ax.pcolormesh(t, f / 1000, Sxx, cmap='gray')
-        # ax.set_ylim(cut_low_frequency, cut_high_frequency)
+        fig, ax = plt.subplots()
+        ax.pcolormesh(t, f / 1000, Sxx, cmap='gray')
+        ax.set_ylim(cut_low_frequency, cut_high_frequency)
 
-        # # ax.set_aspect('auto')  # Adjust aspect ratio
-        # ax.set_axis_off()  # Turn off axis
-        # # Resize the figure directly before saving
-        # fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
+        ax.set_axis_off()  # Turn off axis
+        fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
+        
+        # Adjust margins
+        fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+        
         # Create the saving folder if it doesn't exist
         if save and not os.path.exists(saving_folder):
             os.makedirs(saving_folder)
-        # Save the spectrogram as a JPG image without borders
-        # if save: 
-        #     image_name = os.path.join(saving_folder, file_name + '-' + str(file_name_ex) + '.jpg')
-        #     fig.savefig(image_name, bbox_inches='tight', pad_inches=0, dpi=plt.rcParams['figure.dpi'])  # Save without borders
-         
-        # fig.canvas.draw()
-        # image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-        # image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-        # Convertir l'array NumPy en image PIL
-        # pil_image = Image.fromarray(image)
-
-        # # Afficher l'image
-        # pil_image.show()
-        # break
         
-        images.append(Sxx.reshape(fig.canvas.get_width_height()[::-1] + (3,)))
-        if len(images) >= batch_size:
-            # Fermer les figures pour libérer la mémoire
-            plt.close('all')
-            return images
+        # Save the spectrogram as a JPG image without borders
+        if save:
+            image_name = os.path.join(saving_folder, f"{file_name}-{file_name_ex}.jpg")
+            fig.savefig(image_name, dpi=plt.rcParams['figure.dpi'])  # Save without borders
+
+        fig.canvas.draw()
+        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        images.append(image)
 
         low += int(sliding_w * fs)
         file_name_ex += sliding_w
         up = low + int(0.8 * fs)
 
+    plt.close('all')  # Close all figures to release memory
+
     return images
 
-def process_and_predict(recording_folder_path, saving_folder, start_time=0, batch_size=50, save=False, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
+def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_time = 1800, batch_size=50, save=False, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
     files = os.listdir(recording_folder_path)
     model = tf.keras.models.load_model(model_path)
-    
-    record_names = []
-    positive_initial = []
-    positive_finish = []
-    class_1_scores = []
-    
+    batch_duration = batch_size * 0.4
     for file_name in tqdm(files, desc="Processing Files", position=0, leave=False, colour='green'):
+        
         if not os.path.isdir(os.path.join(recording_folder_path, file_name)):
             fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
             N = len(x)  # Longueur du signal
             total_duration = (N / fs) - start_time  # Durée totale du fichier audio à partir du temps de départ
-            batch_duration = batch_size * 0.4
-            
+            record_names = []
+            positive_initial = []
+            positive_finish = []
+            class_1_scores = []
             num_batches = int(np.ceil(total_duration / batch_duration))
             for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):  # Divisez le fichier en tranches de 40 secondes
                     start = batch*batch_duration + start_time
-                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, save=save)
+                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, 
+                                                start_time=start, end_time=end_time, save=save)
                     sys.stdout = open(os.devnull, 'w')
 
                     for idx, image in enumerate(images):
@@ -152,10 +154,10 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, batc
                             positive_initial.append(image_start_time)
                             positive_finish.append(image_end_time)
                             class_1_scores.append(prediction[0][1])
+
                     sys.stdout = sys.__stdout__
                     
-    
-    save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path)
+            save_csv(record_names, positive_initial, positive_finish, class_1_scores, f"{file_name}_predictions.csv")
 
 # =============================================================================
 #********************* MAIN
@@ -171,7 +173,7 @@ def main():
 
     profiler = cProfile.Profile()
     profiler.enable()
-    process_and_predict(recording_folder_path, saving_folder, save=False, start_time=1)
+    process_and_predict(recording_folder_path, saving_folder, save=True, start_time=1)
     profiler.disable()
     
     # Créez l'objet pstats à partir du profiler

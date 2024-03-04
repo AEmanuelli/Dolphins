@@ -63,7 +63,7 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     
     df.to_csv(csv_path, index=False)
 
-def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0, save=False, wlen=2048,
+def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
                        nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px=903,
                        target_height_px=677):
     try:
@@ -81,7 +81,10 @@ def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0,
     N = len(x)  # signal length
 
     low = int(start_time * fs)
-    up = low + int(0.8 * fs)
+    if end_time is not None:
+        up = min(int(end_time * fs), N)
+    else:
+        up = low + int(0.8 * fs)
     file_name_ex = start_time  # the start in second
     for _ in tqdm(range(batch_size), desc=f"Processing batch : second {start_time} to {start_time+batch_size*.4}", leave=False):
         if up > N:  # Check if the upper index exceeds the signal length
@@ -143,7 +146,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
             num_batches = int(np.ceil(total_duration / batch_duration))
             for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):  # Divisez le fichier en tranches de 40 secondes
                     start = batch*batch_duration + start_time
-                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, save=save)
+                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, start_time=start, end_time=end_time, save=save)
                     sys.stdout = open(os.devnull, 'w')
 
                     for idx, image in enumerate(images):
