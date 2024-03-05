@@ -11,7 +11,7 @@ def main():
     dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
 
     #********************* Créer les fichiers CSV 
-    process_and_predict(recording_folder_path, saving_folder_image, save=False, start_time=0)
+    # process_and_predict(recording_folder_path, saving_folder_image, save=False, start_time=0)
 
     #********************* CSV vers intervalles 
     for fichier in os.listdir(dossier_csv):
@@ -19,7 +19,7 @@ def main():
             chemin_fichier = os.path.join(dossier_csv, fichier)
             intervalles = lire_csv_extraits(chemin_fichier)
             intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
-
+            print(intervalles_fusionnes)
             #********************* Trouver le fichier vidéo correspondant
             fichier_video = trouver_fichier_video(fichier, recording_folder_path)
             if fichier_video:
@@ -28,7 +28,7 @@ def main():
                 os.makedirs(dossier_sortie_video, exist_ok=True)
 
                 #********************* Intervalles vers extraits
-                extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
+                # extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
 
 # Fonction pour trouver le fichier vidéo correspondant au fichier CSV
 def trouver_fichier_video(fichier_csv, dossier_videos):

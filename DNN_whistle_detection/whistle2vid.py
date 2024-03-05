@@ -54,7 +54,7 @@ def lire_csv_extraits(nom_fichier):
                 intervals.append((debut, fin))
     return intervals
 
-def fusionner_intervalles(intervalles, hwindow = 4):
+def fusionner_intervalles(intervalles, hwindow=4):
     # Trier les intervalles par début
     intervalles.sort(key=lambda x: x[0])
     
@@ -66,10 +66,10 @@ def fusionner_intervalles(intervalles, hwindow = 4):
         debut, fin = intervalle
         
         # Arrondir la borne initiale à la seconde inférieure et convertir en entier
-        debut_arrondi = int(debut)-hwindow
+        debut_arrondi = int(debut) - hwindow
         
         # Arrondir la borne finale à la seconde supérieure et convertir en entier
-        fin_arrondi = int(fin + 0.9999)+hwindow
+        fin_arrondi = int(fin + 0.9999) + hwindow
         
         # Si la liste résultante est vide ou si l'intervalle ne se chevauche pas avec le dernier intervalle fusionné
         if not intervalles_fusionnes or debut_arrondi > intervalles_fusionnes[-1][1]:
@@ -78,7 +78,23 @@ def fusionner_intervalles(intervalles, hwindow = 4):
             # Fusionner l'intervalle avec le dernier intervalle fusionné
             intervalles_fusionnes[-1] = (intervalles_fusionnes[-1][0], max(intervalles_fusionnes[-1][1], fin_arrondi))
     
+    # Ajuster les bornes du premier et du dernier intervalle fusionné si nécessaire
+    if intervalles_fusionnes:
+        premier_intervalle = intervalles_fusionnes[0]
+        dernier_intervalle = intervalles_fusionnes[-1]
+        
+        if premier_intervalle[0] < 0:
+            premier_intervalle = (0, premier_intervalle[1])
+        
+        if dernier_intervalle[1] > 1800:
+            dernier_intervalle = (dernier_intervalle[0], 1800)
+        
+        intervalles_fusionnes[0] = premier_intervalle
+        intervalles_fusionnes[-1] = dernier_intervalle
+    
     return intervalles_fusionnes
+
+
 
 def extraire_extraits_video(intervalles, fichier_video, dossier_sortie='./'):
     # Chargement de la vidéo
@@ -120,7 +136,7 @@ fichier_csv = "/media/DOLPHIN_ALEXIS/temp_alexis/Label_01_Aug_2023_0845_channel_
 #********************* txt vers csv
 # # Spécifiez le chemin vers le fichier texte d'entrée et le fichier CSV de sortie
 
-convertir_texte_en_csv(fichier_texte, fichier_csv, skip_lines=1)
+# convertir_texte_en_csv(fichier_texte, fichier_csv, skip_lines=1)
 
 
 
