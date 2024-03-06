@@ -1,6 +1,7 @@
 # =============================================================================
 #********************* IMPORTS
 # =============================================================================
+
 import warnings
 import sys
 import os
@@ -21,7 +22,6 @@ import tensorflow as tf
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 matplotlib.use('Agg')
-from PIL import Image
 
 # =============================================================================
 #********************* FUNCTIONS
@@ -53,7 +53,7 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     
     df.to_csv(csv_path, index=False)
 
-def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
+def process_audio_file(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
                        nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px=903,
                        target_height_px=677):
     try:
@@ -61,7 +61,9 @@ def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0,
         fs, x = wavfile.read(file_path)
     except FileNotFoundError:
         raise FileNotFoundError(f"File {file_path} not found.")
-
+            # Create the saving folder if it doesn't exist
+    if save and not os.path.exists(saving_folder):
+        os.makedirs(saving_folder)
     # Calculate the spectrogram parameters
     hop = round(0.8 * wlen)  # window hop size
     win = blackman(wlen, sym=False)
@@ -95,12 +97,7 @@ def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0,
         
         # Adjust margins
         fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
-
-        
-        # Create the saving folder if it doesn't exist
-        if save and not os.path.exists(saving_folder):
-            os.makedirs(saving_folder)
-        
+      
         # Save the spectrogram as a JPG image without borders
         if save:
             image_name = os.path.join(saving_folder, f"{file_name}-{file_name_ex}.jpg")
@@ -119,15 +116,24 @@ def process_audio_file(file_path, saving_folder="", batch_size=50, start_time=0,
 
     return images
 
-def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_time = 1800, batch_size=50, save=False, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
+def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_time = 1800, batch_size=50, save=False, save_p = True, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
     files = os.listdir(recording_folder_path)
     model = tf.keras.models.load_model(model_path)
     batch_duration = batch_size * 0.4
+    
     for file_name in tqdm(files, desc="Processing Files", position=0, leave=False, colour='green'):
+        print("Processing:", file_name)
+        saving_folder = os.path.join(saving_folder, f"{file_name}")
+        saving_positive = os.path.join(saving_folder, "positive")
+        if save_p and not os.path.exists(saving_folder):
+            os.makedirs(saving_positive)
+        prediction_file_path = os.path.join(saving_folder, f"predictions/{file_name}_predictions.csv")
         file_path = os.path.join(recording_folder_path, file_name)
         # Check if the file is a directory or not an audio file
-        if os.path.isdir(file_path) or not file_name.lower().endswith(('.wav', '.wave')):
+        if os.path.isdir(file_path) or not file_name.lower().endswith(('.wav', '.wave')) or os.path.exists(prediction_file_path):
+            print(f"Non-audio or prediction file already exists for {file_name}. Skipping processing.")
             continue  # Skip directories and non-audio files
+                
         if not os.path.isdir(file_path):
             fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
             N = len(x)  # Longueur du signal
@@ -148,7 +154,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
                     for idx, image in enumerate(images):
                         image_start_time = start + idx * 0.4
                         image_end_time = image_start_time + 0.4
-                        
+                        im_cop = image
                         image = cv2.resize(image, (224, 224))
                         image = np.expand_dims(image, axis=0)
                         image = preprocess_input(image)
@@ -159,6 +165,12 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
                             positive_initial.append(image_start_time)
                             positive_finish.append(image_end_time)
                             class_1_scores.append(prediction[0][1])
+                        
+                            if save_p:
+                                saving_folder = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_images'
+                                saving_positive = os.path.join(saving_folder, "positive")
+                                image_name = os.path.join(saving_positive, f"{file_name}/{image_start_time}-{image_end_time}.jpg")
+                                cv2.imwrite(image_name, im_cop)  # Save the image using OpenCV
 
                     sys.stdout = sys.__stdout__
 

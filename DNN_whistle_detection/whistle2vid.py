@@ -94,8 +94,6 @@ def fusionner_intervalles(intervalles, hwindow=4):
     
     return intervalles_fusionnes
 
-
-
 def extraire_extraits_video(intervalles, fichier_video, dossier_sortie='./'):
     # Chargement de la vidéo
     video = mp.VideoFileClip(fichier_video)
