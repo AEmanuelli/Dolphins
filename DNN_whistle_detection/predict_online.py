@@ -123,17 +123,18 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
     
     for file_name in tqdm(files, desc="Processing Files", position=0, leave=False, colour='green'):
         print("Processing:", file_name)
-        saving_folder = os.path.join(saving_folder, f"{file_name}")
-        saving_positive = os.path.join(saving_folder, "positive")
-        if save_p and not os.path.exists(saving_folder):
-            os.makedirs(saving_positive)
-        prediction_file_path = os.path.join(saving_folder, f"predictions/{file_name}_predictions.csv")
+        prediction_file_path = f"predictions/{file_name}_predictions.csv"
+        saving_folder_file = os.path.join(saving_folder, f"{file_name}")
+        saving_positive = os.path.join(saving_folder_file, "positive")
         file_path = os.path.join(recording_folder_path, file_name)
+        if file_path != "/media/DOLPHIN_ALEXIS1/2023/Exp_01_Aug_2023_0845_channel_1.wav":
+            continue
         # Check if the file is a directory or not an audio file
-        if os.path.isdir(file_path) or not file_name.lower().endswith(('.wav', '.wave')) or os.path.exists(prediction_file_path):
-            print(f"Non-audio or prediction file already exists for {file_name}. Skipping processing.")
+        if os.path.isdir(file_path) or not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or (os.path.exists(prediction_file_path) & os.path.exists(saving_positive)):
+            print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
             continue  # Skip directories and non-audio files
-                
+        if save_p and not os.path.exists(saving_folder_file):
+            os.makedirs(saving_positive)
         if not os.path.isdir(file_path):
             fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
             N = len(x)  # Longueur du signal
@@ -147,7 +148,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
             num_batches = int(np.ceil(total_duration / batch_duration))
             for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):  # Divisez le fichier en tranches de 40 secondes
                     start = batch*batch_duration + start_time
-                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder, batch_size=batch_size, 
+                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder_file, batch_size=batch_size, 
                                                 start_time=start, end_time=end_time, save=save)
                     sys.stdout = open(os.devnull, 'w')
 
@@ -167,9 +168,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
                             class_1_scores.append(prediction[0][1])
                         
                             if save_p:
-                                saving_folder = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_images'
-                                saving_positive = os.path.join(saving_folder, "positive")
-                                image_name = os.path.join(saving_positive, f"{file_name}/{image_start_time}-{image_end_time}.jpg")
+                                image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
                                 cv2.imwrite(image_name, im_cop)  # Save the image using OpenCV
 
                     sys.stdout = sys.__stdout__
