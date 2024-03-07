@@ -19,6 +19,7 @@ import cv2
 import concurrent.futures
 from tensorflow.keras.applications.vgg16 import preprocess_input
 import tensorflow as tf 
+from multiprocessing import Pool, cpu_count
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 matplotlib.use('Agg')
@@ -117,63 +118,74 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
 
     return images
 
-def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_time = 1800, batch_size=50, save=False, save_p = True, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
+def process_file(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, save, save_p, model):
+    prediction_file_path = f"predictions/{file_name}_predictions.csv"
+    saving_folder_file = os.path.join(saving_folder, f"{file_name}")
+    saving_positive = os.path.join(saving_folder_file, "positive")
+    file_path = os.path.join(recording_folder_path, file_name)
+    
+    # if file_path != "/media/DOLPHIN_ALEXIS/2023/Exp_01_Aug_2023_0845_channel_1.wav":
+    #     return
+    
+    # Check if the file is a directory or not an audio file
+    if os.path.isdir(file_path) or not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or (os.path.exists(prediction_file_path) & os.path.exists(saving_positive)):
+        print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
+        return  # Skip directories and non-audio files
+    
+    if save_p and not os.path.exists(saving_folder_file):
+        os.makedirs(saving_positive)
+    
+    if not os.path.isdir(file_path):
+        fs, x = wavfile.read(file_path)
+        N = len(x)  # Longueur du signal
+        
+        if end_time is not None:
+            N = min(N, int(end_time * fs))
+        
+        total_duration = (N / fs) - start_time  # Durée totale du fichier audio à partir du temps de départ
+        record_names = []
+        positive_initial = []
+        positive_finish = []
+        class_1_scores = []
+        num_batches = int(np.ceil(total_duration / (batch_size * 0.4)))
+        
+        for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):
+            start = batch * batch_size * 0.4 + start_time
+            images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, 
+                                        start_time=start, end_time=end_time, save=save)
+            
+            for idx, image in enumerate(images):
+                image_start_time = start + idx * 0.4
+                image_end_time = image_start_time + 0.4
+                im_cop = image
+                image = cv2.resize(image, (224, 224))
+                image = np.expand_dims(image, axis=0)
+                image = preprocess_input(image)
+                prediction = model.predict(image)
+                
+                if prediction[0][1] > prediction[0][0]:
+                    record_names.append(file_name)
+                    positive_initial.append(image_start_time)
+                    positive_finish.append(image_end_time)
+                    class_1_scores.append(prediction[0][1])
+                    
+                    if save_p:
+                        image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
+                        cv2.imwrite(image_name, im_cop)
+        
+        save_csv(record_names, positive_initial, positive_finish, class_1_scores, f"predictions/{file_name}_predictions.csv")
+
+def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_time=1800, batch_size=50, save=False, save_p=True, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
     files = os.listdir(recording_folder_path)
     model = tf.keras.models.load_model(model_path)
-    batch_duration = batch_size * 0.4
     
-    for file_name in tqdm(files, desc="Processing Files", position=0, leave=False, colour='green'):
-        print("Processing:", file_name)
-        prediction_file_path = f"predictions/{file_name}_predictions.csv"
-        saving_folder_file = os.path.join(saving_folder, f"{file_name}")
-        saving_positive = os.path.join(saving_folder_file, "positive")
-        file_path = os.path.join(recording_folder_path, file_name)
-        if file_path != "/media/DOLPHIN_ALEXIS/2023/Exp_01_Aug_2023_0845_channel_1.wav":
-            continue
-        # Check if the file is a directory or not an audio file
-        if os.path.isdir(file_path) or not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or (os.path.exists(prediction_file_path) & os.path.exists(saving_positive)):
-            print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
-            continue  # Skip directories and non-audio files
-        if save_p and not os.path.exists(saving_folder_file):
-            os.makedirs(saving_positive)
-        if not os.path.isdir(file_path):
-            fs, x = wavfile.read(os.path.join(recording_folder_path, file_name))
-            N = len(x)  # Longueur du signal
-            if end_time is not None:
-                N = min(N, int(end_time * fs))
-            total_duration = (N / fs) - start_time  # Durée totale du fichier audio à partir du temps de départ
-            record_names = []
-            positive_initial = []
-            positive_finish = []
-            class_1_scores = []
-            num_batches = int(np.ceil(total_duration / batch_duration))
-            for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):  # Divisez le fichier en tranches de 40 secondes
-                    start = batch*batch_duration + start_time
-                    images = process_audio_file(os.path.join(recording_folder_path, file_name), saving_folder_file, batch_size=batch_size, 
-                                                start_time=start, end_time=end_time, save=save)
-                    sys.stdout = open(os.devnull, 'w')
-
-                    for idx, image in enumerate(images):
-                        image_start_time = start + idx * 0.4
-                        image_end_time = image_start_time + 0.4
-                        im_cop = image
-                        image = cv2.resize(image, (224, 224))
-                        image = np.expand_dims(image, axis=0)
-                        image = preprocess_input(image)
-                        prediction = model.predict(image)
-                        
-                        if prediction[0][1] > prediction[0][0]:
-                            record_names.append(file_name)
-                            positive_initial.append(image_start_time)
-                            positive_finish.append(image_end_time)
-                            class_1_scores.append(prediction[0][1])
-                        
-                            if save_p:
-                                image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
-                                cv2.imwrite(image_name, im_cop)  # Save the image using OpenCV
-
-                    sys.stdout = sys.__stdout__
-
-            save_csv(record_names, positive_initial, positive_finish, class_1_scores, f"predictions/{file_name}_predictions.csv")
-
-
+    with concurrent.futures.ThreadPoolExecutor(max_workers=cpu_count()) as executor:
+        futures = []
+        for file_name in files:
+            futures.append(executor.submit(process_file, file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, save, save_p, model))
+        
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                print(f"An error occurred: {e}")

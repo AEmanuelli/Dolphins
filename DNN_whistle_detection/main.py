@@ -1,4 +1,5 @@
-from predict_online import *
+# from predict_online import process_and_predict
+from predict_online_parallel import *
 from whistle2vid import lire_csv_extraits, fusionner_intervalles, extraire_extraits_video
 
 # =============================================================================
@@ -7,9 +8,9 @@ from whistle2vid import lire_csv_extraits, fusionner_intervalles, extraire_extra
 def main():
     model_path = "models/model_vgg.h5"
     # recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings'
-    recording_folder_path = "/media/DOLPHIN_ALEXIS1/2023"
+    recording_folder_path = "/media/DOLPHIN_ALEXIS/2023"
     saving_folder_image = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_images'
-    dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_predictions"
+    dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
 
     #********************* Créer les fichiers CSV 
     process_and_predict(recording_folder_path, saving_folder_image, start_time=0, end_time=1800, save_p =True, save=False)
