@@ -1,6 +1,6 @@
 # from predict_online import process_and_predict
-from predict_online_parallel import *
-from whistle2vid import lire_csv_extraits, fusionner_intervalles, extraire_extraits_video
+from predict_online import *
+from whistle2vid import lire_csv_extraits, fusionner_intervalles, extraire_extraits_video, trouver_fichier_video
 
 # =============================================================================
 #********************* MAIN
@@ -13,7 +13,7 @@ def main():
     dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
 
     #********************* Créer les fichiers CSV 
-    process_and_predict(recording_folder_path, saving_folder_image, start_time=0, end_time=1800, save_p =True, save=False)
+    process_and_predict(recording_folder_path, saving_folder_image, start_time=1780, end_time=1800, save_p =True, save=False)
 
     #********************* CSV vers intervalles 
     for fichier in os.listdir(dossier_csv):
@@ -33,25 +33,6 @@ def main():
                 #********************* Intervalles vers extraits
                 extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
 
-# Fonction pour trouver le fichier vidéo correspondant au fichier CSV
-def trouver_fichier_video(fichier_csv, dossier_videos):
-    # Extraire la date et l'heure du nom de fichier CSV
-    elements_nom_csv = fichier_csv.split("_")
-    date_heure_csv = elements_nom_csv[2] + "_" + elements_nom_csv[3]  # Format: "Aug_2023_0845"
-
-    # Parcourir tous les fichiers vidéo dans le dossier
-    for fichier_video in os.listdir(dossier_videos):
-        if fichier_video.endswith(".mp4"):
-            # Extraire la date et l'heure du nom de fichier vidéo
-            elements_nom_video = fichier_video.split("_")
-            date_heure_video = elements_nom_video[2] + "_" + elements_nom_video[3]  # Format: "Aug_2023_1645"
-
-            # Comparer les dates et heures pour trouver une correspondance
-            if date_heure_csv == date_heure_video:
-                return os.path.join(dossier_videos, fichier_video)
-
-    print(f"Aucun fichier vidéo correspondant trouvé pour le fichier CSV {fichier_csv}")
-    return None
 
 if __name__ == "__main__":
     main()

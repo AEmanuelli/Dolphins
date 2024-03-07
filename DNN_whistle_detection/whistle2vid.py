@@ -121,6 +121,24 @@ def extraire_extraits_video(intervalles, fichier_video, dossier_sortie='./'):
     # Libérer la mémoire en supprimant l'objet VideoFileClip
     video.close()
 
+def trouver_fichier_video(fichier_csv, dossier_videos):
+    # Extraire la date et l'heure du nom de fichier CSV
+    elements_nom_csv = fichier_csv.split("_")
+    date_heure_csv = elements_nom_csv[2] + "_" + elements_nom_csv[3]  # Format: "Aug_2023_0845"
+
+    # Parcourir tous les fichiers vidéo dans le dossier
+    for fichier_video in os.listdir(dossier_videos):
+        if fichier_video.endswith(".mp4"):
+            # Extraire la date et l'heure du nom de fichier vidéo
+            elements_nom_video = fichier_video.split("_")
+            date_heure_video = elements_nom_video[2] + "_" + elements_nom_video[3]  # Format: "Aug_2023_1645"
+
+            # Comparer les dates et heures pour trouver une correspondance
+            if date_heure_csv == date_heure_video:
+                return os.path.join(dossier_videos, fichier_video)
+
+    print(f"Aucun fichier vidéo correspondant trouvé pour le fichier CSV {fichier_csv}")
+    return None
 #%%
 # =============================================================================
 #********************* UTILISATION
