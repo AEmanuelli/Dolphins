@@ -58,13 +58,13 @@ def process_non_empty_file(prediction_file_path, file_name, recording_folder_pat
         extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
 
 def handle_empty_file(prediction_file_path, file_name):
-    txt_file_path = f"no_whistles_detected_{file_name}.txt"
+    txt_file_path =  prediction_file_path + f"/{file_name}.txt"
     with open(txt_file_path, 'w') as txt_file:
         txt_file.write("No whistles detected")
     print(f"Empty CSV file for {file_name}. No video extraction will be performed. A message has been saved to {txt_file_path}.")
 
 def handle_missing_file(prediction_file_path, file_name):
-    txt_file_path = f"No_CSV_found_{file_name}.txt"
+    txt_file_path = prediction_file_path + f"/{file_name}.txt"
     with open(txt_file_path, 'w') as txt_file:
         txt_file.write("No CSV found")
     print(f"Missing CSV file for {file_name}. No video extraction will be performed.")

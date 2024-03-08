@@ -16,10 +16,11 @@ from tqdm import tqdm
 import cProfile
 import pstats
 import cv2
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 from tensorflow.keras.applications.vgg16 import preprocess_input
-import tensorflow as tf 
-from multiprocessing import Pool, cpu_count
+from whistle2vid import *
+import tensorflow as tf
+import concurrent.futures
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 matplotlib.use('Agg')
@@ -27,6 +28,49 @@ matplotlib.use('Agg')
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
+
+def process_prediction_file(prediction_file_path, file_name, recording_folder_path):
+    go = True 
+    with open(prediction_file_path, 'r') as file:
+        lines = file.readlines()
+        if len(lines) <= 1:
+            go = False
+    if os.path.exists(prediction_file_path) and go :
+        # File exists and is not empty
+        process_non_empty_file(prediction_file_path, file_name, recording_folder_path)
+    elif os.path.exists(prediction_file_path):
+        # File exists but is empty
+        handle_empty_file(prediction_file_path, file_name)
+    else:
+        # File is missing
+        handle_missing_file(prediction_file_path, file_name)
+
+def process_non_empty_file(prediction_file_path, file_name, recording_folder_path):
+    intervalles = lire_csv_extraits(prediction_file_path)
+    intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
+    # print(intervalles_fusionnes)
+
+    fichier_video = trouver_fichier_video(file_name, recording_folder_path)
+    if fichier_video:
+        filename = "_".join(os.path.splitext(file_name)[0].split("_")[:7])
+        dossier_sortie_video = f"./extraits/{filename}"
+        os.makedirs(dossier_sortie_video, exist_ok=True)
+
+        extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
+
+def handle_empty_file(prediction_file_path, file_name):
+    dossier_sortie_video = f"./extraits/{file_name}"
+    txt_file_path = os.path.join(dossier_sortie_video, f"No_whistles_detected.txt")
+    with open(txt_file_path, 'w') as txt_file:
+        txt_file.write(f"No whistles detected in {file_name} ")
+    print(f"Empty CSV file for {file_name}. No video extraction will be performed. A message has been saved to {txt_file_path}.")
+
+def handle_missing_file(prediction_file_path, file_name):
+    dossier_sortie_video = f"./extraits/{file_name}"
+    txt_file_path = os.path.join(dossier_sortie_video, f"No_CSV_found.txt")
+    with open(txt_file_path, 'w') as txt_file:
+        txt_file.write(f"No CSV found in {file_name}")
+    print(f"Missing CSV file for {file_name}. No video extraction will be performed.")
 
 def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
     part = file_path.split('wav-')
@@ -118,93 +162,95 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
 
     return images
 
-def process_file(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, save, save_p, model):
-    prediction_file_path = f"predictions/{file_name}_predictions.csv"
-    saving_folder_file = os.path.join(saving_folder, f"{file_name}")
-    saving_positive = os.path.join(saving_folder_file, "positive")
-    file_path = os.path.join(recording_folder_path, file_name)
-    
-    # Check if the file is a directory or not an audio file
-    if os.path.isdir(file_path) or not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or (os.path.exists(prediction_file_path) & os.path.exists(saving_positive)):
-        print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
-        return  # Skip directories and non-audio files
-    
-    if save_p and not os.path.exists(saving_folder_file):
-        os.makedirs(saving_positive)
-    
-    if not os.path.isdir(file_path):
-        fs, x = wavfile.read(file_path)
-        N = len(x)  # Longueur du signal
+def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file):
+    file_name = os.path.basename(file_path)
+    fs, x = wavfile.read(file_path)
+    N = len(x)
+
+    if end_time is not None:
+        N = min(N, int(end_time * fs))
+
+    total_duration = (N / fs) - start_time
+    record_names = []
+    positive_initial = []
+    positive_finish = []
+    class_1_scores = []
+    num_batches = int(np.ceil(total_duration / batch_duration))
+
+    for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):
+        start = batch * batch_duration + start_time
+        images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
+        saving_positive = os.path.join(saving_folder_file, "positive")
         
-        if end_time is not None:
-            N = min(N, int(end_time * fs))
-        
-        total_duration = (N / fs) - start_time  # Durée totale du fichier audio à partir du temps de départ
-        record_names = []
-        positive_initial = []
-        positive_finish = []
-        class_1_scores = []
-        num_batches = int(np.ceil(total_duration / (batch_size * 0.4)))
-        
-        for batch in range(num_batches):
-            start = batch * batch_size * 0.4 + start_time
-            images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, 
-                                        start_time=start, end_time=end_time, save=save)
+        sys.stdout = open(os.devnull, 'w')
+
+        for idx, image in enumerate(images):
+            image_start_time = start + idx * 0.4
+            image_end_time = image_start_time + 0.4
+            im_cop = image
+            image = cv2.resize(image, (224, 224))
+            image = np.expand_dims(image, axis=0)
+            image = preprocess_input(image)
+            prediction = model.predict(image)
             
-            for idx, image in enumerate(images):
-                image_start_time = start + idx * 0.4
-                image_end_time = image_start_time + 0.4
-                im_cop = image
-                image = cv2.resize(image, (224, 224))
-                image = np.expand_dims(image, axis=0)
-                image = preprocess_input(image)
-                prediction = model.predict(image)
-                
-                if prediction[0][1] > prediction[0][0]:
-                    record_names.append(file_name)
-                    positive_initial.append(image_start_time)
-                    positive_finish.append(image_end_time)
-                    class_1_scores.append(prediction[0][1])
-                    
-                    if save_p:
-                        image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
-                        cv2.imwrite(image_name, im_cop)
+            if prediction[0][1] > prediction[0][0]:
+                record_names.append(file_name)
+                positive_initial.append(image_start_time)
+                positive_finish.append(image_end_time)
+                class_1_scores.append(prediction[0][1])
+            
+                if save_p:
+                    if not os.path.exists(saving_folder_file):
+                        os.makedirs(saving_positive)
+                    image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
+                    cv2.imwrite(image_name, im_cop)
+
+        sys.stdout = sys.__stdout__
         
-        save_csv(record_names, positive_initial, positive_finish, class_1_scores, f"predictions/{file_name}_predictions.csv")
-        
-        # Process the generated CSV file and extract video clips if not empty
-        if os.path.exists(prediction_file_path) and os.path.getsize(prediction_file_path) > 0:
-            intervalles = lire_csv_extraits(prediction_file_path)
-            intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
-            print(intervalles_fusionnes)
+    return record_names, positive_initial, positive_finish, class_1_scores
 
-            # Trouver le fichier vidéo correspondant
-            fichier_video = trouver_fichier_video(file_name, recording_folder_path)
-            if fichier_video:
-                filename = "_".join(os.path.splitext(file_name)[0].split("_")[:7])
-                dossier_sortie_video = f"./extraits/{filename}"  #_{channel}"
-                os.makedirs(dossier_sortie_video, exist_ok=True)
+def process_predict_extract_worker(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, save_p, model_path, csv_path, pbar):
+    pbar.set_postfix(file=file_name)
+    date_and_channel = os.path.splitext(file_name)[0]
+    print("Processing:", date_and_channel)
+    prediction_file_path = f"predictions/{file_name}_predictions.csv"
+    saving_folder_file = os.path.join(saving_folder, f"{date_and_channel}")
 
-                # Intervalles vers extraits
-                extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
-        else:
-            # Write "No whistles detected" to a txt file
-            txt_file_path = f"no_whistles_detected_{file_name}.txt"
-            with open(txt_file_path, 'w') as txt_file:
-                txt_file.write("No whistles detected")
-            print(f"Empty or missing CSV file for {file_name}. Skipping video extraction. Message saved to {txt_file_path}.")
+    file_path = os.path.join(recording_folder_path, file_name)
 
-def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_time=1800, batch_size=50, save=False, save_p=True, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
-    files = os.listdir(recording_folder_path)
-    model = tf.keras.models.load_model(model_path)
+    if os.path.isdir(file_path) or not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or (os.path.exists(prediction_file_path)): #and os.path.exists(saving_positive)):
+        print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
+        return
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=cpu_count()) as executor:
+    model = tf.keras.models.load_model(model_path)
+    batch_duration = batch_size * 0.4
+    record_names, positive_initial, positive_finish, class_1_scores = process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file)
+    save_csv(record_names, positive_initial, positive_finish, class_1_scores, prediction_file_path)    
+    process_prediction_file(prediction_file_path, file_name, recording_folder_path)
+    pbar.update()
+
+def process_predict_extract(recording_folder_path, saving_folder, start_time=1750, end_time=1800, batch_size=50, save=False, save_p=True, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
+    files = os.listdir(recording_folder_path)
+    batch_duration = batch_size * 0.4
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
-        for file_name in files:
-            futures.append(executor.submit(process_file, file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, save, save_p, model))
-        
-        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Processing Files", position=0, leave=False, colour='green'):
-            try:
+        with tqdm(total=len(files), desc="Processing Files", position=0, leave=False, colour='green') as pbar:
+            for file_name in files:
+                futures.append(executor.submit(process_predict_extract_worker, file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, save_p, model_path, csv_path, pbar))
+            
+            for future in concurrent.futures.as_completed(futures):
                 future.result()
-            except Exception as e:
-                print(f"An error occurred: {e}")
+
+def main():
+    model_path = "models/model_vgg.h5"
+    recording_folder_path = "/media/DOLPHIN_ALEXIS/2023"  # Update with your actual path
+    saving_folder_image = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_images'  # Update with your actual path
+    dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"  # Update with your actual path
+    
+    process_predict_extract(recording_folder_path, saving_folder_image, start_time=0, 
+                            end_time=1800, batch_size=50, save=False, save_p=True, 
+                            model_path="models/model_vgg.h5", csv_path="predictions.csv")
+
+if __name__ == "__main__":
+    main()
