@@ -1,38 +1,37 @@
-# from predict_online import process_and_predict
-from predict_online import *
-from whistle2vid import lire_csv_extraits, fusionner_intervalles, extraire_extraits_video, trouver_fichier_video
+import os
+import shutil
 
-# =============================================================================
-#********************* MAIN
-# =============================================================================
-def main():
-    model_path = "models/model_vgg.h5"
-    # recording_folder_path = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/recordings'
-    recording_folder_path = "/media/DOLPHIN_ALEXIS/2023"
-    saving_folder_image = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_images'
-    dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
+def move_files(source_dir, target_dir, file_extension):
+    for root, dirs, files in os.walk(source_dir):
+        for file in files:
+            if file.endswith(file_extension):
+                source_file_path = os.path.join(root, file)
+                target_file_path = os.path.join(target_dir, file)
+                shutil.move(source_file_path, target_file_path)
 
-    #********************* Créer les fichiers CSV 
-    process_and_predict(recording_folder_path, saving_folder_image, start_time=1780, end_time=1800, save_p =True, save=False)
+def merge_folders(folder1, folder2, folder3):
+    for root, dirs, files in os.walk(folder3):
+        for file in files:
+            if file.endswith(".csv"):
+                source_file_path = os.path.join(root, file)
+                # Extracting date and time from CSV filename
+                date_time = "_".join(file.split("_")[2:4])
+                # Finding corresponding video file
+                video_file = f"Exp_{date_time}_channel_1.wav.mp4"
+                video_source_dir = os.path.join(folder2, video_file)
+                video_target_dir = os.path.join(folder1, date_time)
+                os.makedirs(video_target_dir, exist_ok=True)
+                # Moving CSV file to "extraits" folder
+                shutil.move(source_file_path, folder2)
+                # Moving video file to "2023_images" folder
+                shutil.move(video_source_dir, video_target_dir)
 
-    #********************* CSV vers intervalles 
-    for fichier in os.listdir(dossier_csv):
-        if fichier.endswith(".csv"):  # Vérifie si le fichier est un fichier CSV
-            chemin_fichier = os.path.join(dossier_csv, fichier)
-            intervalles = lire_csv_extraits(chemin_fichier)
-            intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
-            print(intervalles_fusionnes)
+# Chemins des dossiers
+dossier_2023_extraits = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_images"
+dossier_extraits = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/extraits"
+dossier_predictions = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
 
-            #********************* Trouver le fichier vidéo correspondant
-            fichier_video = trouver_fichier_video(fichier, recording_folder_path)
-            if fichier_video:
-                filename = "_".join(os.path.splitext(fichier)[0].split("_")[:7])
-                dossier_sortie_video = f"./extraits/{filename}"#_{channel}"
-                os.makedirs(dossier_sortie_video, exist_ok=True)
+# Fusion des dossiers
+merge_folders(dossier_2023_extraits, dossier_extraits, dossier_predictions)
 
-                #********************* Intervalles vers extraits
-                extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
-
-
-if __name__ == "__main__":
-    main()
+print("Fusion des dossiers terminée avec succès !")

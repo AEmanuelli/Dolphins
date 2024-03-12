@@ -56,19 +56,16 @@ def process_non_empty_file(prediction_file_path, file_name, recording_folder_pat
         os.makedirs(dossier_sortie_video, exist_ok=True)
 
         extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
-
 def handle_empty_file(prediction_file_path, file_name):
     txt_file_path =  prediction_file_path + f"/{file_name}.txt"
     with open(txt_file_path, 'w') as txt_file:
         txt_file.write("No whistles detected")
     print(f"Empty CSV file for {file_name}. No video extraction will be performed. A message has been saved to {txt_file_path}.")
-
 def handle_missing_file(prediction_file_path, file_name):
     txt_file_path = prediction_file_path + f"/{file_name}.txt"
     with open(txt_file_path, 'w') as txt_file:
         txt_file.write("No CSV found")
     print(f"Missing CSV file for {file_name}. No video extraction will be performed.")
-
 def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
     part = file_path.split('wav-')
 
@@ -84,7 +81,6 @@ def prepare_csv_data(file_path, record_names, positive_initial, positive_finish)
     positive_finish.append(fin)
     
     return record_names, positive_initial, positive_finish
-
 def save_csv(record_names, positive_initial, positive_finish, class_1_scores, csv_path):
     df = {'file_name': record_names,
     'initial_point': positive_initial,
@@ -94,7 +90,6 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
     df = pd.DataFrame(df)
     
     df.to_csv(csv_path, index=False)
-
 def process_audio_file(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
                        nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px=903,
                        target_height_px=677):
@@ -226,15 +221,3 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=175
         save_csv(record_names, positive_initial, positive_finish, class_1_scores, prediction_file_path)    
         process_prediction_file(prediction_file_path, file_name, recording_folder_path)
 
-def main():
-    model_path = "models/model_vgg.h5"
-    recording_folder_path = "/media/DOLPHIN_ALEXIS/2023"  # Update with your actual path
-    saving_folder_image = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_images'  # Update with your actual path
-    dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"  # Update with your actual path
-    
-    process_predict_extract(recording_folder_path, saving_folder_image, start_time=0, 
-                            end_time=1800, batch_size=50, save=False, save_p=True, 
-                            model_path="models/model_vgg.h5", csv_path="predictions.csv")
-
-if __name__ == "__main__":
-    main()

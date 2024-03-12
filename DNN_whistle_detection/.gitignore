@@ -1,9 +1,10 @@
 recordings
 image*
-extraits
+extraits/*
 recordings_
 images
 predicted_images
 test_fullpipeline
 corbeille
 2023*
+extraits

@@ -124,7 +124,7 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
     low = int(start_time * fs)
     up = low + int(0.8 * fs)
     file_name_ex = start_time  # the start in second
-    for _ in tqdm(range(batch_size), desc=f"Processing batch : second {start_time} to {start_time+batch_size*.4}", leave=False):
+    for _ in range(batch_size):#, desc=f"Processing batch : second {start_time} to {start_time+batch_size*.4}", leave=False):
         if up > N:  # Check if the upper index exceeds the signal length
             break
         x_w = x[low:up]
@@ -180,6 +180,8 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
     for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):
         start = batch * batch_duration + start_time
         images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
+        # predictions = model.predict(preprocess_input(images))
+        # print(predictions)
         saving_positive = os.path.join(saving_folder_file, "positive")
         
         sys.stdout = open(os.devnull, 'w')
@@ -226,31 +228,52 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
     batch_duration = batch_size * 0.4
     record_names, positive_initial, positive_finish, class_1_scores = process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file)
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, prediction_file_path)    
-    process_prediction_file(prediction_file_path, file_name, recording_folder_path)
+    # process_prediction_file(prediction_file_path, file_name, recording_folder_path)
     pbar.update()
 
 def process_predict_extract(recording_folder_path, saving_folder, start_time=1750, end_time=1800, batch_size=50, save=False, save_p=True, model_path="models/model_vgg.h5", csv_path="predictions.csv"):
     files = os.listdir(recording_folder_path)
-    batch_duration = batch_size * 0.4
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    mask_count = 0  # Compteur pour les fichiers filtrés par le masque
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
         futures = []
         with tqdm(total=len(files), desc="Processing Files", position=0, leave=False, colour='green') as pbar:
             for file_name in files:
-                futures.append(executor.submit(process_predict_extract_worker, file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, save_p, model_path, csv_path, pbar))
-            
+                file_path = os.path.join(recording_folder_path, file_name)
+                prediction_file_path = os.path.join(saving_folder, f"{file_name}.pkl")
+                mask = (os.path.isdir(file_path) or 
+                            not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or 
+                            os.path.exists(prediction_file_path))
+                    
+                if mask:
+                    mask_count += 1
+                    pbar.update(1)  # Incrémenter la barre de progression pour les fichiers filtrés
+                    continue
+                
+                future = executor.submit(process_predict_extract_worker, file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, save_p, model_path, csv_path, pbar)
+                future.add_done_callback(lambda _: pbar.update(1))  # Mettre à jour la barre de progression lorsque le thread termine
+                futures.append(future)
+
             for future in concurrent.futures.as_completed(futures):
                 future.result()
 
-def main():
+def process_prediction_files_in_folder(folder_path, recording_folder_path = "/media/DOLPHIN_ALEXIS/2023"):
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith(".csv"):
+                prediction_file_path = os.path.join(folder_path, file_name)
+                filename = "_".join(os.path.splitext(file_name)[0].split("_")[:7])
+                extract_folder_path = f"./extraits/{filename}"
+                if not os.path.exists(extract_folder_path) or not os.listdir(extract_folder_path):
+                    executor.submit(process_prediction_file, prediction_file_path, file_name, recording_folder_path)
+
+if __name__ == "__main__":
+    dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"  # Update with your actual path
     model_path = "models/model_vgg.h5"
     recording_folder_path = "/media/DOLPHIN_ALEXIS/2023"  # Update with your actual path
     saving_folder_image = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023_images'  # Update with your actual path
     dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"  # Update with your actual path
-    
     process_predict_extract(recording_folder_path, saving_folder_image, start_time=0, 
                             end_time=1800, batch_size=50, save=False, save_p=True, 
                             model_path="models/model_vgg.h5", csv_path="predictions.csv")
-
-if __name__ == "__main__":
-    main()
+    process_prediction_files_in_folder(dossier_csv)
