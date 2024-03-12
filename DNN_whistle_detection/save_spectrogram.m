@@ -2,7 +2,7 @@ clear;clc;
 
 recording_folder_path = 'recordings';
 starting_record_index = 1;
-saving_folder = 'images/';
+saving_folder = 'images_/';
 
 Files=dir(recording_folder_path);
 mask = ismember({Files.name}, {'.', '..'});
