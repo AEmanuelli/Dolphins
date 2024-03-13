@@ -48,7 +48,7 @@ def lire_csv_extraits(nom_fichier):
                 intervals.append((debut, fin))
             except ValueError:
                 # Gérer les erreurs de conversion en nombres flottants dans la première colonne
-                print("Erreur de conversion en nombre flottant. La première colonne sera ignorée.")
+                #print("Erreur de conversion en nombre flottant. La première colonne sera ignorée.")
                 debut = float(row[1])
                 fin = float(row[2])  # Commencer à partir de la deuxième colonne
                 intervals.append((debut, fin))
@@ -94,7 +94,7 @@ def fusionner_intervalles(intervalles, hwindow=4):
     
     return intervalles_fusionnes
 
-def extraire_extraits_video(intervalles, fichier_video, dossier_sortie='./'):
+def extraire_extraits_video(intervalles, fichier_video, dossier_sortie):
     # Chargement de la vidéo
     video = mp.VideoFileClip(fichier_video)
     
@@ -106,32 +106,35 @@ def extraire_extraits_video(intervalles, fichier_video, dossier_sortie='./'):
     total_extraits = len(intervalles)
     
     # Afficher une barre de progression
-    with tqdm(total=total_extraits, desc='Extraction des extraits') as pbar:
+    with tqdm(total=total_extraits, desc=f'Extraction pour {dossier_sortie}') as pbar:
         # Parcourir les intervalles
         for i, intervalle in enumerate(intervalles):
             debut, fin = intervalle
-            # Extraire l'extrait correspondant à l'intervalle
-            extrait = video.subclip(debut, fin)
             nom_sortie = f'extrait_{debut}_{fin}.mp4'  # Nom de sortie basé sur l'intervalle
+
             chemin_sortie = os.path.join(dossier_sortie, nom_sortie)  # Chemin complet de sortie
-            # Sauvegarder l'extrait vidéo
-            extrait.write_videofile(chemin_sortie, verbose=False)
-            pbar.update(1)  # Mettre à jour la barre de progression
-    
+            if not os.path.exists(chemin_sortie):
+                # Extraire l'extrait correspondant à l'intervalle
+                extrait = video.subclip(debut, fin)
+                # Sauvegarder l'extrait vidéo
+                extrait.write_videofile(chemin_sortie, verbose=False)
+            else : 
+                print("zbzbz")
+        
     # Libérer la mémoire en supprimant l'objet VideoFileClip
     video.close()
 
 def trouver_fichier_video(fichier_csv, dossier_videos):
     # Extraire la date et l'heure du nom de fichier CSV
     elements_nom_csv = fichier_csv.split("_")
-    date_heure_csv = elements_nom_csv[2] + "_" + elements_nom_csv[3]  # Format: "Aug_2023_0845"
+    date_heure_csv = elements_nom_csv[1] + "_"+ elements_nom_csv[2] + "_" + elements_nom_csv[3] + "_"+elements_nom_csv[4]  # Format: "Aug_2023_0845"
 
     # Parcourir tous les fichiers vidéo dans le dossier
     for fichier_video in os.listdir(dossier_videos):
         if fichier_video.endswith(".mp4"):
             # Extraire la date et l'heure du nom de fichier vidéo
             elements_nom_video = fichier_video.split("_")
-            date_heure_video = elements_nom_video[2] + "_" + elements_nom_video[3]  # Format: "Aug_2023_1645"
+            date_heure_video = elements_nom_video[1] + "_"+ elements_nom_video[2] + "_" + elements_nom_video[3] + "_" + elements_nom_video[4]  # Format: "Aug_2023_1645"
 
             # Comparer les dates et heures pour trouver une correspondance
             if date_heure_csv == date_heure_video:

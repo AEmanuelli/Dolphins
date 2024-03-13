@@ -127,8 +127,7 @@ def process_and_predict(recording_folder_path, saving_folder, start_time=0, end_
         saving_folder_file = os.path.join(saving_folder, f"{file_name}")
         saving_positive = os.path.join(saving_folder_file, "positive")
         file_path = os.path.join(recording_folder_path, file_name)
-        if file_path != "/media/DOLPHIN_ALEXIS1/2023/Exp_01_Aug_2023_0845_channel_1.wav":
-            continue
+
         # Check if the file is a directory or not an audio file
         if os.path.isdir(file_path) or not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or (os.path.exists(prediction_file_path) & os.path.exists(saving_positive)):
             print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
