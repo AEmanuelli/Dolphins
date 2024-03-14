@@ -1,7 +1,7 @@
 
 
 #mount faadil 
-sshfs sumbre@129.199.19.54:/media/sumbre/DOLPHIN1  /media/DOLPHIN_ALEXIS/
+sshfs sumbre@129.199.19.54:/media/sumbre/DOLPHIN  /media/DOLPHIN_ALEXIS/
 
 
 

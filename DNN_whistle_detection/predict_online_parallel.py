@@ -23,7 +23,7 @@ from whistle2vid import *
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 matplotlib.use('Agg')
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Ignorer les messages d'information et de débogage de TensorFlow
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Igno    rer les messages d'information et de débogage de TensorFlow
 
 
 # =============================================================================
@@ -193,12 +193,13 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
 def process_predict_extract(recording_folder_path, saving_folder, start_time=0, end_time=1800, batch_size=50, 
                             save=False, save_p=True, model_path="models/model_vgg.h5", max_workers = 16):
     files = os.listdir(recording_folder_path)
+    sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(recording_folder_path, x)), reverse=True)
     mask_count = 0  # Compteur pour les fichiers filtrés par le masque
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
-        with tqdm(total=len(files), desc="Processing Files", position=0, leave=False, colour='green') as pbar:
-            for file_name in files:
+        with tqdm(total=len(files), desc="Processing Files", position=0, leave=True, colour='green') as pbar:
+            for file_name in sorted_files:
                 file_path = os.path.join(recording_folder_path, file_name)
                 prediction_file_path = os.path.join(saving_folder, f"{file_name}_predictions.csv")
                 old_pp = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"

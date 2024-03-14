@@ -10,7 +10,7 @@ from predict_online_parallel import process_predict_extract
 if __name__ == "__main__":
     dossier_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023"  # Update with your actual path
     model_path = "models/model_vgg.h5"
-    recording_folder_path = "/media/DOLPHIN_ALEXIS/2023"  # Update with your actual path
+    recording_folder_path = "/media/DOLPHIN_ALEXIS1/2023"  # Update with your actual path
     saving_folder = '/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023'  # Update with your actual path
     dossier_anciens_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"  # Update with your actual path
     process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
