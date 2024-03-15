@@ -94,36 +94,6 @@ def fusionner_intervalles(intervalles, hwindow=4):
     
     return intervalles_fusionnes
 
-def extraire_extraits_video(intervalles, fichier_video, dossier_sortie):
-    # Chargement de la vidéo
-    video = mp.VideoFileClip(fichier_video)
-    
-    # Vérifier si le dossier de sortie existe, sinon le créer
-    if not os.path.exists(dossier_sortie):
-        os.makedirs(dossier_sortie)
-    
-    # Calculer le nombre total d'extraits à générer
-    total_extraits = len(intervalles)
-    
-    # Afficher une barre de progression
-    with tqdm(total=total_extraits, desc=f'Extraction pour {dossier_sortie}') as pbar:
-        # Parcourir les intervalles
-        for i, intervalle in enumerate(intervalles):
-            debut, fin = intervalle
-            nom_sortie = f'extrait_{debut}_{fin}.mp4'  # Nom de sortie basé sur l'intervalle
-
-            chemin_sortie = os.path.join(dossier_sortie, nom_sortie)  # Chemin complet de sortie
-            if not os.path.exists(chemin_sortie):
-                # Extraire l'extrait correspondant à l'intervalle
-                extrait = video.subclip(debut, fin)
-                # Sauvegarder l'extrait vidéo
-                extrait.write_videofile(chemin_sortie, verbose=False)
-            else : 
-                print("zbzbz")
-        
-    # Libérer la mémoire en supprimant l'objet VideoFileClip
-    video.close()
-
 def trouver_fichier_video(fichier_csv, dossier_videos):
     # Extraire la date et l'heure du nom de fichier CSV
     elements_nom_csv = fichier_csv.split("_")
