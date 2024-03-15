@@ -138,12 +138,8 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
     for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):
         start = batch * batch_duration + start_time
         images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
-        # predictions = model.predict(preprocess_input(images))
-        # print(predictions)
         saving_positive = os.path.join(saving_folder_file, "positive")
         
-        # sys.stdout = open(os.devnull, 'w')
-
         for idx, image in enumerate(images):
             image_start_time = start + idx * 0.4
             image_end_time = image_start_time + 0.4
@@ -165,8 +161,12 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
                     image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
                     cv2.imwrite(image_name, im_cop)
 
-        # sys.stdout = sys.__stdout__
+            # Libérer les ressources TensorFlow après chaque prédiction
+            # tf.keras.backend.clear_session()
         
+    # Libérer les ressources GPU explicitement
+    # tf.config.experimental.clear_memory()
+    
     return record_names, positive_initial, positive_finish, class_1_scores
 
 def process_predict_extract_worker(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, 
