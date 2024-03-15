@@ -90,7 +90,6 @@ def process_prediction_files_in_folder(folder_path, recording_folder_path="/medi
                     prediction_file_path = os.path.join(root, file_name)
                     docname = "_".join(os.path.splitext(file_name)[0].split("_")[:7])
                     extract_folder_path = os.path.join(root, "extraits")
-                    if not os.path.exists(extract_folder_path) or not os.listdir(extract_folder_path):
-                        executor.submit(process_prediction_file, prediction_file_path, file_name, recording_folder_path, extract_folder_path)
+                    executor.submit(process_prediction_file, prediction_file_path, file_name, recording_folder_path, extract_folder_path)
 
 
