@@ -30,6 +30,14 @@ matplotlib.use('Agg')
 #********************* FUNCTIONS
 # =============================================================================
 
+
+@tf.function
+def predict_image(image, model):
+    image = cv2.resize(image, (224, 224))
+    image = np.expand_dims(image, axis=0)
+    image = preprocess_input(image)
+    return model.predict(image)
+
 def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
     part = file_path.split('wav-')
 
@@ -141,9 +149,10 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
         saving_positive = os.path.join(saving_folder_file, "positive")
         
         for idx, image in enumerate(images):
+            im_cop = image
             image_start_time = start + idx * 0.4
             image_end_time = image_start_time + 0.4
-            im_cop = image
+
             image = cv2.resize(image, (224, 224))
             image = np.expand_dims(image, axis=0)
             image = preprocess_input(image)
@@ -170,7 +179,7 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
     return record_names, positive_initial, positive_finish, class_1_scores
 
 def process_predict_extract_worker(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, 
-                                   save_p, model_path, pbar):
+                                   save_p, model, pbar):
     pbar.set_postfix(file=file_name)
     date_and_channel = os.path.splitext(file_name)[0]
     print("Processing:", date_and_channel) 
@@ -182,8 +191,6 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
     if os.path.isdir(file_path) or not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or (os.path.exists(prediction_file_path)): #and os.path.exists(saving_positive)):
         print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
         return
-    
-    model = tf.keras.models.load_model(model_path)
     batch_duration = batch_size * 0.4
     record_names, positive_initial, positive_finish, class_1_scores = process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file)
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, prediction_file_path)    
@@ -195,9 +202,10 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
     files = os.listdir(recording_folder_path)
     sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(recording_folder_path, x)), reverse=True)
     mask_count = 0  # Compteur pour les fichiers filtrés par le masque
-    
+    model = tf.keras.models.load_model(model_path)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
+
         with tqdm(total=len(files), desc="Processing Files", position=0, leave=True, colour='green') as pbar:
             for file_name in sorted_files:
                 file_path = os.path.join(recording_folder_path, file_name)
@@ -214,9 +222,11 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
                     continue
                 
                 future = executor.submit(process_predict_extract_worker, file_name, recording_folder_path, 
-                                         saving_folder, start_time, end_time, batch_size, save_p, model_path, pbar)
+                                         saving_folder, start_time, end_time, batch_size, save_p, model, pbar)
                 future.add_done_callback(lambda _: pbar.update(1))  # Mettre à jour la barre de progression lorsque le thread termine
                 futures.append(future)
 
             for future in concurrent.futures.as_completed(futures):
                 future.result()
+
+
