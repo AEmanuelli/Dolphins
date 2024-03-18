@@ -4,7 +4,6 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
 from whistle2vid import *
-import tensorflow as tf
 
 # =============================================================================
 #********************* FUNCTIONS
