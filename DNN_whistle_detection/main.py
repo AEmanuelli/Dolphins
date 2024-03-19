@@ -3,11 +3,11 @@ from predict_online_parallel import process_predict_extract
 import os 
 import sys
 
-# # Redirection de la sortie standard et d'erreur de TensorFlow vers /dev/null (Unix) ou NUL (Windows)
-# if os.name == 'posix':  # Unix
-#     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Ignorer les messages d'information et de débogage de TensorFlow
-#     # sys.stdout = open(os.devnull, 'w')
-# #     sys.stderr = open(os.devnull, 'w')
+# Redirection de la sortie standard et d'erreur de TensorFlow vers /dev/null (Unix) ou NUL (Windows)
+if os.name == 'posix':  # Unix
+    # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Ignorer les messages d'information et de débogage de TensorFlow
+    sys.stdout = open(os.devnull, 'w')
+#     sys.stderr = open(os.devnull, 'w')
 
 if __name__ == "__main__":
     
