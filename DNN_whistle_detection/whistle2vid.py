@@ -102,10 +102,13 @@ def trouver_fichier_video(fichier_csv, dossier_videos):
     # Parcourir tous les fichiers vidéo dans le dossier
     for fichier_video in os.listdir(dossier_videos):
         if fichier_video.endswith(".mp4"):
-            # Extraire la date et l'heure du nom de fichier vidéo
-            elements_nom_video = fichier_video.split("_")
-            date_heure_video = elements_nom_video[1] + "_"+ elements_nom_video[2] + "_" + elements_nom_video[3] + "_" + elements_nom_video[4]  # Format: "Aug_2023_1645"
-
+            try: 
+                # Extraire la date et l'heure du nom de fichier vidéo
+                elements_nom_video = fichier_video.split("_")
+                date_heure_video = elements_nom_video[1] + "_" + elements_nom_video[2] + "_" + elements_nom_video[3] + "_" + elements_nom_video[4]  # Format: "Aug_2023_1645"
+            except IndexError: 
+                # print(f"{fichier_video} n'a pas le bon format.")
+                continue
             # Comparer les dates et heures pour trouver une correspondance
             if date_heure_csv == date_heure_video:
                 return os.path.join(dossier_videos, fichier_video)

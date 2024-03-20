@@ -9,13 +9,14 @@ if os.name == 'posix':  # Unix
     sys.stdout = open(os.devnull, 'w')
 #     sys.stderr = open(os.devnull, 'w')
 
-if __name__ == "__main__":
+if __name__ == "__main__":  
  
     model_path = "models/model_vgg.h5"
+
     # Sur PC Faadil 
     recording_folder_path = "/media/DOLPHIN_ALEXIS1/2023"  
     saving_folder = '/media/DOLPHIN_ALEXIS1/Analyses_alexis/2023_analysed' 
-    dossier_csv = "/media/DOLPHIN_ALEXIS1/Analyses_alexis/2023_analysed" 
+    root = "/media/DOLPHIN_ALEXIS1/Analyses_alexis/2023_analysed" 
     
     # Sur PC Alexis
     # dossier_csv = "/media/DOLPHIN/Analyses_alexis/2023_analysed/"  
@@ -27,4 +28,4 @@ if __name__ == "__main__":
                             end_time=1800, batch_size=75, save=False, save_p=True, 
                             model_path="models/model_vgg.h5", max_workers = 8)
 
-    # process_prediction_files_in_folder(dossier_csv, recording_folder_path=recording_folder_path, max_workers = 16)
+    # process_prediction_files_in_folder(dossier_csv, recording_folder_path=root, max_workers = 16)

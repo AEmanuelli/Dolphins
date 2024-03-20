@@ -157,8 +157,8 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
         
         for idx, image in enumerate(images):
             im_cop = image
-            image_start_time = start + idx * 0.4
-            image_end_time = image_start_time + 0.4
+            image_start_time = round(start + idx * 0.4, 2)
+            image_end_time = round(image_start_time + 0.4, 2)
 
             image = cv2.resize(image, (224, 224))
             image = np.expand_dims(image, axis=0)
