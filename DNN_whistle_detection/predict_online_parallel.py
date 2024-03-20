@@ -15,6 +15,7 @@ from tqdm import tqdm
 import cProfile
 import pstats
 import cv2
+import re
 from concurrent.futures import ThreadPoolExecutor
 from tensorflow.keras.applications.vgg16 import preprocess_input
 import tensorflow as tf
@@ -29,14 +30,19 @@ matplotlib.use('Agg')
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
-
-
-@tf.function
-def predict_image(image, model):
-    image = cv2.resize(image, (224, 224))
-    image = np.expand_dims(image, axis=0)
-    image = preprocess_input(image)
-    return model.predict(image)
+def transform_file_name(file_name):
+    # Utilisation d'une expression régulière pour extraire les parties nécessaires du nom de fichier
+    match = re.match(r'Exp_(\d{2})_(\w{3})_(\d{4})_(\d{4})_channel_(\d)', file_name)
+    if match:
+        day = match.group(1)
+        month = match.group(2)
+        year = match.group(3)[2:]  # Récupération des deux derniers chiffres de l'année
+        time = match.group(4)
+        channel = match.group(5)
+        transformed_name = f"{day}_{month}_{year}_{time}_c{channel}"
+        return transformed_name
+    else:
+        return None
 
 def prepare_csv_data(file_path, record_names, positive_initial, positive_finish):
     part = file_path.split('wav-')
@@ -130,6 +136,7 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
 
 def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file):
     file_name = os.path.basename(file_path)
+    transformed_file_name = transform_file_name(file_name)
     fs, x = wavfile.read(file_path)
     N = len(x)
 
@@ -143,7 +150,7 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
     class_1_scores = []
     num_batches = int(np.ceil(total_duration / batch_duration))
 
-    for batch in tqdm(range(num_batches), desc="Batches", leave=False, colour='blue'):
+    for batch in tqdm(range(num_batches), desc=f"Batches for {transformed_file_name}", leave=False, colour='blue'):
         start = batch * batch_duration + start_time
         images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
         saving_positive = os.path.join(saving_folder_file, "positive")

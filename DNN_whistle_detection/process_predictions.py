@@ -81,14 +81,16 @@ def process_prediction_file(prediction_file_path, file_name, recording_folder_pa
         # File is missing
         handle_missing_file(dossier_sortie_extraits, file_name)
 
-def process_prediction_files_in_folder(folder_path, recording_folder_path="/media/DOLPHIN_ALEXIS1/2023", max_workers = 16):
+def process_folder(root, folder_name, recording_folder_path, extract_folder_path):
+    csv_file_name = folder_name + ".wav_predictions.csv"
+    csv_file_path = os.path.join(root, folder_name, csv_file_name)
+    if os.path.exists(csv_file_path):
+        process_prediction_file(csv_file_path, csv_file_name, recording_folder_path, extract_folder_path)
+
+def process_prediction_files_in_folder(folder_path, recording_folder_path, max_workers=8):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        for root, _, files in os.walk(folder_path):
-            for file_name in files:
-                if file_name.endswith(".csv"):
-                    prediction_file_path = os.path.join(root, file_name)
-                    docname = "_".join(os.path.splitext(file_name)[0].split("_")[:7])
-                    extract_folder_path = os.path.join(root, "extraits")
-                    executor.submit(process_prediction_file, prediction_file_path, file_name, recording_folder_path, extract_folder_path)
-
-
+        for item in os.listdir(folder_path):
+            item_path = os.path.join(folder_path, item)
+            if os.path.isdir(item_path):
+                extract_folder_path = os.path.join(item_path, "extraits")
+                executor.submit(process_folder, folder_path, item, recording_folder_path, extract_folder_path)
