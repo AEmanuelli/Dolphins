@@ -41,7 +41,7 @@ def extraire_extraits_video(intervalles, fichier_video, dossier_sortie):
     video.close()
 
 
-def process_non_empty_file(prediction_file_path, file_name, recording_folder_path, dossier_sortie_video):
+def process_non_empty_file(prediction_file_path, file_name, recording_folder_path, item_path):
     intervalles = lire_csv_extraits(prediction_file_path)
     intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
     # print(intervalles_fusionnes)
@@ -49,23 +49,35 @@ def process_non_empty_file(prediction_file_path, file_name, recording_folder_pat
     fichier_video = trouver_fichier_video(file_name, recording_folder_path)
     if fichier_video:
         filename = "_".join(os.path.splitext(file_name)[0].split("_")[:7])
+        dossier_sortie_video = os.path.join(item_path, "extraits")
         os.makedirs(dossier_sortie_video, exist_ok=True)
 
         extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
 
-def handle_empty_file(dossier_sortie_video, file_name):
+def handle_empty_file(item_path, file_name):
+    dossier_sortie_video = os.path.join(item_path, "pas_d_extraits")
+
+    # # A supprimer après le premier run 
+    # import shutil
+    # dossier_sortie_video_a_supprimer = os.path.join(item_path, "extraits")
+    # shutil.rmtree(dossier_sortie_video_a_supprimer) if os.path.exists(dossier_sortie_video_a_supprimer) else None
+    # ####
+
+    os.makedirs(dossier_sortie_video, exist_ok=True)
     txt_file_path = os.path.join(dossier_sortie_video, f"No_whistles_detected.txt")
     with open(txt_file_path, 'w') as txt_file:
         txt_file.write(f"No whistles detected in {file_name} ")
     print(f"Empty CSV file for {file_name}. No video extraction will be performed. A message has been saved to {txt_file_path}.")
 
-def handle_missing_file(dossier_sortie_video, file_name):
+def handle_missing_file(item_path, file_name):
+    dossier_sortie_video = os.path.join(item_path, "pas_d_extraits")
+    os.makedirs(dossier_sortie_video, exist_ok=True)
     txt_file_path = os.path.join(dossier_sortie_video, f"No_CSV_found.txt")
     with open(txt_file_path, 'w') as txt_file:
         txt_file.write(f"No CSV found in {file_name}")
     print(f"Missing CSV file for {file_name}. No video extraction will be performed.")
 
-def process_prediction_file(prediction_file_path, file_name, recording_folder_path, dossier_sortie_extraits):
+def process_prediction_file(prediction_file_path, file_name, recording_folder_path, item_path):
     go = True 
     with open(prediction_file_path, 'r') as file:
         lines = file.readlines()
@@ -73,13 +85,14 @@ def process_prediction_file(prediction_file_path, file_name, recording_folder_pa
             go = False
     if os.path.exists(prediction_file_path) and go :
         # File exists and is not empty
-        process_non_empty_file(prediction_file_path, file_name, recording_folder_path, dossier_sortie_extraits)
+        process_non_empty_file(prediction_file_path, file_name, recording_folder_path, item_path)
     elif os.path.exists(prediction_file_path):
         # File exists but is empty
-        handle_empty_file(dossier_sortie_extraits, file_name)
+        handle_empty_file(item_path, file_name)
     else:
         # File is missing
-        handle_missing_file(dossier_sortie_extraits, file_name)
+        handle_missing_file(item_path, file_name)
+
 
 def process_folder(root, folder_name, recording_folder_path, extract_folder_path):
     csv_file_name = folder_name + ".wav_predictions.csv"
@@ -92,5 +105,13 @@ def process_prediction_files_in_folder(folder_path, recording_folder_path, max_w
         for item in os.listdir(folder_path):
             item_path = os.path.join(folder_path, item)
             if os.path.isdir(item_path):
-                extract_folder_path = os.path.join(item_path, "extraits")
-                executor.submit(process_folder, folder_path, item, recording_folder_path, extract_folder_path)
+                executor.submit(process_folder, folder_path, item, recording_folder_path, item_path)
+# def process_prediction_files_in_folder(folder_path, recording_folder_path="/media/DOLPHIN_ALEXIS1/2023", max_workers = 16):
+#     with ThreadPoolExecutor(max_workers=max_workers) as executor:
+#         for root, _, files in os.walk(folder_path):
+#             for file_name in files:
+#                 if file_name.endswith(".csv"):
+#                     prediction_file_path = os.path.join(root, file_name)
+#                     docname = "_".join(os.path.splitext(file_name)[0].split("_")[:7])
+#                     extract_folder_path = os.path.join(root, "extraits")
+#                     executor.submit(process_prediction_file, prediction_file_path, file_name, recording_folder_path, extract_folder_path)
