@@ -93,37 +93,32 @@ def rename_subfolders(parent_folder):
         break
 
 # Chemin du dossier parent
-parent_folder = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023"
+# parent_folder = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/2023"
 
 # Appel de la fonction pour renommer les sous-dossiers
 # rename_subfolders(parent_folder)
 # Liste pour stocker les noms des dossiers de niveau 1 ne contenant pas de sous-dossier nommé "positive"
+
+
+parent_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed/"
 folders_without_positive_subfolder = []
+i=0
+for directory in os.listdir(parent_folder):
+    subfolder_path = os.path.join(parent_folder, directory)
+    if os.path.isdir(subfolder_path):  # Vérifie si c'est un dossier
+        
+        if all(subdir not in os.listdir(subfolder_path) for subdir in ["extraits", "pas_d_extraits"]):
+            folders_without_positive_subfolder.append(subfolder_path)
+        # if directory+".wav" in os.listdir(subfolder_path) : 
+        #     import shutil
+        #     mab = os.path.join(subfolder_path,directory+".wav" )
+        #     print(mab)
+        #     shutil.rmtree(mab)
+        #     ####
 
-# Parcourez les dossiers de niveau 1 dans le répertoire racine
-for root, directories, _ in os.walk(parent_folder):
-    if root == parent_folder:
-        # Parcourir seulement les dossiers de niveau 1 dans le répertoire racine
-        for directory in directories:
-            subfolder_path = os.path.join(root, directory)
-            # Vérifiez si le sous-dossier ne contient pas un sous-dossier nommé "positive"
-            if "positive" not in os.listdir(subfolder_path):
-                folders_without_positive_subfolder.append(subfolder_path)
 
-# Affichez la liste des dossiers
-for folder in folders_without_positive_subfolder:
+print(len(folders_without_positive_subfolder))
+for i, folder in enumerate(folders_without_positive_subfolder):
     print(folder)
-    # os.rmdir(folder)
-    # print(f"Dossier supprimé : {folder}")
-
-recording_folder_path="/media/DOLPHIN_ALEXIS/2023"
-files_ending_with_1_or_0 = []
-
-# Parcourez les fichiers dans le répertoire spécifié
-for file in os.listdir(recording_folder_path):
-    # Vérifiez si le fichier se termine par "1.wav" ou "0.wav"
-    if file.endswith("1.wav") or file.endswith("0.wav"):
-        files_ending_with_1_or_0.append(file)
-
-# Affichez la taille de la liste
-print("Nombre de fichiers se terminant par '1.wav' ou '0.wav' :", len(files_ending_with_1_or_0))
+    if i>10:
+        break
