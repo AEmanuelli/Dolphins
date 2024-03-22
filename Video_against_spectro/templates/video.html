@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ experiment_name }} - {{ video_name }}</title>
+</head>
+<body>
+    <h1>Vidéo: {{ video_name }}</h1>
+    <video width="640" height="480" controls>
+        <source src="{{ url_for('static_video', experiment_name=experiment_name, video_name=video_name) }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <h2>Images associées :</h2>
+    <ul>
+        {% for image in images %}
+        <li><img src="{{ url_for('static_image', experiment_name=experiment_name, image_name=image) }}" alt="{{ image }}"></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
+

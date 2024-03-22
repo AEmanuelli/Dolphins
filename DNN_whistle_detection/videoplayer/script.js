@@ -5,13 +5,12 @@ document.addEventListener("DOMContentLoaded", function() {
     function generateVideoList(videos) {
         videos.forEach(function(video) {
             var videoName = video.split('.')[0];
-            var videoTime = videoName.split('_').slice(1).map(function(t) { return parseFloat(t); });
             var videoLink = document.createElement('a');
             videoLink.href = "#";
             videoLink.textContent = videoName;
             videoLink.addEventListener('click', function(event) {
                 event.preventDefault();
-                playVideo(video, videoTime);
+                playVideo(videoName);
             });
             videoListContainer.appendChild(videoLink);
             videoListContainer.appendChild(document.createElement('br'));
@@ -19,23 +18,41 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Function to play video
-    function playVideo(videoName, videoTime) {
+    function playVideo(videoName) {
         var videoPlayer = document.getElementById("videoPlayer");
-        var additionalImage = document.getElementById("additionalImage");
+        var additionalImagesList = document.getElementById("additionalImagesList");
         
         // Set video source
-        videoPlayer.src = "videos/" + videoName;
+        videoPlayer.src = "{{ url_for('static', filename='videos/' + analysis_folder + '/' + experiment_folder + '/' + videoName) }}";
 
-        // Define timings and corresponding images
-        var startTime = videoTime[0];
-        var endTime = videoTime[1];
-        var imageFileName = startTime + "_" + (startTime + 0.4) + ".jpg";
+        // Fetch images associated with the video
+        fetchImages(videoName).then(function(images) {
+            additionalImagesList.innerHTML = ""; // Clear previous images
+            images.forEach(function(image) {
+                var img = document.createElement('img');
+                img.src = "{{ url_for('image', analysis_folder=analysis_folder, experiment_folder=experiment_folder, video_name=videoName, image_name=image) }}";
+                img.alt = image;
+                additionalImagesList.appendChild(img);
+            });
+        }).catch(function(error) {
+            console.error('Error fetching images:', error);
+        });
+    }
 
-        // Set additional image source
-        additionalImage.src = "images/" + imageFileName;
-
-        // Show the additional image
-        additionalImage.style.display = "inline";
+    // Function to fetch images associated with the video
+    function fetchImages(videoName) {
+        return new Promise(function(resolve, reject) {
+            fetch("images.json")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.hasOwnProperty(videoName)) {
+                        resolve(data[videoName]);
+                    } else {
+                        reject("No images found for video: " + videoName);
+                    }
+                })
+                .catch(error => reject(error));
+        });
     }
 
     // Fetch videos from the folder
@@ -46,3 +63,4 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .catch(error => console.error('Error:', error));
 });
+
