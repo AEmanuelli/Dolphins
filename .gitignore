@@ -8,4 +8,8 @@ extraits
 
 *.h5
 extrait_1637_1649.mp4
+<<<<<<< Updated upstream
 *.pyc
+=======
+>>>>>>> Stashed changes
+DNN_whistle_detection/__pycache__/predict_online_parallel.cpython-39.pyc
