@@ -1,8 +1,4 @@
-import os
-import shutil
-
-import os
-import shutil
+from tqdm import tqdm
 import os
 import shutil
 # from predict_online_parallel import process_prediction_files_in_folderpr
@@ -117,8 +113,137 @@ for directory in os.listdir(parent_folder):
         #     ####
 
 
-print(len(folders_without_positive_subfolder))
+print("fichiers dont le csv n'a pas été analysé", len(folders_without_positive_subfolder))
 for i, folder in enumerate(folders_without_positive_subfolder):
-    print(folder)
+    print(folder,)
     if i>10:
         break
+
+
+
+import os
+from moviepy.editor import VideoFileClip
+
+def is_corrupted_mp4(file_path):
+    try:
+        clip = VideoFileClip(file_path)
+        return False
+    except Exception as e:
+        # print(f"Erreur lors de la lecture de {file_path}: {e}")
+        return True
+
+def find_corrupted_mp4_files(folder_path, output_file):
+    with open(output_file, 'a') as f:
+        for folder in tqdm(os.listdir(folder_path)):
+            folder_full_path = os.path.join(folder_path, folder)
+            if os.path.isdir(folder_full_path):
+                for sub_folder in os.listdir(folder_full_path):
+                    sub_folder_full_path = os.path.join(folder_full_path, sub_folder)
+                    if os.path.isdir(sub_folder_full_path) and sub_folder == "extraits":
+                        for video in os.listdir(sub_folder_full_path):
+                            video_path = os.path.join(sub_folder_full_path, video)
+                            if is_corrupted_mp4(video_path):
+                                f.write(video_path + '\n')
+
+
+
+# output_file = "/home/alexis/Documents/GitHub/Dolphins/DNN_whistle_detection/fichiers_corrompus.txt"
+
+# find_corrupted_mp4_files(parent_folder, output_file)
+
+# print("Les chemins des fichiers corrompus ont été enregistrés dans", output_file)
+import os
+import shutil
+
+def copy_files_to_folder(source_file, destination_folder):
+    # Vérifier si le fichier source existe
+    if not os.path.exists(source_file):
+        print("Le fichier source n'existe pas.")
+        return
+    
+    # Créer le dossier de destination s'il n'existe pas
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+    
+    # Lire la liste des fichiers à partir du fichier source
+    with open(source_file, 'r') as f:
+        file_list = f.readlines()
+    
+    # Copier chaque fichier répertorié vers le dossier de destination
+    for file_path in file_list:
+        # Supprimer les espaces blancs autour du chemin du fichier
+        file_path = file_path.strip()
+        # Vérifier si le fichier existe avant de le copier
+        if os.path.exists(file_path):
+            # Extraire le nom du fichier pour la copie
+            file_name = os.path.basename(file_path)
+            # Construire le chemin de destination
+            destination_path = os.path.join(destination_folder, file_name)
+            # Copier le fichier vers le dossier de destination
+            shutil.copy(file_path, destination_path)
+        else:
+            print(f"Le fichier {file_path} n'existe pas.")
+
+# Chemin du fichier source contenant la liste des fichiers à copier
+source_file_path = "/home/alexis/Documents/GitHub/Dolphins/DNN_whistle_detection/fichiers_corrompus.txt"
+
+# Chemin du dossier de destination sur le bureau
+destination_folder_path = "/home/alexis/Desktop/corr"
+
+# Copier les fichiers vers le dossier de destination
+# copy_files_to_folder(source_file_path, destination_folder_path)
+
+
+import os
+import shutil
+
+def copy_and_delete_files(source_file, destination_folder):
+    # Vérifier si le fichier source existe
+    if not os.path.exists(source_file):
+        print("Le fichier source n'existe pas.")
+        return
+    
+    # Créer le dossier de destination s'il n'existe pas
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+    
+    # Lire la liste des fichiers à partir du fichier source
+    with open(source_file, 'r') as f:
+        file_list = f.readlines()
+    
+    # Initialiser le compteur de fichiers supprimés
+    files_deleted = 0
+    
+    # Copier chaque fichier répertorié vers le dossier de destination
+    for file_path in file_list:
+        # Supprimer les espaces blancs autour du chemin du fichier
+        file_path = file_path.strip()
+        # Vérifier si le fichier existe avant de le copier
+        if os.path.exists(file_path):
+            # Extraire le nom du fichier pour la copie
+            file_name = os.path.basename(file_path)
+            # Construire le chemin de destination
+            destination_path = os.path.join(destination_folder, file_name)
+            try:
+                # Copier le fichier vers le dossier de destination
+                shutil.copy(file_path, destination_path)
+                # Supprimer le fichier original
+                os.remove(file_path)
+                files_deleted += 1
+            except Exception as e:
+                print(f"Erreur lors de la copie/suppression du fichier {file_path}: {e}")
+        else:
+            print(f"Le fichier {file_path} n'existe pas.")
+
+    return files_deleted
+
+# Chemin du fichier source contenant la liste des fichiers à copier/supprimer
+source_file_path = "/home/alexis/Documents/GitHub/Dolphins/DNN_whistle_detection/fichiers_corrompus.txt"
+
+# Chemin du dossier de destination sur le bureau
+destination_folder_path = "/home/alexis/Desktop/corr"
+
+# Copier les fichiers vers le dossier de destination et supprimer les originaux
+deleted_count = copy_and_delete_files(source_file_path, destination_folder_path)
+
+print(f"Nombre de fichiers supprimés : {deleted_count}")
