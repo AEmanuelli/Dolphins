@@ -10,7 +10,7 @@ analyses_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed"
 def index():
     # Récupérer la liste des expériences avec des dossiers "extraits"
     experiment_folders = []
-    for folder in os.listdir(analyses_folder):
+    for folder in sorted(os.listdir(analyses_folder)):
         extracts_folder = os.path.join(analyses_folder, folder, 'extraits')
         if os.path.isdir(extracts_folder):
             experiment_folders.append(os.path.join(analyses_folder, folder))
@@ -21,7 +21,7 @@ def experiment(experiment_name):
     # Récupérer la liste des vidéos dans le dossier 'extraits'
     videos = []
     extracts_folder = os.path.join(analyses_folder, experiment_name, 'extraits')
-    for filename in os.listdir(extracts_folder):
+    for filename in sorted(os.listdir(extracts_folder)):
         if filename.endswith(".mp4"):
             videos.append(filename)
     return render_template("experiment.html", experiment_name=experiment_name, videos=videos)
