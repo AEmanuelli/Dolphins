@@ -96,7 +96,10 @@ def rename_subfolders(parent_folder):
 # Liste pour stocker les noms des dossiers de niveau 1 ne contenant pas de sous-dossier nommé "positive"
 
 
-parent_folder = "/media/DOLPHIN_ALEXIS1/Analyses_alexis/2023_analysed/"
+# parent_folder = "/media/DOLPHIN_ALEXIS1/Analyses_alexis/2023_analysed/"
+parent_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed/"
+
+
 folders_without_positive_subfolder = []
 i=0
 for directory in os.listdir(parent_folder):
@@ -145,7 +148,18 @@ def find_corrupted_mp4_files(folder_path, output_file):
                             if is_corrupted_mp4(video_path):
                                 f.write(video_path + '\n')
 
+import os
 
+parent_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed/"
+num_folders_with_extracts_subfolder = 0
+
+for directory in os.listdir(parent_folder):
+    subfolder_path = os.path.join(parent_folder, directory)
+    if os.path.isdir(subfolder_path):  # Vérifie si c'est un dossier
+        if "extraits" in os.listdir(subfolder_path):
+            num_folders_with_extracts_subfolder += 1
+
+print("Nombre de dossiers contenant un sous-dossier 'extraits' :", num_folders_with_extracts_subfolder)
 
 output_file = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/fichiers_corrompus.txt"
 find_corrupted_mp4_files(parent_folder, output_file)
@@ -246,3 +260,6 @@ def copy_and_delete_files(source_file, destination_folder):
 # deleted_count = copy_and_delete_files(source_file_path, destination_folder_path)
 
 # print(f"Nombre de fichiers supprimés : {deleted_count}")
+
+
+
