@@ -45,6 +45,7 @@ def extraire_extraits_video(intervalles, fichier_video, dossier_sortie_video):
                 extrait.write_videofile(chemin_sortie, verbose=False)
             else : 
                 print("zbzbz")
+            pbar.update(1)
         
     # Libérer la mémoire en supprimant l'objet VideoFileClip
     video.close()
@@ -68,15 +69,24 @@ def process_non_empty_file(prediction_file_path, folder_name, recording_folder_p
         # ####
 
         extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
+    else : 
+        t_file_name = transform_file_name(folder_name)
+        dossier_sortie_video = os.path.join(folder_path, "pas_d_extraits")
+        os.makedirs(dossier_sortie_video, exist_ok=True)
+        txt_file_path = os.path.join(dossier_sortie_video, f"No_Video_found.txt")
+        with open(txt_file_path, 'w') as txt_file:
+            txt_file.write(f"No video found for {t_file_name}")
+        print(f"Missing video file for {t_file_name}. No video extraction can be performed.")
+
 
 def handle_empty_file(folder_path, folder_name):
     dossier_sortie_video = os.path.join(folder_path, "pas_d_extraits")
     t_file_name = transform_file_name(folder_name)
 
     # A supprimer après le premier run 
-    import shutil
-    dossier_sortie_video_a_supprimer = os.path.join(folder_path, "extraits")
-    shutil.rmtree(dossier_sortie_video_a_supprimer) if (os.path.exists(dossier_sortie_video_a_supprimer) and not os.listdir(dossier_sortie_video_a_supprimer)) else None
+    # import shutil
+    # dossier_sortie_video_a_supprimer = os.path.join(folder_path, "extraits")
+    # shutil.rmtree(dossier_sortie_video_a_supprimer) if (os.path.exists(dossier_sortie_video_a_supprimer) and not os.listdir(dossier_sortie_video_a_supprimer)) else None
     ####
 
     os.makedirs(dossier_sortie_video, exist_ok=True)
@@ -107,7 +117,6 @@ def process_prediction_file(prediction_file_path, folder_name, recording_folder_
     else:
         # File is missing
         handle_missing_file(folder_path, folder_name)
-        return
 
     if not empty:
         # File exists and is not empty
@@ -126,7 +135,7 @@ def process_folder(root, folder_name, recording_folder_path, folder_path):
 
 def process_prediction_files_in_folder(root, recording_folder_path, max_workers=8):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        for folder_name in tqdm(os.listdir(root), leave=True):
+        for folder_name in tqdm(reversed(os.listdir(root)), leave=False):
             folder_path = os.path.join(root, folder_name)
             if os.path.isdir(folder_path):
                 executor.submit(process_folder, root, folder_name, recording_folder_path, folder_path)
