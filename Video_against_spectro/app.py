@@ -7,14 +7,14 @@ app = Flask(__name__)
 analyses_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed"
 
 @app.route("/")
-def index():
+def index_sauvegarde():
     # Récupérer la liste des expériences avec des dossiers "extraits"
     experiment_folders = []
     for folder in sorted(os.listdir(analyses_folder)):
         extracts_folder = os.path.join(analyses_folder, folder, 'extraits')
         if os.path.isdir(extracts_folder):
             experiment_folders.append(os.path.join(analyses_folder, folder))
-    return render_template("index.html", experiment_folders=experiment_folders)
+    return render_template("index_sauvegarde.html", experiment_folders=experiment_folders)
 
 @app.route("/experiment/<experiment_name>")
 def experiment(experiment_name):

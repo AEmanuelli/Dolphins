@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index</title>
+    <title>Select Month</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Liste des années:</h1>
+    <h1>Select Month for {{ year }}</h1>
     <ul>
-        {% for year in years %}
-        <li><a href="{{ url_for('select_month', year=year) }}">{{ year }}</a></li>
+        {% for month in months %}
+        <li><a href="{{ url_for('select_day', year=year, month=month) }}">{{ month }}</a></li>
         {% endfor %}
     </ul>
 </body>
 </html>
+

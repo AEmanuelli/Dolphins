@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index</title>
+    <title>Select Hour</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Liste des années:</h1>
+    <h1>Select Hour</h1>
     <ul>
-        {% for year in years %}
-        <li><a href="{{ url_for('select_month', year=year) }}">{{ year }}</a></li>
+        {% for hour in hours %}
+        <li><a href="{{ url_for('show_files', year=year, month=month, day=day, hour=hour) }}">{{ hour }}</a></li>
         {% endfor %}
     </ul>
 </body>
