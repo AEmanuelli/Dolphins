@@ -22,4 +22,4 @@ DNN_whistle_detection/__pycache__/predict_online_parallel.cpython-39.pyc
 DNN_whistle_detection/fichiers_corrompus.txt
 /home/alexis/Documents/GitHub/Dolphins/DNN_whistle_detection/.gitignore
 DNN_whistle_detection/__pycache__/whistle2vid.cpython-39.pyc
-DNN_whistle_detection/main.py
+/home/alexis/Documents/GitHub/Dolphins/DNN_whistle_detection/__pycache__/whistle2vid.cpython-39.pyc

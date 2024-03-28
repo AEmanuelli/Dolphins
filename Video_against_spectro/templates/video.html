@@ -18,6 +18,12 @@
         <li><img src="{{ url_for('static_image', experiment_name=experiment_name, image_name=image) }}" alt="{{ image }}"></li>
         {% endfor %}
     </ul>
+    {% if vid_name %}
+    <h1>Full video: {{ vid_name }}</h1>
+    <video width="640" height="480" controls>
+        <source src="{{ url_for('static_supplementary_video', video_name=vid_name) }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    {% endif %}
 </body>
 </html>
-
