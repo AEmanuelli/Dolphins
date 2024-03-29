@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     dossier_anciens_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"  #plus à jour 
     process_predict_extract(recordings, saving_folder, start_time=0, 
-                            end_time=1800, batch_size=75, save=False, save_p=True, 
+                            end_time=2400, batch_size=100, save=False, save_p=True, 
                             model_path="models/model_vgg.h5", max_workers = 4)
 
     # process_prediction_files_in_folder(root, recording_folder_path=recordings, max_workers = 10)

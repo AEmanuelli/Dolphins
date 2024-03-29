@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_file
+from flask import Flask, render_template, send_file, request
 import os
 
 
@@ -150,6 +150,12 @@ def static_image(experiment_name, image_name):
     image_path = os.path.join(analyses_folder, experiment_name, 'positive', image_name)
     return send_file(image_path)
 
+@app.route('/save_text', methods=['POST'])
+def save_text():
+    submitted_text = request.form['input_text']
+    with open('submitted_text.txt', 'a') as file:
+        file.write(submitted_text + '\n')
+    return 'Text saved successfully!'
 
 if __name__ == "__main__":
     app.run(debug=True)

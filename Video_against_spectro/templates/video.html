@@ -25,5 +25,12 @@
         Your browser does not support the video tag.
     </video>
     {% endif %}
+
+    <form action="/save_text" method="post">
+        <label for="input_text">Input Text:</label><br>
+        <input type="text" id="input_text" name="input_text"><br>
+        <input type="submit" value="Submit">
+    </form>
+    
 </body>
 </html>
