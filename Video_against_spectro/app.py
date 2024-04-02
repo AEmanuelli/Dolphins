@@ -1,7 +1,7 @@
 from flask import Flask, render_template, send_file, request
 import os
 
-FaadilPC = True
+FaadilPC = False
 
 if FaadilPC: 
     dossier_videos = "/media/DOLPHIN_ALEXIS/2023/"
@@ -10,7 +10,7 @@ if FaadilPC:
     video_folder = "/media/DOLPHIN_ALEXIS/2023/"
     
 else : 
-    dossier_video = "/media/DOLPHIN/2023/"
+    dossier_videos = "/media/DOLPHIN/2023/"
     analyses_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed"
     video_folder = "/media/DOLPHIN/2023/"
 
@@ -40,11 +40,7 @@ def trouver_fichier_video(fichier_csv, dossier_videos = dossier_videos):
     print(f"Aucun fichier vidéo correspondant trouvé pour le fichier CSV {fichier_csv}")
     return None
 
-
 app = Flask(__name__)
-
-
-
 
 
 def extract_date_and_time(folder_name):
@@ -131,7 +127,7 @@ def video(experiment_name, video_name):
     full_vid_link = trouver_fichier_video(experiment_name)
     if full_vid_link:
         vid_name = os.path.basename(full_vid_link)  # Extracts the filename from the full video link
-        
+        print("True", vid_name)
     else:
         vid_name = None  # Handle the case where no video link is found
     print(vid_name)
@@ -145,7 +141,8 @@ def video(experiment_name, video_name):
                 img_start = float(filename.split('-')[0])
                 if img_start >= video_start and img_start <= video_end:
                     images.append(filename)
-    return render_template("video.html", experiment_name=experiment_name, video_name=video_name, images=images, vid_name = vid_name)
+    return render_template("video.html", experiment_name=experiment_name, video_name=video_name, images=images, vid_name=vid_name)  # Pass vid_name to the template context
+
 
 @app.route("/static/videos/<experiment_name>/<video_name>")
 def static_video(experiment_name, video_name):
@@ -156,7 +153,9 @@ def static_video(experiment_name, video_name):
 def static_supplementary_video(video_name):
     # Construct the path to the supplementary video file
     supplementary_video_path = os.path.join(video_folder, video_name)
-    return send_file(supplementary_video_path)
+    print(supplementary_video_path)
+    return send_file(supplementary_video_path, mimetype='video/mp4')
+
 
 @app.route("/static/images/<experiment_name>/<image_name>")
 def static_image(experiment_name, image_name):
@@ -169,6 +168,12 @@ def save_text():
     with open('submitted_text.txt', 'a') as file:
         file.write(submitted_text + '\n')
     return 'Text saved successfully!'
+# @app.route('/save_text', methods=['POST'])
+# def save_text():
+#     submitted_text = request.form['input_text']
+#     with open('/home/alexis/Documents/GitHub/Dolphins/Video_against_spectro/text_test/submitted_text.txt', 'a') as file:
+#         file.write(submitted_text + '\n')
+#     return 'Text saved successfully!'
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

@@ -4,33 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ experiment_name }} - {{ video_name }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles_dolphin.css') }}">
 </head>
-<body>
-    <h1>Vidéo: {{ video_name }}</h1>
-    <video width="640" height="480" controls>
-        <source src="{{ url_for('static_video', experiment_name=experiment_name, video_name=video_name) }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-    <h2>Images associées :</h2>
-    <ul>
-        {% for image in images %}
-        <li><img src="{{ url_for('static_image', experiment_name=experiment_name, image_name=image) }}" alt="{{ image }}"></li>
-        {% endfor %}
-    </ul>
-    {% if vid_name %}
-    <h1>Full video: {{ vid_name }}</h1>
-    <video width="640" height="480" controls>
-        <source src="{{ url_for('static_supplementary_video', video_name=vid_name) }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-    {% endif %}
-
+<div class="container">
+    <div class="content">
+        <h1>Vidéo: {{ video_name }}</h1>
+        <video width="640" height="480" controls>
+            <source src="{{ url_for('static_video', experiment_name=experiment_name, video_name=video_name) }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        {% if vid_name %}
+        <h1>Full video: {{ vid_name }}</h1>
+        <video width="640" height="480" controls preload="metadata">
+            <source src="{{ url_for('static_supplementary_video', video_name=vid_name) }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        {% endif %}
+    
+    <!-- Input text window -->
     <form action="/save_text" method="post">
         <label for="input_text">Input Text:</label><br>
         <input type="text" id="input_text" name="input_text"><br>
         <input type="submit" value="Submit">
     </form>
+    </div>
+    <div class="sidebar">
+        <h2>Images associées :</h2>
+        <ul class="image-list">
+            {% for image in images %}
+            <li><img src="{{ url_for('static_image', experiment_name=experiment_name, image_name=image) }}" alt="{{ image }}" style="width: 200px;"></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
     
+    
+
+        
+
 </body>
 </html>
+
