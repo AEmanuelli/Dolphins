@@ -1,8 +1,20 @@
 from flask import Flask, render_template, send_file, request
 import os
 
+FaadilPC = True
 
-def trouver_fichier_video(fichier_csv, dossier_videos = "/media/DOLPHIN/2023/"):
+if FaadilPC: 
+    dossier_videos = "/media/DOLPHIN_ALEXIS/2023/"
+    # Chemin du dossier contenant les analyses
+    analyses_folder = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed"
+    video_folder = "/media/DOLPHIN_ALEXIS/2023/"
+    
+else : 
+    dossier_video = "/media/DOLPHIN/2023/"
+    analyses_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed"
+    video_folder = "/media/DOLPHIN/2023/"
+
+def trouver_fichier_video(fichier_csv, dossier_videos = dossier_videos):
     # Extraire la date et l'heure du nom de fichier CSV
     try: 
         elements_nom_csv = fichier_csv.split("_")
@@ -31,9 +43,10 @@ def trouver_fichier_video(fichier_csv, dossier_videos = "/media/DOLPHIN/2023/"):
 
 app = Flask(__name__)
 
-# Chemin du dossier contenant les analyses
-analyses_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed"
-video_folder = "/media/DOLPHIN/2023/"
+
+
+
+
 def extract_date_and_time(folder_name):
     # Extraction de l'année, du mois, du jour et de l'heure à partir du nom de dossier
     parts = folder_name.split('_')

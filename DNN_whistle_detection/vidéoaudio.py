@@ -33,3 +33,6 @@ def vidéoetaudio(intervalles, fichier_video, fichier_audio, dossier_sortie_vide
     # Libérer la mémoire en supprimant les objets VideoFileClip et AudioFileClip
     video.close()
     audio.close()
+
+
+# vidéoetaudio([(10, 20)], "/media/DOLPHIN_ALEXIS1/2023/Exp_28_Mar_2024_1445_cam_all.mp4", "/media/DOLPHIN_ALEXIS1/2023/Exp_28_Mar_2024_1445_channel_1.wav", "/users/zfne/emanuell/Desktop/test")

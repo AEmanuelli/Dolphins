@@ -51,7 +51,7 @@ def extraire_extraits_video(intervalles, fichier_video, dossier_sortie_video):
     video.close()
 
 
-def process_non_empty_file(prediction_file_path, folder_name, recording_folder_path, folder_path, audio = False):
+def process_non_empty_file(prediction_file_path, folder_name, recording_folder_path, folder_path, audio = True):
     intervalles = lire_csv_extraits(prediction_file_path)
     intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
     # print(intervalles_fusionnes)
@@ -59,8 +59,6 @@ def process_non_empty_file(prediction_file_path, folder_name, recording_folder_p
     fichier_video = trouver_fichier_video(folder_name, recording_folder_path)
     if fichier_video:
         dossier_sortie_video = os.path.join(folder_path, "extraits")
-        os.makedirs(dossier_sortie_video, exist_ok=True)
-
 
         # # A supprimer après le premier run 
         # import shutil
@@ -71,8 +69,12 @@ def process_non_empty_file(prediction_file_path, folder_name, recording_folder_p
         if audio : 
             from vidéoaudio import vidéoetaudio
             fichier_audio = os.path.join(recording_folder_path, folder_name + ".wav")
-            vidéoetaudio((intervalles_fusionnes, fichier_video, fichier_audio, dossier_sortie_video))
+            dossier_sortie_video_et_audio = dossier_sortie_video + "_avec_audio"
+            os.makedirs(dossier_sortie_video_et_audio, exist_ok=True)
+            vidéoetaudio(intervalles_fusionnes, fichier_video, fichier_audio, dossier_sortie_video_et_audio)
         else :
+            os.makedirs(dossier_sortie_video, exist_ok=True)
+
             extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
     
     else : 
