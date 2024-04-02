@@ -24,3 +24,5 @@ DNN_whistle_detection/fichiers_corrompus.txt
 DNN_whistle_detection/__pycache__/whistle2vid.cpython-39.pyc
 /home/alexis/Documents/GitHub/Dolphins/DNN_whistle_detection/__pycache__/whistle2vid.cpython-39.pyc
 *.mp4
+DNN_whistle_detection/main.py
+DNN_whistle_detection/main.py
