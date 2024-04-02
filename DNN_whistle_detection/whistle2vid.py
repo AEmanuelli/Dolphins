@@ -94,7 +94,7 @@ def fusionner_intervalles(intervalles, hwindow=4):
     
     return intervalles_fusionnes
 
-def trouver_fichier_video(fichier_csv, dossier_videos):
+def trouver_fichier_video(fichier_csv, dossier_videos = "/media/DOLPHIN/2023/"):
     # Extraire la date et l'heure du nom de fichier CSV
     elements_nom_csv = fichier_csv.split("_")
     date_heure_csv = elements_nom_csv[1] + "_"+ elements_nom_csv[2] + "_" + elements_nom_csv[3] + "_"+elements_nom_csv[4]  # Format: "Aug_2023_0845"
