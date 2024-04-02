@@ -56,6 +56,8 @@ def extract_date_and_time(folder_name):
         # Si le format du nom de dossier est incorrect, retournez des valeurs par défaut
         return None, None, None, None
 
+import os
+
 def get_folders_by_date(year=None, month=None, day=None):
     """
     Récupère les dossiers correspondants à une date spécifique.
@@ -67,8 +69,14 @@ def get_folders_by_date(year=None, month=None, day=None):
         if (not year or folder_year == year) and \
            (not month or folder_month == month) and \
            (not day or folder_day == day):
-            folders.append(folder)
+            # Check if the folder contains a subfolder named "extraits"
+            if os.path.isdir(os.path.join(analyses_folder, folder, "extraits")):
+                # Check if the folder contains any CSV files
+                csv_files = [file for file in os.listdir(os.path.join(analyses_folder, folder)) if file.endswith('.csv')]
+                if csv_files:
+                    folders.append(folder)
     return folders
+
 
 @app.route("/")
 def index():
@@ -82,13 +90,21 @@ def index():
 
 @app.route("/<year>")
 def select_month(year):
+    # Liste de tous les mois dans l'année
+    all_months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
     # Récupérer les mois disponibles pour une année donnée
     months = set()
     for folder in get_folders_by_date(year=year):
         _, folder_month, _, _ = extract_date_and_time(folder)
         if folder_month:
             months.add(folder_month)
-    return render_template("select_month.html", year=year, months=sorted(months))
+
+    # Trier les mois dans l'ordre chronologique en utilisant l'index dans la liste all_months
+    sorted_months = sorted(months, key=lambda x: all_months.index(x))
+
+    return render_template("select_month.html", year=year, months=sorted_months)
+
 
 @app.route("/<year>/<month>")
 def select_day(year, month):
@@ -110,16 +126,59 @@ def select_hour(year, month, day):
             hours.add(folder_hour)
     return render_template("select_hour.html", year=year, month=month, day=day, hours=sorted(hours))
 
+import os
+
 @app.route("/<year>/<month>/<day>/<hour>")
 def show_files(year, month, day, hour):
-    # Construire le chemin du dossier correspondant à l'année, au mois, au jour et à l'heure spécifiés
-    folder_path_channel_0 = os.path.join(analyses_folder, f"Exp_{day}_{month}_{year}_{hour}_channel_0", "extraits")
-    folder_path_channel_1 = os.path.join(analyses_folder, f"Exp_{day}_{month}_{year}_{hour}_channel_1", "extraits")
+    # Construire le chemin du dossier correspondant à l'année, au mois, au jour et à l'heure spécifiés pour les deux canaux
+    folder_path_channel_0 = os.path.join(analyses_folder, f"Exp_{day}_{month}_{year}_{hour}_channel_0")
+    folder_path_channel_1 = os.path.join(analyses_folder, f"Exp_{day}_{month}_{year}_{hour}_channel_1")
 
-    # Récupérer la liste des fichiers dans les dossiers extraits des deux canaux
-    files_channel_0 = sorted(os.listdir(folder_path_channel_0)) if os.path.exists(folder_path_channel_0) else []
-    files_channel_1 = sorted(os.listdir(folder_path_channel_1)) if os.path.exists(folder_path_channel_1) else []
-    return render_template("show_files.html", year=year, month=month, day=day, hour=hour, files_channel_0=files_channel_0, files_channel_1=files_channel_1)
+    # Vérifier la présence du dossier "extraits" pour chaque canal
+    folder_path_channel_0_extraits = os.path.join(folder_path_channel_0, "extraits")
+    folder_path_channel_1_extraits = os.path.join(folder_path_channel_1, "extraits")
+
+    # Récupérer la liste des fichiers dans les dossiers "extraits" des deux canaux s'ils existent
+    # Fonction pour extraire le nombre du nom de fichier
+    extract_number = lambda filename: int(filename.split('_')[1])
+
+    # Trier les fichiers du premier dossier
+    files_channel_0 = sorted(os.listdir(folder_path_channel_0_extraits), key=extract_number) if os.path.exists(folder_path_channel_0_extraits) else []
+
+    # Trier les fichiers du deuxième dossier
+    files_channel_1 = sorted(os.listdir(folder_path_channel_1_extraits), key=extract_number) if os.path.exists(folder_path_channel_1_extraits) else []
+
+    # Vérifier la présence du dossier "pas_d_extraits" pour chaque canal
+    folder_path_channel_0_no_extracts = os.path.join(folder_path_channel_0, "pas_d_extraits")
+    folder_path_channel_1_no_extracts = os.path.join(folder_path_channel_1, "pas_d_extraits")
+
+    reasons_channel_0 = ""
+    reasons_channel_1 = ""
+
+    def get_reasons(folder_path):
+        reasons = ""
+        if os.path.exists(folder_path):
+            files = os.listdir(folder_path)
+            for file_name in files:
+                if file_name.endswith(".txt"):
+                    reason_file_path = os.path.join(folder_path, file_name)
+                    with open(reason_file_path, "r") as file:
+                        reasons = file.read()
+                    break  # Sortir de la boucle une fois que le fichier texte est trouvé
+        return reasons
+
+
+    reasons_channel_0 = get_reasons(folder_path_channel_0_no_extracts)
+    reasons_channel_1 = get_reasons(folder_path_channel_1_no_extracts)
+
+
+    return render_template("show_files.html", year=year, month=month, day=day, hour=hour,
+                           files_channel_0=files_channel_0, files_channel_1=files_channel_1,
+                           reasons_channel_0=reasons_channel_0, reasons_channel_1=reasons_channel_1)
+
+
+
+
 
 @app.route("/videos/<experiment_name>/<video_name>")
 def video(experiment_name, video_name):
@@ -146,7 +205,7 @@ def video(experiment_name, video_name):
 
 @app.route("/static/videos/<experiment_name>/<video_name>")
 def static_video(experiment_name, video_name):
-    video_path = os.path.join(analyses_folder, experiment_name, 'extraits', video_name)
+    video_path = os.path.join(analyses_folder, experiment_name, 'extraits_avec_audio', video_name)
     return send_file(video_path)
 
 @app.route("/static/videos_supplementary/<video_name>")

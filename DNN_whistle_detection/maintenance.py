@@ -113,12 +113,13 @@ for directory in os.listdir(parent_folder):
         #     mab = os.path.join(subfolder_path,directory+".wav" )
         #     print(mab)
         #     shutil.rmtree(mab)
-        #     ####
+            ####
 
 
 print("fichiers dont le csv n'a pas été analysé", len(folders_without_positive_subfolder))
 for i, folder in enumerate(folders_without_positive_subfolder):
     print(folder)
+    # shutil.rmtree(folder)
     if i>10:
         break
 
@@ -159,14 +160,13 @@ for directory in os.listdir(parent_folder):
         if "extraits" in os.listdir(subfolder_path):
             num_folders_with_extracts_subfolder += 1
 
-print("Nombre de dossiers contenant un sous-dossier 'extraits' :", num_folders_with_extracts_subfolder)
+# print("Nombre de dossiers contenant un sous-dossier 'extraits' :", num_folders_with_extracts_subfolder)
 
-output_file = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/fichiers_corrompus.txt"
-find_corrupted_mp4_files(parent_folder, output_file)
+# output_file = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/fichiers_corrompus.txt"
+# find_corrupted_mp4_files(parent_folder, output_file)
 
-print("Les chemins des fichiers corrompus ont été enregistrés dans", output_file)
-import os
-import shutil
+# print("Les chemins des fichiers corrompus ont été enregistrés dans", output_file)
+
 
 # def copy_files_to_folder(source_file, destination_folder):
 #     # Vérifier si le fichier source existe
@@ -206,9 +206,6 @@ import shutil
 # # Copier les fichiers vers le dossier de destination
 # # copy_files_to_folder(source_file_path, destination_folder_path)
 
-
-import os
-import shutil
 
 def copy_and_delete_files(source_file, destination_folder):
     # Vérifier si le fichier source existe
@@ -263,3 +260,22 @@ def copy_and_delete_files(source_file, destination_folder):
 
 
 
+import os
+
+parent_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed/"
+folders_with_both_subfolders = []
+
+for directory in tqdm(os.listdir(parent_folder)):
+    subfolder_path = os.path.join(parent_folder, directory)
+    if os.path.isdir(subfolder_path):  # Vérifie si c'est un dossier
+        if "extraits" in os.listdir(subfolder_path) and "pas_d_extraits" in os.listdir(subfolder_path):
+            folders_with_both_subfolders.append(subfolder_path)
+
+
+print("dossiers contenant à la fois 'extraits' et 'pas_d_extraits", len(folders_with_both_subfolders))
+
+for i, folder in enumerate(folders_with_both_subfolders):
+    print(folder)
+    # shutil.rmtree(folder)
+    if i>10:
+        break
