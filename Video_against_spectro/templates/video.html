@@ -6,6 +6,7 @@
     <title>{{ experiment_name }} - {{ video_name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles_dolphin.css') }}">
 </head>
+<body>
 <div class="container">
     <div class="content">
         <h1>Vidéo: {{ video_name }}</h1>
@@ -21,12 +22,22 @@
         </video>
         {% endif %}
     
-    <!-- Input text window -->
-    <form action="/save_text" method="post">
-        <label for="input_text">Input Text:</label><br>
-        <input type="text" id="input_text" name="input_text"><br>
-        <input type="submit" value="Submit">
-    </form>
+        <!-- Input text window -->
+        <form action="/save_text" method="post">
+            <label for="input_text">Input Text:</label><br>
+            <input type="text" id="input_text" name="input_text"><br>
+            <input type="submit" value="Submit">
+        </form>
+
+        <!-- Section pour afficher les anciens commentaires -->
+        <div id="oldComments">
+            <h2>Old Comments</h2>
+            <ul id="commentList">
+                {% for comment in old_comments %}
+                <li>{{ comment }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
     <div class="sidebar">
         <h2>Images associées :</h2>
@@ -38,11 +49,12 @@
     </div>
 </div>
 
-    
-    
-
-        
+<script>
+    // Function to reload the page after form submission
+    function reloadPage() {
+        window.location.reload();
+    }
+</script>
 
 </body>
 </html>
-
