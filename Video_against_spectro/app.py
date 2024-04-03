@@ -1,5 +1,7 @@
 from flask import Flask, render_template, send_file, request
 import os
+import csv
+from datetime import datetime
 
 FaadilPC = False
 
@@ -56,7 +58,7 @@ def extract_date_and_time(folder_name):
         # Si le format du nom de dossier est incorrect, retournez des valeurs par défaut
         return None, None, None, None
 
-import os
+
 
 def get_folders_by_date(year=None, month=None, day=None):
     """
@@ -69,8 +71,8 @@ def get_folders_by_date(year=None, month=None, day=None):
         if (not year or folder_year == year) and \
            (not month or folder_month == month) and \
            (not day or folder_day == day):
-            # Check if the folder contains a subfolder named "extraits"
-            if os.path.isdir(os.path.join(analyses_folder, folder, "extraits")):
+            # Check if the folder contains a subfolder named "extraits_avec_audio"
+            if os.path.isdir(os.path.join(analyses_folder, folder, "extraits_avec_audio")):
                 # Check if the folder contains any CSV files
                 csv_files = [file for file in os.listdir(os.path.join(analyses_folder, folder)) if file.endswith('.csv')]
                 if csv_files:
@@ -135,8 +137,8 @@ def show_files(year, month, day, hour):
     folder_path_channel_1 = os.path.join(analyses_folder, f"Exp_{day}_{month}_{year}_{hour}_channel_1")
 
     # Vérifier la présence du dossier "extraits" pour chaque canal
-    folder_path_channel_0_extraits = os.path.join(folder_path_channel_0, "extraits")
-    folder_path_channel_1_extraits = os.path.join(folder_path_channel_1, "extraits")
+    folder_path_channel_0_extraits = os.path.join(folder_path_channel_0, "extraits_avec_audio")
+    folder_path_channel_1_extraits = os.path.join(folder_path_channel_1, "extraits_avec_audio")
 
     # Récupérer la liste des fichiers dans les dossiers "extraits" des deux canaux s'ils existent
     # Fonction pour extraire le nombre du nom de fichier
@@ -178,18 +180,23 @@ def show_files(year, month, day, hour):
 
 
 
-
-
 @app.route("/videos/<experiment_name>/<video_name>")
 def video(experiment_name, video_name):
     # Récupérer les images correspondant à la vidéo
     full_vid_link = trouver_fichier_video(experiment_name)
     if full_vid_link:
         vid_name = os.path.basename(full_vid_link)  # Extracts the filename from the full video link
-        print("True", vid_name)
     else:
         vid_name = None  # Handle the case where no video link is found
-    print(vid_name)
+
+    # Récupérer les anciens commentaires depuis le fichier CSV pour la vidéo spécifiée
+    old_comments = []
+    with open('comments.csv', 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['Video Path'] == os.path.join(experiment_name, video_name):
+                comment = f"{row['Date']} - {row['Comment']}"
+                old_comments.append(comment)
     images = []
     video_start = int(video_name.split('_')[1])
     video_end = int(video_name.split('_')[2].split('.')[0])
@@ -200,8 +207,8 @@ def video(experiment_name, video_name):
                 img_start = float(filename.split('-')[0])
                 if img_start >= video_start and img_start <= video_end:
                     images.append(filename)
-    return render_template("video.html", experiment_name=experiment_name, video_name=video_name, images=images, vid_name=vid_name)  # Pass vid_name to the template context
-
+    # Rendre le modèle HTML avec les commentaires et le nom de la vidéo
+    return render_template("video.html", experiment_name=experiment_name, video_name=video_name, old_comments=old_comments, vid_name=vid_name, images = images)
 
 @app.route("/static/videos/<experiment_name>/<video_name>")
 def static_video(experiment_name, video_name):
@@ -221,18 +228,28 @@ def static_image(experiment_name, image_name):
     image_path = os.path.join(analyses_folder, experiment_name, 'positive', image_name)
     return send_file(image_path)
 
+
 @app.route('/save_text', methods=['POST'])
 def save_text():
     submitted_text = request.form['input_text']
-    with open('submitted_text.txt', 'a') as file:
-        file.write(submitted_text + '\n')
+    submitted_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Date et heure actuelles
+    video_name = request.referrer.split('/')[-1]  # Récupère le nom du fichier vidéo depuis l'URL de référence
+    experiment_name = request.referrer.split('/')[-2]  # Récupère le nom du dossier expérimental depuis l'URL de référence
+    full_vid_link = trouver_fichier_video(experiment_name)  # Chemin complet du fichier vidéo
+
+    # Écriture des données dans un fichier CSV
+    with open('comments.csv', 'a', newline='') as csvfile:
+        fieldnames = ['Date', 'Video Path', 'Comment']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        # Vérifie si le fichier est vide, si oui, ajoute les en-têtes
+        if os.stat('comments.csv').st_size == 0:
+            writer.writeheader()
+
+        writer.writerow({'Date': submitted_date, 'Video Path': os.path.join(experiment_name, video_name), 'Comment': submitted_text})
+
     return 'Text saved successfully!'
-# @app.route('/save_text', methods=['POST'])
-# def save_text():
-#     submitted_text = request.form['input_text']
-#     with open('/home/alexis/Documents/GitHub/Dolphins/Video_against_spectro/text_test/submitted_text.txt', 'a') as file:
-#         file.write(submitted_text + '\n')
-#     return 'Text saved successfully!'
+
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
