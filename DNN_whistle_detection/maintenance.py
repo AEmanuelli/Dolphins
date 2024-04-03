@@ -262,20 +262,23 @@ def copy_and_delete_files(source_file, destination_folder):
 
 import os
 
-parent_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed/"
-folders_with_both_subfolders = []
-
-for directory in tqdm(os.listdir(parent_folder)):
-    subfolder_path = os.path.join(parent_folder, directory)
-    if os.path.isdir(subfolder_path):  # Vérifie si c'est un dossier
-        if "extraits" in os.listdir(subfolder_path) and "pas_d_extraits" in os.listdir(subfolder_path):
-            folders_with_both_subfolders.append(subfolder_path)
 
 
-print("dossiers contenant à la fois 'extraits' et 'pas_d_extraits", len(folders_with_both_subfolders))
+def get_videos_extracts_list(parent_folder = "/media/DOLPHIN/Analyses_alexis/2023_analysed/"):
+    all_video_files = [] 
 
-for i, folder in enumerate(folders_with_both_subfolders):
-    print(folder)
-    # shutil.rmtree(folder)
-    if i>10:
-        break
+    for directory in tqdm(os.listdir(parent_folder)):
+        subfolder_path = os.path.join(parent_folder, directory)
+        if os.path.isdir(subfolder_path):  # Vérifie si c'est un dossier
+            if "extraits_avec_audio" in os.listdir(subfolder_path) and "positive" in os.listdir(subfolder_path):
+                folder_path = os.path.join(subfolder_path, "extraits_avec_audio")
+                for file in os.listdir(folder_path):
+                    file_path = os.path.join(folder_path, file)
+                    if os.path.isfile(file_path):
+                        all_video_files.append(file_path)
+    return all_video_files 
+
+video_files = get_videos_extracts_list()
+
+for file in video_files:
+    print(file)
