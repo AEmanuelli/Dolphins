@@ -23,11 +23,13 @@
         {% endif %}
     
         <!-- Input text window -->
-        <form action="/save_text" method="post">
-            <label for="input_text">Input Text:</label><br>
-            <input type="text" id="input_text" name="input_text"><br>
-            <input type="submit" value="Submit">
-        </form>
+        <form class="contact-form" name="basedatos" action="https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/formResponse" target="_self" method="POST">
+            <input type="hidden" name="entry.1008522387" value="{{ experiment_name }}">
+            <input type="hidden" name="entry.971205134" value="{{ video_name }}">
+            <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Name" type="text"> </div>
+            <div class="input-group tm-mb-30"> <input name="entry.1104629907" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Comment" type="text"> </div>
+            <div class="input-group justify-content-end"> <input class="btn btn-primary tm-btn-pad-2" value="Send" type="submit"> </div>
+        </form><!-- Map --> 
 
         <!-- Section pour afficher les anciens commentaires -->
         <div id="oldComments">
