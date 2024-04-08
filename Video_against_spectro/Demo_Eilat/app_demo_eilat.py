@@ -3,7 +3,7 @@ import os
 import csv
 from datetime import datetime
 
-analyses_folder = os.path.abspath("Video_against_spectro/Demo_Eilat/Vid_demo_Eilat")
+analyses_folder = os.path.abspath("Vid_demo_Eilat")
 
 app = Flask(__name__)
 
@@ -143,9 +143,7 @@ def submit_form():
         entry_1637143753 = request.form["entry.1637143753"]
         entry_1104629907 = request.form["entry.1104629907"]
         
-        # Process the form data as needed (e.g., save to a database)
-        
-        # Optionally, you can redirect to a "Thank You" page after successful submission
+        # "Thank You" page after successful submission
         return render_template("thank_you.html")
     except Exception as e:
         # Log any errors that occur during form submission
@@ -180,4 +178,4 @@ def static_image(experiment_name, image_name):
     return send_file(image_path)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5002, debug=True)
