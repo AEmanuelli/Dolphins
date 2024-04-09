@@ -17,7 +17,7 @@
     - 📜 requirements.txt: Configuration file listing dependencies required for the backend.
     - 📜 README.md: You are here! This file provides an overview of the contents and setup instructions for the Demo_Eilat web application.
 
-## Indications
+# Indications
 
 ### To run the demo
 
