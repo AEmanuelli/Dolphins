@@ -12,7 +12,7 @@ from process_predictions import process_prediction_files_in_folder
 
 if __name__ == "__main__":  
  
-    model_path = "models/model_vgg.h5"
+    model_path = "DNN_whistle_detection/models/model_vgg.h5"
 
     # Sur PC Faadil 
     # from predict_online_parallel import process_predict_extract
