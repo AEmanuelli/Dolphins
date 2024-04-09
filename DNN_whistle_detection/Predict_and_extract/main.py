@@ -32,4 +32,4 @@ if __name__ == "__main__":
     #                         end_time=1800, batch_size=75, save=False, save_p=True, 
     #                         model_path="DNN_whistle_detection/models/model_vgg.h5", max_workers = 8)
 
-    process_prediction_files_in_folder(root, recording_folder_path=recordings, max_workers = 10)
+    process_prediction_files_in_folder(root, recording_folder_path=recordings, max_workers = 10, audio = True)

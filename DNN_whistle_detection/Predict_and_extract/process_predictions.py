@@ -112,7 +112,7 @@ def handle_missing_file(folder_path, folder_name):
         txt_file.write(f"No CSV found in {t_file_name}")
     print(f"Missing CSV file for {t_file_name}. No video extraction will be performed.")
 
-def process_prediction_file(prediction_file_path, folder_name, recording_folder_path, folder_path):
+def process_prediction_file(prediction_file_path, folder_name, recording_folder_path, folder_path, audio = True):
     t_file_name = transform_file_name(folder_name)
     print(f"processing : {t_file_name}")
     empty = False 
@@ -128,25 +128,25 @@ def process_prediction_file(prediction_file_path, folder_name, recording_folder_
 
     if not empty:
         # File exists and is not empty
-        process_non_empty_file(prediction_file_path, folder_name, recording_folder_path, folder_path)
+        process_non_empty_file(prediction_file_path, folder_name, recording_folder_path, folder_path, audio = audio)
     else:
         # File exists but is empty
         handle_empty_file(folder_path, folder_name)
 
-def process_folder(root, folder_name, recording_folder_path, folder_path):
+def process_folder(root, folder_name, recording_folder_path, folder_path, audio = True):
     csv_file_name = folder_name + ".wav_predictions.csv"
     # print(csv_file_name, csv_file_path)
     prediction_file_path = os.path.join(root, folder_name, csv_file_name)
     print("Prediction file path:", prediction_file_path)
     if os.path.exists(prediction_file_path): #s'assure de l'existence du ficheir csv
-        process_prediction_file(prediction_file_path, folder_name, recording_folder_path, folder_path)
+        process_prediction_file(prediction_file_path, folder_name, recording_folder_path, folder_path, audio = audio)
 
-def process_prediction_files_in_folder(root, recording_folder_path, max_workers=8):
+def process_prediction_files_in_folder(root, recording_folder_path, max_workers=8, audio = True):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         for folder_name in tqdm(reversed(os.listdir(root)), leave=False):
             folder_path = os.path.join(root, folder_name)
             if os.path.isdir(folder_path):
-                executor.submit(process_folder, root, folder_name, recording_folder_path, folder_path)
+                executor.submit(process_folder, root, folder_name, recording_folder_path, folder_path, audio = audio)
 # def process_prediction_files_in_folder(folder_path, recording_folder_path="/media/DOLPHIN_ALEXIS1/2023", max_workers = 16):
 #     with ThreadPoolExecutor(max_workers=max_workers) as executor:
 #         for root, _, files in os.walk(folder_path):
