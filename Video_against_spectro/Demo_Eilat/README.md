@@ -33,6 +33,12 @@ cd Video_against_spectro/Demo_Eilat
 pip install -r requirements.txt
 ```
 
+or 
+
+```bash
+pip3 install -r requirements.txt
+```
+
 3. Run the app locally:
 
 ```bash
