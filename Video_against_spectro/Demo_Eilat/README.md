@@ -5,20 +5,20 @@
     
     📂 Demo_Eilat
         📂 static/
-            📜 styles_dolphin.css webpage design
+            📜 styles_dolphin.css CSS file for webpage design.
         📂 templates
-            📜 index.html page d'accueil : choix de l'année parmis celles disponibles (2023/2024)
-            📜 select_day.html choix du jour parmis ceux disponibles
-            📜 select_hour.html choix de l'heure parmis celles disponibles
-            📜 select_month.html choix du mois parmis ceux disponibles
-            📜 show_files.html choix de l'extrait vidéo parlmis ceux disponibles dans les deux channels pour le recording choisi.
-            📜 thank_you.html page de remerciement après la soumission d'un commentaire, avce un lein de redirection vers index.html
-            📜 video.html Interface permettant de commenter l'extrait
+            📜 index.html: Homepage allowing users to select a year from available options (2023/2024).
+            📜 select_day.html: Page for selecting a day from available options.
+            📜 select_hour.html: Page for selecting an hour from available options.
+            📜 select_month.html: Page for selecting a month from available options.
+            📜 show_files.html: Page for choosing a video excerpt from available options in two channels for the selected recording.
+            📜 thank_you.html: Page displayed after submitting a comment, with a redirection link to index.html.
+            📜 video.html: Interface for commenting on the video excerpt.
         📂 Vid_demo_Eilat
             📂 échantillon des résultats des extractions
-        📜 app_demo_eilat.py backend du site web 
-        📜 requirements.txt configuration pour le backend 
-        📜 README.md 
+        📜 app_demo_eilat.py This file contains the backend logic of the web application.
+        📜 requirements.txt Configuration file listing dependencies required for the backend.
+        📜 README.md You are here! This file provides an overview of the contents and setup instructions for the Demo_Eilat web application.
 
 #Indications
 
@@ -29,3 +29,20 @@ pip install -r requirements.txt
 
 ##run app local : 
 python app_demo_eilat.py
+Usage
+
+    Clone the repository:
+
+    bash
+
+git clone https://github.com/your-username/Demo_Eilat.git
+
+Install the required dependencies:
+
+pip install -r requirements.txt
+
+Run the backend server:
+
+python app_demo_eilat.py
+
+Access the website through your web browser at http://localhost:5000.
