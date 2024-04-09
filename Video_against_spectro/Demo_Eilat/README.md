@@ -25,3 +25,17 @@
 
 ```bash
 cd Video_against_spectro/Demo_Eilat
+```
+
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the app locally:
+
+```bash
+
+python app_demo_eilat.py
+```
