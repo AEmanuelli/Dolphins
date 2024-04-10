@@ -50,7 +50,6 @@ def extraire_extraits_video(intervalles, fichier_video, dossier_sortie_video):
     # Libérer la mémoire en supprimant l'objet VideoFileClip
     video.close()
 
-
 def process_non_empty_file(prediction_file_path, folder_name, recording_folder_path, folder_path, audio = True):
     intervalles = lire_csv_extraits(prediction_file_path)
     intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
@@ -85,7 +84,6 @@ def process_non_empty_file(prediction_file_path, folder_name, recording_folder_p
         with open(txt_file_path, 'w') as txt_file:
             txt_file.write(f"No video found for {t_file_name}")
         print(f"Missing video file for {t_file_name}. No video extraction can be performed.")
-
 
 def handle_empty_file(folder_path, folder_name):
     dossier_sortie_video = os.path.join(folder_path, "pas_d_extraits")

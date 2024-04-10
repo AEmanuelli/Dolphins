@@ -1,11 +1,14 @@
 import os
+import sys
+sys.path.append('/home/alexis/Documents/GitHub/Dolphins')  # Add the root directory to sys.path
+
+from DNN_whistle_detection.Predict_and_extract.utils import process_audio_file
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import spectrogram
 from scipy.io import wavfile
 from tqdm import tqdm
-from DNN_whistle_detection.Predict_and_extract.process_predictions import process_audio_file
 
 # Exemple d'utilisation avec un fichier CSV contenant les intervalles de temps
 def main():
