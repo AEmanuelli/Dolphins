@@ -3,9 +3,9 @@
 # =============================================================================
 import os
 from concurrent.futures import ThreadPoolExecutor
-from whistle2vid import *
+from utils import *
 import re
-
+from tqdm import tqdm 
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
