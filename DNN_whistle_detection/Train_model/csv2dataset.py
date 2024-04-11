@@ -62,3 +62,16 @@
 #     main()
 
 
+from tensorflow.keras.models import load_model
+
+# Load the model from the specified path
+model_path = 'path/to/your/model.h5'
+model = load_model(model_path)
+
+# Display a summary of the model architecture
+model.summary()
+
+# Retrieve the weights of each layer
+for layer in model.layers:
+    print(layer.name)
+    print(layer.get_weights())
