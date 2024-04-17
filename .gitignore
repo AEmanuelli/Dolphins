@@ -32,3 +32,4 @@ DNN_yolo_dolphin_recognition/yolov5/
 *.jpg
 /home/alexis/Documents/GitHub/Dolphins/Dolphins_env
 Dolphins_env
+DNN_whistle_detection/Train_model/whistles_from_csv
