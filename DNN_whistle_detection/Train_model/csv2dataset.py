@@ -10,7 +10,7 @@ sys.path.append('/home/alexis/Documents/GitHub/Dolphins')  # Add the root direct
 from DNN_whistle_detection.Predict_and_extract.utils import process_audio_file, process_audio_file_alternative
 
 # Function to process intervals for a single recording
-def process_recording(csv_rows, audio_file_path, saving_folder, alternative = False, window_size = .4, margin = 0.3, neg_per_int =5):
+def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, window_size = .4, margin = 0.3, neg_per_int =5):
     """
     Creates dataset material for a single recording.
 
@@ -18,7 +18,7 @@ def process_recording(csv_rows, audio_file_path, saving_folder, alternative = Fa
     - csv_rows (list): List of rows from the CSV file containing intervals.
     - audio_file_path (str): Path to the audio file.
     - saving_folder (str): Path to the folder where images will be saved.
-    - alternative (bool): Flag indicating whether to use an alternative processing method (default: False).
+    - HD (bool): Flag indicating whether to use an alternative processing method (default: False).
     - window_size (float): Size of the window (in seconds) for each interval (default: 0.4).
     - margin (float): Minimum percentage of the length of positive images that we want to be labeled as positive according to the csv (default: 30).
     - neg_per_int (int) : quantity of negative images extracted where there are no positives (default : 5).
@@ -65,7 +65,7 @@ def process_recording(csv_rows, audio_file_path, saving_folder, alternative = Fa
         end_time_processed_neg = end_time_neg + (0.4 - (end_time_pos % 0.4)) - 5*window_size
 
         try:
-            if alternative : 
+            if HD : 
                 # Traitement de l'intervalle audio POSITIF
                 process_audio_file_alternative(audio_file_path, saving_folder=saving_folder_pos, start_time=start_time_processed_pos, 
                                                end_time=end_time_processed_pos, save=True)
