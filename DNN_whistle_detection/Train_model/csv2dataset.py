@@ -1,7 +1,7 @@
 import csv
 import sys
 import os
-from tqdm import tqdm 
+from tqdm.auto import tqdm 
 import math
 
 
@@ -22,8 +22,8 @@ def process_recording(csv_rows, audio_file_path, saving_folder):
         start_time = float(row[2])
         end_time = float(row[3])
         # Option 1 : arrondir pour avoir un joli float
-        # start_time_processed = round(math.ceil(start_time * 10) / 10, 1) # Arrondi au supérieur, à un chiffre après la virgule 
-        # end_time_processed = round(math.floor(end_time * 10) / 10, 1)   # Arrondi à l'inférieur, à un chiffre après la virgule
+        # start_time_processed = round(math.floor(start_time * 10) / 10, 1) # Arrondi au supérieur, à un chiffre après la virgule 
+        # end_time_processed = round(math.ceil(end_time * 10) / 10, 1)   # Arrondi à l'inférieur, à un chiffre après la virgule
 
         # Option 2 : découper dans le même format que notre convertisseur audio-->image
         start_time_processed = start_time - (start_time % 0.4)
@@ -38,19 +38,20 @@ def process_recording(csv_rows, audio_file_path, saving_folder):
         except Exception as e:
             continue
 
-
+total_lines = 5027
 # Main function
 def main():
     # Chemin du fichier CSV
-    csv_file_path = "/media/DOLPHIN1/Whistletest.csv"
+    csv_file_path = "/media/DOLPHIN1/AllWhistlesSubClustering.csv"
 
     # Chemin du dossier contenant les fichiers audio WAV
     audio_folder_path = "/media/zf31/Dolphins/Sound/" 
 
     # Dossier de sauvegarde des images
-    saving_folder = "DNN_whistle_detection/Train_model/whistles_from_csv/test"
+    saving_folder = "DNN_whistle_detection/Train_model/whistles_from_csv/ugly_coherent_images"
+    # saving_folder = "DNN_whistle_detection/Train_model/whistles_from_csv/beautiful spec"
 
-    # Lecture du fichier CSv
+    # Lecture du fichier CSV
     with open(csv_file_path, 'r') as file:
         reader = csv.reader(file)
         next(reader)  # Skip header
@@ -58,7 +59,8 @@ def main():
         current_recording_id = None
         current_recording_intervals = []
 
-        for row in tqdm(reader):
+        for row in tqdm(reader, desc="Processing", total=total_lines, unit="row", colour="blue", bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"):
+            recording_id = row[0]  # Recording ID is assumed to be the first column
             recording_id = row[0]  # Recording ID is assumed to be the first column
             if recording_id != current_recording_id:
                 # Process intervals for the previous recording

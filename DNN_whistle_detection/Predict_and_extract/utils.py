@@ -268,3 +268,69 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
     plt.close('all')  # Close all figures to release memory
 
     return images
+
+
+def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
+                       nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px=903,
+                       target_height_px=677):
+    try:
+        # Load sound recording
+        fs, x = wavfile.read(file_path)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File {file_path} not found.")
+    
+    # Create the saving folder if it doesn't exist
+    if save and not os.path.exists(saving_folder):
+        os.makedirs(saving_folder)
+    
+    # Calculate the spectrogram parameters
+    hop = round(0.8 * wlen)  # window hop size
+    win = blackman(wlen, sym=False)
+
+    images = []
+    file_name = os.path.splitext(os.path.basename(file_path))[0]
+    N = len(x)  # signal length
+
+    if end_time is not None:
+        N = min(N, int(end_time * fs))
+
+    low = int(start_time * fs)
+    
+    samples_per_slice = int(sliding_w * fs)
+
+    for _ in tqdm(range(batch_size), desc="Generating Images"):
+        if low + samples_per_slice > N:  # Check if the slice exceeds the signal length
+            break
+        x_w = x[low:low + samples_per_slice]
+        
+        # Calculate the spectrogram
+        f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
+        Sxx = 20 * np.log10(np.abs(Sxx) + 1e-6)  # Convert to dB, adding small value to avoid log(0)
+
+        # Create the spectrogram plot
+        fig, ax = plt.subplots()
+        cax = ax.pcolormesh(t, f / 1000, Sxx, cmap='inferno')
+        ax.set_ylim(cut_low_frequency, cut_high_frequency)
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Frequency (kHz)')
+        cbar = fig.colorbar(cax)
+        cbar.set_label('Intensity (dB)')
+        ax.grid(False)
+        
+        fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
+        
+        # Save the spectrogram as a JPG image without borders
+        if save:
+            image_name = os.path.join(saving_folder, f"{file_name}-{low/fs}.jpg")
+            fig.savefig(image_name, dpi=plt.rcParams['figure.dpi'], bbox_inches='tight', pad_inches=0)  # Save without borders
+
+        fig.canvas.draw()
+        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        images.append(image)
+
+        low += samples_per_slice
+
+        plt.close(fig)  # Close figure to release memory
+
+    return images
