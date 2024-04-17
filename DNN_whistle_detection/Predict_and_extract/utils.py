@@ -213,13 +213,14 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
         fs, x = wavfile.read(file_path)
     except FileNotFoundError:
         raise FileNotFoundError(f"File {file_path} not found.")
-            # Create the saving folder if it doesn't exist
+    
+    # Create the saving folder if it doesn't exist
     if save and not os.path.exists(saving_folder):
         os.makedirs(saving_folder)
+    
     # Calculate the spectrogram parameters
     hop = round(0.8 * wlen)  # window hop size
     win = blackman(wlen, sym=False)
-    # win = np.blackman(wlen)
 
     images = []
     file_name = os.path.splitext(os.path.basename(file_path))[0]
@@ -229,12 +230,13 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
         N = min(N, int(end_time * fs))
 
     low = int(start_time * fs)
-    up = low + int(0.8 * fs)
-    file_name_ex = start_time  # the start in second
-    for _ in range(batch_size):#, desc=f"Processing batch : second {start_time} to {start_time+batch_size*.4}", leave=False):
-        if up > N:  # Check if the upper index exceeds the signal length
+    
+    samples_per_slice = int(sliding_w * fs)
+
+    for _ in range(batch_size):
+        if low + samples_per_slice > N:  # Check if the slice exceeds the signal length
             break
-        x_w = x[low:up]
+        x_w = x[low:low + samples_per_slice]
         
         # Calculate the spectrogram
         f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
@@ -253,7 +255,7 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
       
         # Save the spectrogram as a JPG image without borders
         if save:
-            image_name = os.path.join(saving_folder, f"{file_name}-{file_name_ex}.jpg")
+            image_name = os.path.join(saving_folder, f"{file_name}-{low/fs}.jpg")
             fig.savefig(image_name, dpi=plt.rcParams['figure.dpi'])  # Save without borders
 
         fig.canvas.draw()
@@ -261,9 +263,7 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
         image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
         images.append(image)
 
-        low += int(sliding_w * fs)
-        file_name_ex += sliding_w
-        up = low + int(0.8 * fs)
+        low += samples_per_slice
 
     plt.close('all')  # Close all figures to release memory
 
