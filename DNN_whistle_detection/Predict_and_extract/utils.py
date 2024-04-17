@@ -13,9 +13,9 @@ import os
 from tqdm import tqdm
 #%%
 # =============================================================================
-#********************* FUNCTIONS : Whistle to video 
+#********************* FUNCTIONS 
 # =============================================================================
-
+#*********************  Whistle to video 
 def convertir_texte_en_csv(fichier_texte, fichier_csv, delimiteur="\t", skip_lines = 1):
     """
     Convertit un fichier texte en fichier CSV en traitant une ligne sur deux.
@@ -123,47 +123,152 @@ def trouver_fichier_video(fichier_csv, dossier_videos = "/media/DOLPHIN/2023/"):
 
     print(f"Aucun fichier vidéo correspondant trouvé pour le fichier CSV {fichier_csv}")
     return None
-#%%
-# =============================================================================
-#********************* UTILISATION
-# =============================================================================
 
+#********************* Audio to Spectrogram
 
-fichier_texte = "/media/DOLPHIN_ALEXIS/temp_alexis/Label_01_Aug_2023_0845_channel_1.txt"
-fichier_csv = "/media/DOLPHIN_ALEXIS/temp_alexis/Label_01_Aug_2023_0845_channel_1.csv"
+def spectrogram_f(samples, sample_rate, stride_ms = 5.0, 
+                window_ms = 10.0, max_freq = np.inf, min_freq = 0):
+    """
+    Compute a spectrogram with consecutive Fourier transforms.
 
+    Parameters
+    ----------
+    samples : waveform samples.
+    sample_rate : acquisition frequency.
+    stride_ms : overlap stride used in ms. The default is 5.0.
+    window_ms : window used in ms. The default is 10.0.
+    max_freq : frequency maximum. The default is np.inf.
+    min_freq : frequency minimum. The default is 0.
 
-#********************* txt vers csv
-# # Spécifiez le chemin vers le fichier texte d'entrée et le fichier CSV de sortie
+    Returns
+    -------
+    specgram
+    freqs 
+    times
 
-# convertir_texte_en_csv(fichier_texte, fichier_csv, skip_lines=1)
+    """
+    
+    # Get number of points for each window and stride
+    stride_size = int(0.001 * sample_rate * stride_ms)
+    window_size = int(0.001 * sample_rate * window_ms)
+    
 
+    # Extract strided windows
+    truncate_size = (len(samples) - window_size) % stride_size
+    samples = samples[:len(samples) - truncate_size]
+    nshape = (window_size, (len(samples) - window_size) // stride_size + 1)
+    nstrides = (samples.strides[0], samples.strides[0] * stride_size)
+    windows = np.lib.stride_tricks.as_strided(samples, shape = nshape, strides = nstrides)
+    
+    times = np.linspace(0, (len(samples)+truncate_size)/sample_rate, nshape[1])
+    
+    assert np.all(windows[:, 1] == samples[stride_size:(stride_size + window_size)])
 
+    # Window weighting, squared Fast Fourier Transform (fft), scaling
+    weighting = np.hanning(window_size)[:, None]
+    
+    fft = np.fft.rfft(windows * weighting, axis=0)
+    fft = np.absolute(fft)
+    fft = fft**2
+    
+    scale = np.sum(weighting**2) * sample_rate
+    fft[1:-1, :] *= (2.0 / scale)
+    fft[(0, -1), :] /= scale
+    
+    # Prepare fft frequency list
+    freqs = float(sample_rate) / window_size * np.arange(fft.shape[0])
+    
+    # Select the spectogram window  
+    ind_max = np.where(freqs <= max_freq)[0][-1] + 1
+    ind_min = np.where(freqs >= min_freq)[0][0]
+    freqs = freqs[ind_min:ind_max]
+    
+    # specgram = np.log(fft[ind_min:ind_max, :] + eps)
+    specgram = fft[ind_min:ind_max, :]
+        
+    return specgram, freqs, times
 
+def plot_spectogram(specgram, freqs, times, ms=False, log=True, eps= 1e-14):
+    """
+    Plot the spectrogram.
 
+    Parameters
+    ----------
+    specgram
+    freqs
+    times
+    ms : Plot with the time in seconds. The default is False.
+    log : The default is True.
+    eps : The default is 1e-14.
 
-# #********************* csv vers intervalles 
-# nom_fichier = "/media/DOLPHIN_ALEXIS/temp_alexis/labels_channel_1.csv"
-# intervalles = lire_csv_extraits(nom_fichier)
-# intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow = 5)
-# print(intervalles_fusionnes)
+    Returns
+    -------
+    ax
 
+    """
+    if ms :
+        fig, ax = plt.subplots(figsize=(10, 5))
+        if log :
+            ax.pcolormesh(times, freqs, np.log(specgram + eps), shading='auto', cmap='viridis')
+        else:
+            ax.pcolormesh(times, freqs, specgram, shading='auto', cmap='viridis')
+        plt.ylabel('Frequency [Hz]')
+        plt.xlabel('Time [ms]')
+        # plt.xticks(np.arange(0, times[-1]+0.1, step=0.1))
+        plt.yticks(np.arange(freqs[0],freqs[-1], step=1000))
+        plt.title('Spectrogram')
+    else :
+        fig, ax = plt.subplots(figsize=(10, 5))
+        if log :
+            ax.pcolormesh(np.arange(0, specgram.shape[1]), freqs, np.log(specgram + eps), shading='auto', cmap='viridis')
+        else:
+            ax.pcolormesh(np.arange(0, specgram.shape[1]), freqs, specgram, shading='auto', cmap='viridis')
+        plt.ylabel('Frequency [Hz]')
+        plt.xlabel('Time')
+        # plt.xticks(np.arange(0, specgram.shape[1], step=50))
+        plt.yticks(np.arange(freqs[0],freqs[-1], step=1000))
+        plt.title('Spectrogram')
 
-# #********************* intervalles vers extraits
-# fichier_video = "/media/DOLPHIN_ALEXIS/temp_alexis/1_08/Exp_01_Aug_2023_1645_cam_all.mp4"  # Chemin vers le fichier vidéo d'entrée
-# dossier_sortie = "./extraits/channel_1"
-# extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie)
+    return ax
 
+def wav_to_spec(recording_path, stride_ms = 5.0, window_ms = 10.0, max_freq = np.inf, min_freq = 0, cut=None):
+    """
+    Function to get spectrogram from recording path directly. More effecient way to use the memory.
 
-# import matlab.engine
-# eng = matlab.engine.start_matlab()
-# # Run a MATLAB script
-# eng.eval("/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/save_spectrogram.m", nargout=0)
+    Parameters
+    ----------
+    recording_path
+    stride_ms : overlap stride used in ms. The default is 5.0.
+    window_ms : window used in ms. The default is 10.0.
+    max_freq : frequency maximum. The default is np.inf.
+    min_freq : frequency minimum. The default is 0.
+    cut : optional. Used for selecting a portion of the recording.
+          Use a tuple (s_start, s_end) where s_start and s_end are 
+          the beginning and the end of the section in seconds.
 
-# # Call a MATLAB function
-# result = eng.my_matlab_function(arg1, arg2)
+    Returns
+    -------
+    specgram
+    freqs 
+    times
 
-
+    """
+    
+    sample_rate, samples = wavfile.read(recording_path)
+    try:
+        samples = samples[:,0]
+    except IndexError:
+        pass
+    
+    specgram, freqs, times = spectrogram(samples, sample_rate, stride_ms=5.0, window_ms=10.0, 
+                                         max_freq=max_freq, min_freq=min_freq)
+    
+    if cut is not None:
+        s_start, s_end = cut
+        specgram = specgram[:,(times > s_start)&(times < s_end)]
+        times = times[(times > s_start)&(times < s_end)]
+    
+    return specgram, freqs, times
 
 def transform_file_name(file_name):
     # Utilisation d'une expression régulière pour extraire les parties nécessaires du nom de fichier
@@ -240,7 +345,7 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
         
         # Calculate the spectrogram
         f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
-        Sxx = 20 * np.log10(np.abs(Sxx))  # Convert to dB
+        Sxx = 20 * np.log10(np.abs(Sxx)+1e-14)  # Convert to dB
 
         # Create the spectrogram plot
         fig, ax = plt.subplots()
@@ -268,7 +373,6 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
     plt.close('all')  # Close all figures to release memory
 
     return images
-
 
 def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
                        nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px=903,
@@ -311,11 +415,8 @@ def process_audio_file_alternative(file_path, saving_folder="./images", batch_si
         fig, ax = plt.subplots()
         cax = ax.pcolormesh(t, f / 1000, Sxx, cmap='inferno')
         ax.set_ylim(cut_low_frequency, cut_high_frequency)
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Frequency (kHz)')
-        cbar = fig.colorbar(cax)
-        cbar.set_label('Intensity (dB)')
-        ax.grid(False)
+        
+        ax.axis('off')  # Turn off axis
         
         fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
         
@@ -334,3 +435,112 @@ def process_audio_file_alternative(file_path, saving_folder="./images", batch_si
         plt.close(fig)  # Close figure to release memory
 
     return images
+
+
+
+#%%
+# =============================================================================
+#********************* UTILISATION
+# =============================================================================
+
+
+fichier_texte = "/media/DOLPHIN_ALEXIS/temp_alexis/Label_01_Aug_2023_0845_channel_1.txt"
+fichier_csv = "/media/DOLPHIN_ALEXIS/temp_alexis/Label_01_Aug_2023_0845_channel_1.csv"
+
+
+#********************* txt vers csv
+# # Spécifiez le chemin vers le fichier texte d'entrée et le fichier CSV de sortie
+
+# convertir_texte_en_csv(fichier_texte, fichier_csv, skip_lines=1)
+
+
+
+
+
+# #********************* csv vers intervalles 
+# nom_fichier = "/media/DOLPHIN_ALEXIS/temp_alexis/labels_channel_1.csv"
+# intervalles = lire_csv_extraits(nom_fichier)
+# intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow = 5)
+# print(intervalles_fusionnes)
+
+
+# #********************* intervalles vers extraits
+# fichier_video = "/media/DOLPHIN_ALEXIS/temp_alexis/1_08/Exp_01_Aug_2023_1645_cam_all.mp4"  # Chemin vers le fichier vidéo d'entrée
+# dossier_sortie = "./extraits/channel_1"
+# extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie)
+
+
+# import matlab.engine
+# eng = matlab.engine.start_matlab()
+# # Run a MATLAB script
+# eng.eval("/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/save_spectrogram.m", nargout=0)
+
+# # Call a MATLAB function
+# result = eng.my_matlab_function(arg1, arg2)
+
+
+
+
+
+
+# def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=500, start_time=0, end_time=None, save=True, wlen=2048,
+#                        nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20) :
+#     try:
+#         # Load sound recording
+#         fs, x = wavfile.read(file_path)
+#     except FileNotFoundError:
+#         raise FileNotFoundError(f"File {file_path} not found.")
+    
+#     # Create the saving folder if it doesn't exist
+#     if save and not os.path.exists(saving_folder):
+#         os.makedirs(saving_folder)
+    
+#     fig, ax = plt.subplots(figsize=(10, 5))
+#     # Calculate the spectrogram parameters
+#     hop = round(0.8 * wlen)  # window hop size
+#     win = blackman(wlen, sym=False)
+
+#     images = []
+#     file_name = os.path.splitext(os.path.basename(file_path))[0]
+#     N = len(x)  # signal length
+
+#     if end_time is not None:
+#         N = min(N, int(end_time * fs))
+
+#     low = int(start_time * fs)
+    
+#     samples_per_slice = int(sliding_w * fs)
+
+#     for _ in tqdm(range(batch_size), desc="Generating Images"):
+#         if low + samples_per_slice > N:  # Check if the slice exceeds the signal length
+#             break
+#         x_w = x[low:low + samples_per_slice]
+        
+#         # Calculate the spectrogram
+#         f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
+#         Sxx = 20 * np.log10(np.abs(Sxx) + 1e-14)  # Convert to dB, adding small value to avoid log(0)
+
+#         # Create the spectrogram plot
+#         fig, ax = plt.subplots()
+#         cax = ax.pcolormesh(t, f / 1000, Sxx, cmap='inferno')
+#         ax.set_ylim(cut_low_frequency, cut_high_frequency)
+        
+#         ax.axis('off')  # Turn off axis
+        
+#         fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
+        
+#         # Save the spectrogram as a JPG image without borders
+#         if save:
+#             image_name = os.path.join(saving_folder, f"{file_name}-{low/fs}.jpg")
+#             fig.savefig(image_name, dpi=plt.rcParams['figure.dpi'], bbox_inches='tight', pad_inches=0)  # Save without borders
+
+#         fig.canvas.draw()
+#         image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+#         image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+#         images.append(image)
+
+#         low += samples_per_slice
+
+#         plt.close(fig)  # Close figure to release memory
+
+#     return images
