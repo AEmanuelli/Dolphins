@@ -19,14 +19,20 @@ def process_recording(csv_rows, audio_file_path, saving_folder):
     # os.makedirs(recording_saving_folder, exist_ok=True)
     # Process each interval for this recording
     for row in csv_rows:
+        start_time = float(row[2])
+        end_time = float(row[3])
+        # Option 1 : arrondir pour avoir un joli float
+        # start_time_processed = round(math.ceil(start_time * 10) / 10, 1) # Arrondi au supérieur, à un chiffre après la virgule 
+        # end_time_processed = round(math.floor(end_time * 10) / 10, 1)   # Arrondi à l'inférieur, à un chiffre après la virgule
 
-        start_time = round(math.floor(float(row[2]) * 10) / 10, 1)  # Arrondi à l'inférieur, à un chiffre après la virgule
-        end_time = round(math.ceil(float(row[3]) * 10) / 10, 1)     # Arrondi au supérieur, à un chiffre après la virgule
+        # Option 2 : découper dans le même format que notre convertisseur audio-->image
+        start_time_processed = start_time - (start_time % 0.4)
+        end_time_processed = end_time + (0.4 - (end_time % 0.4))
 
 
         # Traitement de l'intervalle audio
         try:
-            process_audio_file(audio_file_path, saving_folder=saving_folder, start_time=start_time, end_time=end_time, save=True)
+            process_audio_file(audio_file_path, saving_folder=saving_folder, start_time=start_time_processed, end_time=end_time_processed, save=True)
             print(f"OK pour {audio_file_path}")
             break
         except Exception as e:
