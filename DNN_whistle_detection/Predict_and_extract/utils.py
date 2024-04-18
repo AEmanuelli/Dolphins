@@ -11,6 +11,10 @@ import csv
 import moviepy.editor as mp
 import os
 from tqdm import tqdm
+
+import librosa
+import numpy as np
+
 #%%
 # =============================================================================
 #********************* FUNCTIONS 
@@ -188,6 +192,102 @@ def spectrogram_f(samples, sample_rate, stride_ms = 5.0,
         
     return specgram, freqs, times
 
+def wav_to_spec(recording_path, stride_ms = 5.0, window_ms = 10.0, max_freq = np.inf, min_freq = 0, cut=None):
+    """
+    Function to get spectrogram from recording path directly. More effecient way to use the memory.
+
+    Parameters
+    ----------
+    recording_path
+    stride_ms : overlap stride used in ms. The default is 5.0.
+    window_ms : window used in ms. The default is 10.0.
+    max_freq : frequency maximum. The default is np.inf.
+    min_freq : frequency minimum. The default is 0.
+    cut : optional. Used for selecting a portion of the recording.
+          Use a tuple (s_start, s_end) where s_start and s_end are 
+          the beginning and the end of the section in seconds.
+
+    Returns
+    -------
+    specgram
+    freqs 
+    times
+
+    """
+    
+    sample_rate, samples = wavfile.read(recording_path)
+    try:
+        samples = samples[:,0]
+    except IndexError:
+        pass
+    
+    specgram, freqs, times = spectrogram_f(samples, sample_rate, stride_ms=5.0, window_ms=10.0, 
+                                         max_freq=max_freq, min_freq=min_freq)
+    
+    if cut is not None:
+        s_start, s_end = cut
+        specgram = specgram[:,(times > s_start)&(times < s_end)]
+        times = times[(times > s_start)&(times < s_end)]
+    
+    return specgram, freqs, times
+
+def wav_to_spec_librosa(recording_path, stride_ms=5.0, window_ms=10.0, max_freq=np.inf, min_freq=0, cut=None):
+    """
+    Function to get spectrogram from recording path directly. More efficient way to use memory.
+
+    Parameters
+    ----------
+    recording_path : str
+        Path to the WAV file.
+    stride_ms : float, optional
+        Overlap stride used in milliseconds. The default is 5.0.
+    window_ms : float, optional
+        Window used in milliseconds. The default is 10.0.
+    max_freq : float, optional
+        Maximum frequency. The default is np.inf.
+    min_freq : float, optional
+        Minimum frequency. The default is 0.
+    cut : tuple, optional
+        Used for selecting a portion of the recording.
+        Use a tuple (s_start, s_end) where s_start and s_end are 
+        the beginning and the end of the section in seconds.
+
+    Returns
+    -------
+    specgram : np.ndarray
+        Spectrogram of the audio.
+    freqs : np.ndarray
+        Frequencies.
+    times : np.ndarray
+        Time axis.
+
+    """
+    
+    # Load audio file
+    samples, sample_rate = librosa.load(recording_path, sr=None, mono=True)
+    
+    # Compute spectrogram
+    specgram = librosa.feature.melspectrogram(y=samples, sr=sample_rate, n_fft=int(sample_rate * window_ms / 1000),
+                                              hop_length=int(sample_rate * stride_ms / 1000),
+                                              fmax=max_freq, fmin=min_freq)
+    specgram_db = librosa.power_to_db(specgram, ref=np.max)
+    
+    # Compute time axis
+    times = np.arange(specgram.shape[1]) * (window_ms - stride_ms) / 1000.0
+    
+    # Compute frequency axis
+    freqs = librosa.core.mel_frequencies(n_mels=specgram.shape[0], fmin=min_freq, fmax=max_freq)
+    
+    # Apply cut if specified
+    if cut is not None:
+        s_start, s_end = cut
+        start_frame = int(s_start * sample_rate / (window_ms - stride_ms))
+        end_frame = int(s_end * sample_rate / (window_ms - stride_ms))
+        specgram_db = specgram_db[:, start_frame:end_frame]
+        times = times[start_frame:end_frame]
+    
+    return specgram_db, freqs, times
+
 def plot_spectogram(specgram, freqs, times, ms=False, log=True, eps= 1e-14):
     """
     Plot the spectrogram.
@@ -230,45 +330,6 @@ def plot_spectogram(specgram, freqs, times, ms=False, log=True, eps= 1e-14):
         plt.title('Spectrogram')
 
     return ax
-
-def wav_to_spec(recording_path, stride_ms = 5.0, window_ms = 10.0, max_freq = np.inf, min_freq = 0, cut=None):
-    """
-    Function to get spectrogram from recording path directly. More effecient way to use the memory.
-
-    Parameters
-    ----------
-    recording_path
-    stride_ms : overlap stride used in ms. The default is 5.0.
-    window_ms : window used in ms. The default is 10.0.
-    max_freq : frequency maximum. The default is np.inf.
-    min_freq : frequency minimum. The default is 0.
-    cut : optional. Used for selecting a portion of the recording.
-          Use a tuple (s_start, s_end) where s_start and s_end are 
-          the beginning and the end of the section in seconds.
-
-    Returns
-    -------
-    specgram
-    freqs 
-    times
-
-    """
-    
-    sample_rate, samples = wavfile.read(recording_path)
-    try:
-        samples = samples[:,0]
-    except IndexError:
-        pass
-    
-    specgram, freqs, times = spectrogram(samples, sample_rate, stride_ms=5.0, window_ms=10.0, 
-                                         max_freq=max_freq, min_freq=min_freq)
-    
-    if cut is not None:
-        s_start, s_end = cut
-        specgram = specgram[:,(times > s_start)&(times < s_end)]
-        times = times[(times > s_start)&(times < s_end)]
-    
-    return specgram, freqs, times
 
 def transform_file_name(file_name):
     # Utilisation d'une expression régulière pour extraire les parties nécessaires du nom de fichier
@@ -481,66 +542,78 @@ fichier_csv = "/media/DOLPHIN_ALEXIS/temp_alexis/Label_01_Aug_2023_0845_channel_
 
 
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+def save_spectrogram(specgram, freqs, times, image_saving_path, ms=False, log=True, eps=1e-14):
+    """
+    Save the spectrogram image.
+
+    Parameters
+    ----------
+    specgram : 2D array
+        The spectrogram data.
+    freqs : array
+        Array of frequencies.
+    times : array
+        Array of times.
+    saving_folder : str
+        Path to the folder where the image will be saved.
+    ms : bool, optional
+        Plot with the time in milliseconds. The default is False.
+    log : bool, optional
+        Whether to use logarithmic scale. The default is True.
+    eps : float, optional
+        Epsilon value. The default is 1e-14.
+
+    Returns
+    -------
+    None
+    """
+    if ms:
+        fig, ax = plt.subplots(figsize=(10, 5))
+        if log:
+            ax.pcolormesh(times, freqs, np.log(specgram + eps), shading='auto', cmap='viridis')
+        else:
+            ax.pcolormesh(times, freqs, specgram, shading='auto', cmap='viridis')
+        plt.ylabel('Frequency [Hz]')
+        plt.xlabel('Time [ms]')
+        plt.yticks(np.arange(freqs[0], freqs[-1], step=1000))
+    else:
+        fig, ax = plt.subplots(figsize=(10, 5))
+        if log:
+            ax.pcolormesh(np.arange(0, specgram.shape[1]), freqs, np.log(specgram + eps), shading='auto', cmap='viridis')
+        else:
+            ax.pcolormesh(np.arange(0, specgram.shape[1]), freqs, specgram, shading='auto', cmap='viridis')
+        plt.ylabel('Frequency [Hz]')
+        plt.xlabel('Time')
+        plt.yticks(np.arange(freqs[0], freqs[-1], step=1000))
+
+    # Supprimer titre et légende
+    plt.title('')
+    plt.colorbar().remove()
+
+    # Enregistrer l'image
+    plt.savefig(image_saving_path, bbox_inches='tight', pad_inches=0)
+
+    plt.close(fig)
 
 
-# def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=500, start_time=0, end_time=None, save=True, wlen=2048,
-#                        nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20) :
-#     try:
-#         # Load sound recording
-#         fs, x = wavfile.read(file_path)
-#     except FileNotFoundError:
-#         raise FileNotFoundError(f"File {file_path} not found.")
-    
-#     # Create the saving folder if it doesn't exist
-#     if save and not os.path.exists(saving_folder):
-#         os.makedirs(saving_folder)
-    
-#     fig, ax = plt.subplots(figsize=(10, 5))
-#     # Calculate the spectrogram parameters
-#     hop = round(0.8 * wlen)  # window hop size
-#     win = blackman(wlen, sym=False)
+def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=5, start_time=0, end_time=None, save=True, 
+                                   cut_low_frequency=3, cut_high_frequency=25) :
+    # Create the saving folder if it doesn't exist
+    if save and not os.path.exists(saving_folder):
+        os.makedirs(saving_folder)
 
-#     images = []
-#     file_name = os.path.splitext(os.path.basename(file_path))[0]
-#     N = len(x)  # signal length
+    for i in tqdm(range(batch_size), desc="Generating Images"):
+        file_name = os.path.splitext(os.path.basename(file_path))[0]
+        image_name = os.path.join(saving_folder, f"{file_name}-{i}.jpg")
+        print(image_name)
+        Sxx, f, t = wav_to_spec(file_path, stride_ms = 5.0, window_ms = 10.0, max_freq = cut_low_frequency, min_freq = cut_high_frequency, cut=(start_time, end_time))
+        save_spectrogram(Sxx, f, t, saving_folder, image_saving_path=image_name)
+        print(image_name)
 
-#     if end_time is not None:
-#         N = min(N, int(end_time * fs))
 
-#     low = int(start_time * fs)
-    
-#     samples_per_slice = int(sliding_w * fs)
-
-#     for _ in tqdm(range(batch_size), desc="Generating Images"):
-#         if low + samples_per_slice > N:  # Check if the slice exceeds the signal length
-#             break
-#         x_w = x[low:low + samples_per_slice]
         
-#         # Calculate the spectrogram
-#         f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
-#         Sxx = 20 * np.log10(np.abs(Sxx) + 1e-14)  # Convert to dB, adding small value to avoid log(0)
-
-#         # Create the spectrogram plot
-#         fig, ax = plt.subplots()
-#         cax = ax.pcolormesh(t, f / 1000, Sxx, cmap='inferno')
-#         ax.set_ylim(cut_low_frequency, cut_high_frequency)
         
-#         ax.axis('off')  # Turn off axis
-        
-#         fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
-        
-#         # Save the spectrogram as a JPG image without borders
-#         if save:
-#             image_name = os.path.join(saving_folder, f"{file_name}-{low/fs}.jpg")
-#             fig.savefig(image_name, dpi=plt.rcParams['figure.dpi'], bbox_inches='tight', pad_inches=0)  # Save without borders
 
-#         fig.canvas.draw()
-#         image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-#         image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-#         images.append(image)
-
-#         low += samples_per_slice
-
-#         plt.close(fig)  # Close figure to release memory
-
-#     return images

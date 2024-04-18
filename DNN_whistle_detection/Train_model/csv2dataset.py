@@ -94,7 +94,7 @@ def count_lines_in_csv(csv_file_path):
 
 
 # Main function
-def main():
+def create_dataset_from_csv(where, HD):
     # Chemin du fichier CSV
     csv_file_path = "DNN_whistle_detection/Train_model/AllWhistlesSubClustering_final.csv"
     total_lines = count_lines_in_csv(csv_file_path)
@@ -102,7 +102,7 @@ def main():
     audio_folder_path = "/media/zf31/Dolphins/Sound/" 
 
     # Dossier de sauvegarde des images
-    saving_folder = "DNN_whistle_detection/Train_model/whistles_from_csv/test"
+    saving_folder = where
     # saving_folder = "DNN_whistle_detection/Train_model/whistles_from_csv/ugly_coherent_images"
     # saving_folder = "DNN_whistle_detection/Train_model/whistles_from_csv/beautiful spec"
 
@@ -120,7 +120,7 @@ def main():
             if recording_id != current_recording_id:
                 # Process intervals for the previous recording
                 if current_recording_intervals:
-                    process_recording(current_recording_intervals, os.path.join(audio_folder_path, current_recording_id + ".wav"), saving_folder)
+                    process_recording(current_recording_intervals, os.path.join(audio_folder_path, current_recording_id + ".wav"), saving_folder, HD = HD)
                 # Start processing intervals for a new recording
                 current_recording_id = recording_id
                 current_recording_intervals = []
@@ -130,7 +130,8 @@ def main():
 
         # Process the last recording
         if current_recording_intervals:
-            process_recording(current_recording_intervals, os.path.join(audio_folder_path, current_recording_id + ".wav"), saving_folder)
+            process_recording(current_recording_intervals, os.path.join(audio_folder_path, current_recording_id + ".wav"), saving_folder, HD = HD)
 
 if __name__ == "__main__":
-    main()
+    saving_folder = os.path.abspath("DNN_whistle_detection/Train_model/whistles_from_csv/Ugly_coherent_spec_wednesday_night")
+    create_dataset_from_csv(where = saving_folder, HD = False)
