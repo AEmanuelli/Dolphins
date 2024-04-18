@@ -6,10 +6,10 @@ import math
 
 sys.path.append('/home/alexis/Documents/GitHub/Dolphins')  # Add the root directory to sys.path
 
-from DNN_whistle_detection.Predict_and_extract.utils import process_audio_file, process_audio_file_alternative, name_saving_folder
+from DNN_whistle_detection.Predict_and_extract.utils import process_audio_file, process_audio_file_alternative, name_saving_folder, count_lines_in_csv
 
 # Function to process intervals for a single recording
-def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, window_size = .4, margin = 0.3, neg_per_int =5):
+def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, window_size = .4, margin = 0.3, neg_per_int =10):
     """
     Creates dataset material for a single recording.
 
@@ -38,7 +38,7 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
     # Process each interval for this recording
 
 
-    end_time_pos_cache = 0
+    end_time_pos_cache = 30
     for row in csv_rows:
         start_time_neg = end_time_pos_cache
         start_time_pos = float(row[2]) + margin*window_size
@@ -73,9 +73,9 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
                     process_audio_file_alternative(audio_file_path, saving_folder=saving_folder_neg, start_time=start_time_processed_neg, 
                                                 end_time=end_time_processed_neg, batch_size = neg_per_int, save=True)
             else:   
-                # Traitement de l'intervalle audio POSITIF 
-                process_audio_file(audio_file_path, saving_folder=saving_folder_pos, start_time=start_time_processed_pos, 
-                                   end_time=end_time_processed_pos, save=True)
+                # # Traitement de l'intervalle audio POSITIF 
+                # process_audio_file(audio_file_path, saving_folder=saving_folder_pos, start_time=start_time_processed_pos, 
+                #                    end_time=end_time_processed_pos, save=True)
                 if ok_neg:
                     # Traitement de l'intervalle audio NÉGATIF
                     process_audio_file(audio_file_path, saving_folder=saving_folder_neg, start_time=start_time_processed_neg, 
@@ -86,14 +86,8 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
             continue
         
 
-def count_lines_in_csv(csv_file_path):
-    with open(csv_file_path, 'r') as file:
-        reader = csv.reader(file)
-        return sum(1 for row in reader)
-
-
 # Main function
-def create_dataset_from_csv(HD,HD_name = "HD", Ugly_coherent_name="Ugly_coherent" ,folder_name = None):
+def create_dataset_from_csv(HD, HD_name = "HD", Ugly_coherent_name="Ugly_coherent" ,folder_name = None):
     
     """
     Crée un ensemble d'images spectrogrammes à partir d'un fichier CSV contenant des timestamps des whistles positifs.
@@ -155,4 +149,4 @@ def create_dataset_from_csv(HD,HD_name = "HD", Ugly_coherent_name="Ugly_coherent
             process_recording(current_recording_intervals, os.path.join(audio_folder_path, current_recording_id + ".wav"), saving_folder, HD = HD)
 
 if __name__ == "__main__":
-    create_dataset_from_csv(HD = False)
+    create_dataset_from_csv(HD = False, folder_name="Ugly_coherent_negative")

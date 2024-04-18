@@ -55,6 +55,11 @@ def name_saving_folder(base_folder):
     # Retourner le chemin absolu du dossier avec le suffixe "_last"
     return saving_folder
 
+def count_lines_in_csv(csv_file_path):
+    with open(csv_file_path, 'r') as file:
+        reader = csv.reader(file)
+        return sum(1 for row in reader)
+
 #*********************  Whistle to video 
 def convertir_texte_en_csv(fichier_texte, fichier_csv, delimiteur="\t", skip_lines = 1):
     """
@@ -472,11 +477,12 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
     return images
 
 def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
-                       nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px=903,
-                       target_height_px=677):
+                                   nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=25, target_width_px=1920,
+                                   target_height_px=1080):
     try:
         # Load sound recording
-        fs, x = wavfile.read(file_path)
+        x, fs = librosa.load(file_path, sr=None)
+        print("zboub")
     except FileNotFoundError:
         raise FileNotFoundError(f"File {file_path} not found.")
     
@@ -485,9 +491,9 @@ def process_audio_file_alternative(file_path, saving_folder="./images", batch_si
         os.makedirs(saving_folder)
     
     # Calculate the spectrogram parameters
-    hop = round(0.8 * wlen)  # window hop size
-    win = blackman(wlen, sym=False)
-
+    hop_length = int(sliding_w * fs)
+    n_mels = 128  # Number of Mel bands
+    
     images = []
     file_name = os.path.splitext(os.path.basename(file_path))[0]
     N = len(x)  # signal length
@@ -497,26 +503,24 @@ def process_audio_file_alternative(file_path, saving_folder="./images", batch_si
 
     low = int(start_time * fs)
     
-    samples_per_slice = int(sliding_w * fs)
-
-    for _ in tqdm(range(batch_size), desc="Generating Images"):
-        if low + samples_per_slice > N:  # Check if the slice exceeds the signal length
+    for _ in range(batch_size):
+        if low + hop_length > N:  # Check if the slice exceeds the signal length
             break
-        x_w = x[low:low + samples_per_slice]
+        x_w = x[low:low + hop_length]
         
-        # Calculate the spectrogram
-        f, t, Sxx = spectrogram(x_w, fs, nperseg=wlen, noverlap=hop, nfft=nfft, window=win)
-        Sxx = 20 * np.log10(np.abs(Sxx) + 1e-6)  # Convert to dB, adding small value to avoid log(0)
+        # Calculate the Mel spectrogram
+        Sxx = librosa.feature.melspectrogram(y=x_w, sr=fs, n_fft=nfft, hop_length=hop_length, n_mels=n_mels, fmin=cut_low_frequency, fmax=cut_high_frequency)
+        Sxx = librosa.power_to_db(Sxx, ref=np.max)  # Convert to dB
 
         # Create the spectrogram plot
         fig, ax = plt.subplots()
-        cax = ax.pcolormesh(t, f / 1000, Sxx, cmap='inferno')
+        librosa.display.specshow(Sxx, sr=fs, hop_length=hop_length, cmap='inferno')
         ax.set_ylim(cut_low_frequency, cut_high_frequency)
         
         ax.axis('off')  # Turn off axis
         
         fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
-        
+
         # Save the spectrogram as a JPG image without borders
         if save:
             image_name = os.path.join(saving_folder, f"{file_name}-{low/fs}.jpg")
@@ -527,7 +531,7 @@ def process_audio_file_alternative(file_path, saving_folder="./images", batch_si
         image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
         images.append(image)
 
-        low += samples_per_slice
+        low += hop_length
 
         plt.close(fig)  # Close figure to release memory
 
@@ -576,8 +580,7 @@ fichier_csv = "/media/DOLPHIN_ALEXIS/temp_alexis/Label_01_Aug_2023_0845_channel_
 # result = eng.my_matlab_function(arg1, arg2)
 
 
-
-
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -593,8 +596,8 @@ def save_spectrogram(specgram, freqs, times, image_saving_path, ms=False, log=Tr
         Array of frequencies.
     times : array
         Array of times.
-    saving_folder : str
-        Path to the folder where the image will be saved.
+    image_saving_path : str
+        Path to the image file where the spectrogram will be saved.
     ms : bool, optional
         Plot with the time in milliseconds. The default is False.
     log : bool, optional
@@ -606,48 +609,59 @@ def save_spectrogram(specgram, freqs, times, image_saving_path, ms=False, log=Tr
     -------
     None
     """
+    # Ensure the directory structure exists
+    os.makedirs(os.path.dirname(image_saving_path), exist_ok=True)
+
+    # Determine time units for the x-axis
     if ms:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        if log:
-            ax.pcolormesh(times, freqs, np.log(specgram + eps), shading='auto', cmap='viridis')
-        else:
-            ax.pcolormesh(times, freqs, specgram, shading='auto', cmap='viridis')
-        plt.ylabel('Frequency [Hz]')
-        plt.xlabel('Time [ms]')
-        plt.yticks(np.arange(freqs[0], freqs[-1], step=1000))
-    else:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        if log:
-            ax.pcolormesh(np.arange(0, specgram.shape[1]), freqs, np.log(specgram + eps), shading='auto', cmap='viridis')
-        else:
-            ax.pcolormesh(np.arange(0, specgram.shape[1]), freqs, specgram, shading='auto', cmap='viridis')
-        plt.ylabel('Frequency [Hz]')
-        plt.xlabel('Time')
-        plt.yticks(np.arange(freqs[0], freqs[-1], step=1000))
+        times *= 1000  # Convert time to milliseconds
 
-    # Supprimer titre et légende
-    plt.title('')
-    plt.colorbar().remove()
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(10, 5), dpi=100)  # Adjust DPI for better resolution
 
-    # Enregistrer l'image
-    plt.savefig(image_saving_path, bbox_inches='tight', pad_inches=0)
+    # Plot the spectrogram
+    if log:
+        specgram = np.log(specgram + eps)
+    mesh = ax.pcolormesh(times, freqs, specgram, shading='auto', cmap='viridis')
 
+    # Remove axis labels and ticks
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+
+    # Remove colorbar
+    plt.colorbar(mesh, ax=ax).remove()
+
+    # Save the image with tight layout and transparent background
+    plt.savefig(image_saving_path, bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Close the figure to release memory
     plt.close(fig)
 
 
-def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=5, start_time=0, end_time=None, save=True, 
-                                   cut_low_frequency=3, cut_high_frequency=25) :
-    # Create the saving folder if it doesn't exist
-    if save and not os.path.exists(saving_folder):
-        os.makedirs(saving_folder)
 
+def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=5, start_time=0, end_time=None, save=True, 
+                                   cut_low_frequency=3000, cut_high_frequency=25000):
     for i in tqdm(range(batch_size), desc="Generating Images"):
         file_name = os.path.splitext(os.path.basename(file_path))[0]
-        image_name = os.path.join(saving_folder, f"{file_name}-{i}.jpg")
-        print(image_name)
-        Sxx, f, t = wav_to_spec(file_path, stride_ms = 5.0, window_ms = 10.0, max_freq = cut_low_frequency, min_freq = cut_high_frequency, cut=(start_time, end_time))
-        save_spectrogram(Sxx, f, t, saving_folder, image_saving_path=image_name)
-        print(image_name)
+        window_size_seconds = .4
+        try:
+            # Move start and end time by the window size
+            start_time += window_size_seconds
+            image_name = os.path.join(saving_folder, f"{file_name}-{round(start_time, 1)}.jpg")
+            print("Image name:", image_name)  # Debugging statement
+            if end_time is not None:
+                if start_time>= end_time:
+                    break
+            
+            Sxx, f, t = wav_to_spec_librosa(file_path, stride_ms=5.0, window_ms=10.0, max_freq=cut_high_frequency, min_freq=cut_low_frequency, cut=(start_time, end_time))
+            print("Spectrogram shape before saving:", Sxx.shape)
+            save_spectrogram(Sxx, f, t, image_saving_path=image_name)
+            print("Image saved successfully.")  # Debugging statement
+        except Exception as e:
+            print("Error while processing:", e)  # Debugging statement
+            continue
 
 
         
