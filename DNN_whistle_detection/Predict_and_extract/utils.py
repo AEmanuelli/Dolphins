@@ -19,6 +19,42 @@ import numpy as np
 # =============================================================================
 #********************* FUNCTIONS 
 # =============================================================================
+
+def name_saving_folder(base_folder):
+    """
+    Obtient le chemin absolu du dossier de sauvegarde en fonction du dossier de base fourni.
+
+    Args:
+        base_folder (str): Le chemin du dossier de base à partir duquel le dossier de sauvegarde doit être généré.
+
+    Returns:
+        str: Le chemin absolu du dossier de sauvegarde, en tenant compte du numéro de dossier incrémenté le cas échéant.
+    """
+    # Obtenir le chemin complet du dossier avec le suffixe "_last"
+    saving_folder = os.path.join(os.path.dirname(base_folder), f"{os.path.basename(base_folder)}_last")
+
+    # Vérifier si un autre dossier porte le même nom
+    if os.path.exists(saving_folder):
+        # Renommer le dossier existant pour remplacer "last" par le numéro correct
+        existing_folders = [f for f in os.listdir(os.path.dirname(base_folder)) if f.startswith(os.path.basename(base_folder))]
+        if existing_folders:
+            # Filtrer les noms de dossiers qui ont un numéro valide
+            valid_folders = [f for f in existing_folders if f.split('_')[-1].isdigit()]
+            if valid_folders:
+                # Obtenir le numéro le plus élevé parmi les dossiers valides
+                latest_folder = max(valid_folders, key=lambda f: int(f.split('_')[-1]))
+                folder_number = int(latest_folder.split('_')[-1]) + 1
+            else:
+                folder_number = 1
+        else:
+            folder_number = 1
+
+        # Renommer le dossier existant
+        os.rename(saving_folder, os.path.join(os.path.dirname(base_folder), f"{os.path.basename(base_folder)}_{folder_number}"))
+
+    # Retourner le chemin absolu du dossier avec le suffixe "_last"
+    return saving_folder
+
 #*********************  Whistle to video 
 def convertir_texte_en_csv(fichier_texte, fichier_csv, delimiteur="\t", skip_lines = 1):
     """

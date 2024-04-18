@@ -4,10 +4,9 @@ import os
 from tqdm.auto import tqdm 
 import math
 
-
 sys.path.append('/home/alexis/Documents/GitHub/Dolphins')  # Add the root directory to sys.path
 
-from DNN_whistle_detection.Predict_and_extract.utils import process_audio_file, process_audio_file_alternative
+from DNN_whistle_detection.Predict_and_extract.utils import process_audio_file, process_audio_file_alternative, name_saving_folder
 
 # Function to process intervals for a single recording
 def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, window_size = .4, margin = 0.3, neg_per_int =5):
@@ -94,15 +93,38 @@ def count_lines_in_csv(csv_file_path):
 
 
 # Main function
-def create_dataset_from_csv(where, HD):
+def create_dataset_from_csv(HD,HD_name = "HD", Ugly_coherent_name="Ugly_coherent" ,folder_name = None):
+    
+    """
+    Crée un ensemble d'images spectrogrammes à partir d'un fichier CSV contenant des timestamps des whistles positifs.
+
+    Args:
+        HD (bool): Indique si les images doivent être crée en HD pour une bonne visualisation ou en résolution fidèle à 
+        celle des images précédemment utilisées pour entrainer le CNN.
+        folder_name (str, optional): Nom du dossier dans lequel les enregistrements seront stockés. Par défaut, None.
+
+    Returns:
+        None
+    """
+
+
     # Chemin du fichier CSV
     csv_file_path = "DNN_whistle_detection/Train_model/AllWhistlesSubClustering_final.csv"
     total_lines = count_lines_in_csv(csv_file_path)
     # Chemin du dossier contenant les fichiers audio WAV
     audio_folder_path = "/media/zf31/Dolphins/Sound/" 
 
+    if folder_name : 
+        base_folder = f"DNN_whistle_detection/Train_model/whistles_from_csv/{folder_name}"
+    elif HD:
+        base_folder = f"DNN_whistle_detection/Train_model/whistles_from_csv/{HD_name}"
+    else:
+        base_folder = f"DNN_whistle_detection/Train_model/whistles_from_csv/{Ugly_coherent_name}"
+
+    saving_folder = name_saving_folder(base_folder)
+    
     # Dossier de sauvegarde des images
-    saving_folder = where
+    
     # saving_folder = "DNN_whistle_detection/Train_model/whistles_from_csv/ugly_coherent_images"
     # saving_folder = "DNN_whistle_detection/Train_model/whistles_from_csv/beautiful spec"
 
@@ -133,5 +155,4 @@ def create_dataset_from_csv(where, HD):
             process_recording(current_recording_intervals, os.path.join(audio_folder_path, current_recording_id + ".wav"), saving_folder, HD = HD)
 
 if __name__ == "__main__":
-    saving_folder = os.path.abspath("DNN_whistle_detection/Train_model/whistles_from_csv/Ugly_coherent_spec_wednesday_night")
-    create_dataset_from_csv(where = saving_folder, HD = False)
+    create_dataset_from_csv(HD = False)
