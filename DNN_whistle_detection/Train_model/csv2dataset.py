@@ -9,7 +9,7 @@ sys.path.append('/home/alexis/Documents/GitHub/Dolphins')  # Add the root direct
 from DNN_whistle_detection.Predict_and_extract.utils import process_audio_file, process_audio_file_alternative, name_saving_folder, count_lines_in_csv
 
 # Function to process intervals for a single recording
-def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, window_size = .4, margin = 0.3, neg_per_int =10):
+def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, window_size = .4, margin = 0.3, neg_per_int =50):
     """
     Creates dataset material for a single recording.
 
@@ -38,7 +38,7 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
     # Process each interval for this recording
 
 
-    end_time_pos_cache = 30
+    end_time_pos_cache = 20
     for row in csv_rows:
         start_time_neg = end_time_pos_cache
         start_time_pos = float(row[2]) + margin*window_size
@@ -46,10 +46,10 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
         end_time_neg = float(row[2])- margin*window_size
         end_time_pos = float(row[3]) - margin*window_size
 
-        ok_neg = (end_time_neg-start_time_neg) >= 30 # Si les whistles sont espacés de moins de 30s on ne prélève pas de négatifs
+        ok_neg = (end_time_neg-start_time_neg) >= 24 # Si les whistles sont espacés de moins de 30s on ne prélève pas de négatifs
 
 
-        end_time_pos_cache = end_time_pos + 2*margin*window_size 
+        end_time_pos_cache = end_time_pos + 2*margin*window_size #on rajoute un peu de marge pour ce qui va devenir le début du prochain intervalle négatif
         
         # Option 1 : arrondir pour avoir un joli float
         # start_time_processed = round(math.floor(start_time * 10) / 10, 1) # Arrondi au supérieur, à un chiffre après la virgule 
@@ -60,8 +60,8 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
         end_time_processed_pos = end_time_pos + (0.4 - (end_time_pos % 0.4))
         
         
-        start_time_processed_neg = start_time_neg - (start_time_neg % 0.4) + 5*window_size
-        end_time_processed_neg = end_time_neg + (0.4 - (end_time_pos % 0.4)) - 5*window_size
+        start_time_processed_neg = start_time_neg - (start_time_neg % window_size) + 3*window_size
+        end_time_processed_neg = end_time_neg + (window_size - (end_time_pos % window_size)) - 3*window_size
 
         try:
             if HD : 
@@ -87,14 +87,16 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
         
 
 # Main function
-def create_dataset_from_csv(HD, HD_name = "HD", Ugly_coherent_name="Ugly_coherent" ,folder_name = None):
+def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_model/AllWhistlesSubClustering_final.csv", HD_name = "HD", Ugly_coherent_name="Ugly_coherent" ,folder_name = None):
     
     """
     Crée un ensemble d'images spectrogrammes à partir d'un fichier CSV contenant des timestamps des whistles positifs.
 
     Args:
-        HD (bool): Indique si les images doivent être crée en HD pour une bonne visualisation ou en résolution fidèle à 
-        celle des images précédemment utilisées pour entrainer le CNN.
+        HD (bool): Indique si les images doivent être créées en HD pour une bonne visualisation ou en résolution 
+                   fidèle à celle des images précédemment utilisées pour entraîner le CNN.
+        HD_name (str, optional): Nom du dossier pour les images HD. Par défaut, "HD".
+        Ugly_coherent_name (str, optional): Nom du dossier pour les images en résolution fidèle. Par défaut, "Ugly_coherent".
         folder_name (str, optional): Nom du dossier dans lequel les enregistrements seront stockés. Par défaut, None.
 
     Returns:
@@ -103,7 +105,7 @@ def create_dataset_from_csv(HD, HD_name = "HD", Ugly_coherent_name="Ugly_coheren
 
 
     # Chemin du fichier CSV
-    csv_file_path = "DNN_whistle_detection/Train_model/AllWhistlesSubClustering_final.csv"
+    
     total_lines = count_lines_in_csv(csv_file_path)
     # Chemin du dossier contenant les fichiers audio WAV
     audio_folder_path = "/media/zf31/Dolphins/Sound/" 
