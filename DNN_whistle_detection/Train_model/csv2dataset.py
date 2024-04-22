@@ -4,7 +4,7 @@ import os
 from tqdm.auto import tqdm 
 import math
 
-sys.path.append('/home/alexis/Documents/GitHub/Dolphins')  # Add the root directory to sys.path
+sys.path.append(os.path.abspath(''))  # Add the root directory to sys.path
 
 from DNN_whistle_detection.Predict_and_extract.utils import process_audio_file, process_audio_file_alternative, name_saving_folder, count_lines_in_csv
 
@@ -116,7 +116,7 @@ def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_mod
         base_folder = f"DNN_whistle_detection/Train_model/whistles_from_csv/{HD_name}"
     else:
         base_folder = f"DNN_whistle_detection/Train_model/whistles_from_csv/{Ugly_coherent_name}"
-
+    base_folder = "/media/DOLPHIN_ALEXIS/Analyses_alexis/dataset/"
     saving_folder = name_saving_folder(base_folder)
     
     # Dossier de sauvegarde des images
@@ -127,7 +127,9 @@ def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_mod
     # Lecture du fichier CSV
     with open(csv_file_path, 'r') as file:
         reader = csv.reader(file)
-        next(reader)  # Skip header
+        # next(reader)  # Skip header
+        for _ in range(1058):  # Skip 1058 lines
+            next(reader)
 
         current_recording_id = None
         current_recording_intervals = []
