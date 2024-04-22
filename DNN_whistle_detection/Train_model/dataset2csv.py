@@ -1,16 +1,12 @@
 import os
 import csv
-from datetime import datetime
 from tqdm import tqdm
 
 def extract_info(filename):
-    parts = filename.split('_')
-    exp_name = parts[0]
-    date_str = '_'.join(parts[1:4])
-    time_str = parts[4].split('-')[0]
-    datetime_str = f"{date_str} {time_str}"
-    start_time = datetime.strptime(datetime_str, "%d_%b_%Y_%I%M%p")
-    return exp_name, start_time
+    parts = filename.rsplit('-', 1)
+    file_name = parts[0]
+    timing = parts[1].split('.')[0]  # Pour enlever l'extension de fichier (.jpg)
+    return file_name, timing
 
 def main():
     folder_path_1 = "/media/DOLPHIN/Analyses_alexis/dataset/_last/positives"  # Remplacez cela par le chemin de votre dossier
@@ -23,21 +19,21 @@ def main():
     
     with open(output_csv_0, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(['Nom de l\'expérience', 'Temps de début'])
+        writer.writerow(['File', 'Timing'])
         
         for file in tqdm(files_0, desc="Traitement des fichiers dans le dossier negatives"):
             if file.endswith('.jpg'):
-                exp_name, start_time = extract_info(file)
-                writer.writerow([exp_name, start_time])
+                file_name, timing = extract_info(file)
+                writer.writerow([file_name, timing])
                 
     with open(output_csv_1, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(['Nom de l\'expérience', 'Temps de début'])
+        writer.writerow(['File', 'Timing'])
         
         for file in tqdm(files_1, desc="Traitement des fichiers dans le dossier positives"):
             if file.endswith('.jpg'):
-                exp_name, start_time = extract_info(file)
-                writer.writerow([exp_name, start_time])
+                file_name, timing = extract_info(file)
+                writer.writerow([file_name, timing])
 
 if __name__ == "__main__":
     main()
