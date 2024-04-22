@@ -87,8 +87,8 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
         
 
 # Main function
-def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_model/AllWhistlesSubClustering_final.csv", HD_name = "HD", Ugly_coherent_name="Ugly_coherent" ,folder_name = None):
-    
+def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_model/AllWhistlesSubClustering_final.csv", 
+                            HD_name = "HD", Ugly_coherent_name="Ugly_coherent" ,folder_name = None):
     """
     Crée un ensemble d'images spectrogrammes à partir d'un fichier CSV contenant des timestamps des whistles positifs.
 
@@ -116,7 +116,7 @@ def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_mod
         base_folder = f"DNN_whistle_detection/Train_model/whistles_from_csv/{HD_name}"
     else:
         base_folder = f"DNN_whistle_detection/Train_model/whistles_from_csv/{Ugly_coherent_name}"
-    base_folder = "/media/DOLPHIN_ALEXIS/Analyses_alexis/dataset/"
+    # base_folder = "/media/DOLPHIN_ALEXIS/Analyses_alexis/dataset/"
     saving_folder = name_saving_folder(base_folder)
     
     # Dossier de sauvegarde des images
