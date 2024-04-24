@@ -28,8 +28,7 @@ for experiment_name in experiment_names:
     
     # Récupérer les chemins des vidéos positives
     positive_images = [os.path.join(positive_folder, file) for file in os.listdir(positive_folder)]
-    print("ZBOOOUBE", len(positive_images))
-    
+        
 
     # Boucle pour créer un fichier HTML par extrait vidéo
     for i, path in enumerate(vid_paths):
@@ -62,7 +61,7 @@ for experiment_name in experiment_names:
                 </video>
             </div>
             <div class="sidebar">
-                <h2>Vidéos positives associées :</h2>
+                <h2>Spectrograms of associated whistles :</h2>
                 <ul class="image-list">
         """
 
@@ -75,6 +74,7 @@ for experiment_name in experiment_names:
             print(display_time)
             html_content+= f"""
             <script>
+            
                 // Fonction pour afficher une image à la seconde 1 de la vidéo
                 document.addEventListener("DOMContentLoaded", function() {{
                     var video = document.querySelector("video");
@@ -84,19 +84,23 @@ for experiment_name in experiment_names:
                         // Vérifiez si la vidéo est à la seconde en question
                         if (video.currentTime >= { display_time } && video.currentTime < { display_time + 2 } && !imageDisplayed) {{
                             // Créez une nouvelle image
-                            var image = document.createElement("img");
-                            image.src = "{ positive_im }";
-                            var imageContainer = document.createElement("div"); // Créer un conteneur pour positionner l'image
+                            var image = document.createElement("img");                    
                             
-                            imageContainer.appendChild(image);
-                            document.body.appendChild(imageContainer);
+                            image.src = "{ positive_im }";
+                                                       
+                            // Définissez la forme de découpe de l'image pour afficher uniquement la moitié gauche
+                            image.style.width = "15%";
+                            image.style.height = "auto"; // Pour maintenir les proportions d'origine
+
+                            
+                            document.body.appendChild(image);
                             
                             // Marquez que l'image est affichée
                             imageDisplayed = true;
 
                             // Supprimez l'image après 5 secondeS
                             setTimeout(function() {{
-                                document.body.removeChild(imageContainer);
+                                //document.body.removeChild(image);
                                 imageDisplayed = false;
                             }}, 5000);
                         }}
@@ -145,3 +149,6 @@ for experiment_name in experiment_names:
             f.write(html_content)
 
         print(f"Fichier HTML '{html_file}' créé avec succès !")
+
+
+
