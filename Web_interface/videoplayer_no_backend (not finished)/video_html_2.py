@@ -64,14 +64,14 @@ for experiment_name in experiment_names:
         # Ajouter les images positives associées
         for positive_im in positive_images:
             html_content += f'<li><img src="{positive_im}" alt="Positive Image"></li>'
-            
-        html_content += """
+
+        html_content += f"""
                 </ul>
             </div>
             <!-- Formulaire de soumission -->
-            <form class="contact-form" name="basedatos" action="/submit_form" target="_self" method="POST">
+            <form class="contact-form" name="basedatos" action="https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/formResponse" target="_self" method="POST">
                 <input type="hidden" name="entry.1008522387" value="{experiment_name}">
-                <input type="hidden" name="entry.971205134" value="{path}">
+                <input type="hidden" name="entry.971205134" value="{os.path.splitext(os.path.basename(path))[0]}">
                 <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Nom" type="text"> </div>
                 <div class="input-group tm-mb-30">
                     <textarea name="entry.1104629907" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Commentaire" style="height: 100px;"></textarea>

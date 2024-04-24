@@ -43,7 +43,7 @@ for i, path in enumerate(vid_paths):
             </ul>
         </div>
         <!-- Formulaire de soumission -->
-        <form class="contact-form" name="basedatos" action="/submit_form" target="_self" method="POST">
+        <form class="contact-form" name="basedatos" action="https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/viewform" target="_self" method="POST">
             <input type="hidden" name="entry.1008522387" value="ExperimentName">
             <input type="hidden" name="entry.971205134" value="VideoName">
             <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Nom" type="text"> </div>
