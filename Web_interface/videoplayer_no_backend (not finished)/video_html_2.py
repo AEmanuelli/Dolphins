@@ -1,8 +1,7 @@
 import os
 
-def main():
-    global_folder = "/home/alexis/Desktop/Test video_html_gen/"
-    output_html = "Web_interface/videoplayer_no_backend (not finished)/video_html"
+def main(global_folder, output_html):
+
     # Chemin où seront enregistrés les fichiers HTML
     output_directory = os.path.abspath(output_html)
 
@@ -35,7 +34,7 @@ def main():
         # Boucle pour créer un fichier HTML par extrait vidéo
         for i, path in enumerate(vid_paths):
             # Nom du fichier HTML
-            html_file = f"{experiment_name}_video_{i}.html" # AMDOIFIE 
+            html_file = f"{experiment_name}_video_{i}.html" # AMDOIFIE ?
 
             # Chemin complet du fichier HTML
             file_path = os.path.join(output_directory, html_file)
@@ -142,4 +141,6 @@ def main():
             print(f"Fichier HTML '{html_file}' créé avec succès !")
 
 if __name__ == "__main__":
-    main()
+    global_folder = "/home/alexis/Desktop/Test video_html_gen/"
+    output_html = "Web_interface/videoplayer_no_backend (not finished)/video_html"
+    main(global_folder, output_html)
