@@ -86,7 +86,6 @@ for experiment_name in experiment_names:
                             // Créez une nouvelle image
                             var image = document.createElement("img");
                             image.src = "{ positive_im }";
-                            image.classList.add("small-image"); // Ajouter une classe pour contrôler la taille de l'image
                             var imageContainer = document.createElement("div"); // Créer un conteneur pour positionner l'image
                             
                             imageContainer.appendChild(image);
@@ -95,11 +94,11 @@ for experiment_name in experiment_names:
                             // Marquez que l'image est affichée
                             imageDisplayed = true;
 
-                            // Supprimez l'image après 1 seconde
+                            // Supprimez l'image après 5 secondeS
                             setTimeout(function() {{
                                 document.body.removeChild(imageContainer);
                                 imageDisplayed = false;
-                            }}, 1000);
+                            }}, 5000);
                         }}
                     }});
                 }});
