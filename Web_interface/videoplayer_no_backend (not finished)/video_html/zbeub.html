@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choix de vidéo</title>
+</head>
+<body>
+
+<h1>Choisissez une vidéo :</h1>
+
+<!-- Liste des vidéos -->
+<select id="videoSelect" onchange="changeVideo()">
+    <option value="">Sélectionnez une vidéo</option>
+    <option value="/home/alexis/Documents/GitHub/Dolphins/Web_interface/videoplayer_no_backend (not finished)/extraits_avec_audio/extrait_231_242.mp4">Vidéo 1</option>
+    <option value="https://www.example.com/video2.mp4">Vidéo 2</option>
+    <option value="/home/alexis/Documents/GitHub/Dolphins/Web_interface/videoplayer_no_backend (not finished)/extraits_avec_audio/extrait_231_242.mp4">Vidéo 3</option>
+    <!-- Ajoutez d'autres options avec les adresses de vos vidéos -->
+</select>
+
+<!-- Conteneur de la vidéo -->
+<div id="videoContainer">
+    <video id="videoPlayer" controls style="max-width: 100%;"></video>
+</div>
+
+<script>
+    // Fonction pour changer la source de la vidéo
+    function changeVideo() {
+        var select = document.getElementById("videoSelect");
+        var videoPlayer = document.getElementById("videoPlayer");
+        var selectedOption = select.options[select.selectedIndex];
+        
+        if (selectedOption.value !== "") {
+            videoPlayer.innerHTML = '<source src="' + selectedOption.value + '" type="video/mp4">';
+            videoPlayer.play();
+        } else {
+            videoPlayer.pause();
+            videoPlayer.innerHTML = '';
+        }
+    }
+</script>
+
+</body>
+</html>
+
+//"/home/alexis/Documents/GitHub/Dolphins/Web_interface/videoplayer_no_backend (not finished)/extraits_avec_audio/extrait_231_242.mp4"
