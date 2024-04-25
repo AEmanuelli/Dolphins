@@ -17,9 +17,9 @@ import gc
 
 IMG_SIZE = 224
 batch_size = 32
-directory = "Dataset\\dolphin_signal_dataset\\Train"
+directory = "DNN_whistle_detection/Train_model"
 
-train_data = pd.read_csv('Dataset\\dolphin_signal_dataset\\dolphin_signal_train.csv')
+train_data = pd.read_csv('DNN_whistle_detection/Train_model/dolphin_signal_train.csv')
 train_data = train_data.sample(frac=1, random_state=2).reset_index() # shuffle data
 
 

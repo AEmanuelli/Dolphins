@@ -2,9 +2,9 @@ import requests
 
 # Informations de connexion
 base_url = 'https://hub.bio.ens.psl.eu'
-username = 'EMANUELL'
+username = 'emanuell'
 password = 'TB2y.dvZ8ftB'
-folder_path = "dir=/extraits_avec_audio&fileid=10073868"
+folder_path = "extraits_avec_audio"
 
 # Authentification
 session = requests.Session()
@@ -35,3 +35,4 @@ if response.status_code == 207:  # Statut 207 correspondant à une réponse mult
         print(f'Lien de partage pour le fichier {file_names[i-1]} : {link}')
 else:
     print(f'La requête a échoué avec le code {response.status_code}.')
+
