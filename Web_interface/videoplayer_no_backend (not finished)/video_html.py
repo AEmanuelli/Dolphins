@@ -7,7 +7,10 @@ output_directory = os.path.abspath("Web_interface/videoplayer_no_backend (not fi
 os.makedirs(output_directory, exist_ok=True)
 
 folder = "/home/alexis/Documents/GitHub/Dolphins/Web_interface/videoplayer_no_backend (not finished)/extraits_avec_audio"
+base_path = ""
 vid_paths = [os.path.join(folder, file) for file in os.listdir(folder)]
+source_paths = [os.path.join(base_path, file) for file in os.listdir(folder)]
+
 
 # Boucle pour créer 50 fichiers HTML avec des vidéos différentes
 for i, path in enumerate(vid_paths):
@@ -32,7 +35,7 @@ for i, path in enumerate(vid_paths):
         <div class="content">
             <h1>Vidéo: Vidéo {i}</h1>
             <video width="640" height="480" controls>
-                <source src="{path}" type="video/mp4">
+                <source src="{source_paths[i]}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
@@ -43,7 +46,7 @@ for i, path in enumerate(vid_paths):
             </ul>
         </div>
         <!-- Formulaire de soumission -->
-        <form class="contact-form" name="basedatos" action="https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/viewform" target="_self" method="POST">
+        <form class="contact-form" name="basedatos" action="/submit_form" target="_self" method="POST">
             <input type="hidden" name="entry.1008522387" value="ExperimentName">
             <input type="hidden" name="entry.971205134" value="VideoName">
             <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Nom" type="text"> </div>
