@@ -10,11 +10,10 @@ def main(global_folder, output_html):
 
     # Dossier global contenant les expériences
     global_folder = os.path.abspath(global_folder)
-    source = "https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com/Vid_demo_Eilat/"
     # Récupérer les noms des expériences
     experiment_names = [experiment for experiment in os.listdir(global_folder) if os.path.isdir(os.path.join(global_folder, experiment))]
     
-    source = "https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com/Vid_demo_Eilat/"
+    source = "https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com/"
     
     # Boucle sur chaque expérience
     for experiment_name in experiment_names:
@@ -151,8 +150,46 @@ def main(global_folder, output_html):
 
 
 
+def generate_html_index(output_directory):
+    # Chemin complet du fichier index HTML
+    index_file_path = os.path.join(output_directory, "index.html")
+
+    # Contenu HTML pour l'index
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Index des fichiers HTML générés</title>
+    </head>
+    <body>
+        <h1>Index des fichiers HTML générés</h1>
+        <ul>
+    """
+
+    # Parcours de tous les fichiers HTML dans le répertoire de sortie
+    for file in os.listdir(output_directory):
+        if file.endswith(".html"):
+            # Ajout d'un lien vers chaque fichier HTML
+            html_content += f'<li><a href="{file}">{file}</a></li>'
+
+    # Fermeture des balises HTML
+    html_content += """
+        </ul>
+    </body>
+    </html>
+    """
+
+    # Écriture du contenu HTML dans le fichier index
+    with open(index_file_path, "w") as f:
+        f.write(html_content)
+
+    print(f"Fichier index HTML '{index_file_path}' créé avec succès !")
+
 
 if __name__ == "__main__":
-    global_folder = "/home/alexis/Desktop/Demo_Eilat/Vid_demo_Eilat"
-    output_html = "/home/alexis/Desktop/video_html_aws"
-    main(global_folder, output_html)
+    global_folder = "/media/DOLPHIN/Analyses_alexis/First_launch_website_content/"
+    output_html = "/home/alexis/Desktop/Test_aws_website"
+    # main(global_folder, output_html)
+    generate_html_index(output_html)
