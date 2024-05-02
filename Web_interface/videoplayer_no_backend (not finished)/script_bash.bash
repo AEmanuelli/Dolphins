@@ -1,105 +1,50 @@
-import os
+#!/bin/bash
 
-# Chemin où seront enregistrés les fichiers HTML
-output_directory = os.path.abspath("Web_interface/videoplayer_no_backend (not finished)/video_html")
+# Chemin vers le dossier source
+source_dir="/media/DOLPHIN/Analyses_alexis/2023_analysed"
 
-# Créer le répertoire s'il n'existe pas déjà
-os.makedirs(output_directory, exist_ok=True)
+# Chemin vers le dossier de destination
+destination_dir="/media/DOLPHIN/Analyses_alexis/upload_online"
 
-# Dossier global contenant les expériences
-global_folder = "/home/alexis/Desktop/Test video_html_gen/"
+# Créer le dossier de destination s'il n'existe pas
+mkdir -p "$destination_dir"
 
-# Récupérer les noms des expériences
-experiment_names = [experiment for experiment in os.listdir(global_folder) if os.path.isdir(os.path.join(global_folder, experiment))]
+# Parcourir les sous-dossiers du dossier source
+for subdir in "$source_dir"/*; do
+    # Vérifier si le chemin est un dossier
+    if [ -d "$subdir" ]; then
+        # Nom du sous-dossier
+        subdir_name=$(basename "$subdir")
 
-# Boucle sur chaque expérience
-for experiment_name in experiment_names:
-    # Chemin vers le dossier de l'expérience
-    experiment_path = os.path.join(global_folder, experiment_name)
-    
-    # Chemin vers le dossier des extraits vidéos
-    video_folder = os.path.join(experiment_path, "extraits")
-    
-    # Récupérer les chemins des vidéos dans le dossier des extraits
-    vid_paths = [os.path.join(video_folder, file) for file in os.listdir(video_folder)]
-    
-    # Chemin vers le dossier des vidéos positives
-    positive_folder = os.path.join(experiment_path, "positive")
-    
-    # Récupérer les noms des images positives
-    positive_images = [file for file in os.listdir(positive_folder) if file.endswith(".jpg")]
-    
-    # Boucle pour créer un fichier HTML par extrait vidéo
-    for i, path in enumerate(vid_paths):
-        # Nom du fichier HTML
-        html_file = f"{experiment_name}_video_{i}.html"
+        # Créer le même sous-dossier dans le dossier de destination
+        mkdir -p "$destination_dir/$subdir_name"
 
-        # Chemin complet du fichier HTML
-        file_path = os.path.join(output_directory, html_file)
+        # Copier les sous-dossiers "positive" et "extraits_avec_audio"
+        cp -r "$subdir"/positive "$destination_dir/$subdir_name"
+        cp -r "$subdir"/extraits_avec_audio "$destination_dir/$subdir_name"
+    fi
+done
 
-        # Extraire le nom de l'image correspondante à partir du nom du fichier vidéo
-        video_name = os.path.splitext(os.path.basename(path))[0]
-        image_name = f"{video_name}.jpg"
 
-        # Chemin de l'image correspondante
-        image_path = os.path.join(positive_folder, image_name)
+#!/bin/bash
 
-        # Vérifier si l'image existe
-        if os.path.exists(image_path):
-            # Extraire les moments de début et de fin de l'image à partir de son nom
-            image_start, image_end = map(float, image_name.split("-"))
+# Chemin vers le dossier des extraits avec audio
+source_dir="/media/DOLPHIN/Analyses_alexis/First_launch_website_content"
 
-            # Moment de début de la vidéo
-            video_start = 1637  # Remplacez par la valeur réelle
+# Initialiser un tableau JSON
+echo "[" > paths.json
 
-            # Calculer le moment exact où l'image doit être affichée
-            display_time = video_start + image_start
+# Parcourir les sous-dossiers de niveau 2 nommés "extraits_avec_audio"
+find "$source_dir" -mindepth 2 -maxdepth 2 -type d -name "extraits_avec_audio" | while read -r subdir; do
+    # Récupérer les chemins complets des fichiers dans le sous-dossier "extraits_avec_audio"
+    find "$subdir" -type f | while read -r file; do
+        # Remplacer "source_dir" par "zizi" dans le chemin
+        modified_path="${file//$source_dir/https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com}"
+        # Ajouter le chemin modifié au tableau JSON
+        echo "\"$modified_path\"," >> paths.json
+    done
+done
 
-            # Contenu HTML avec le nom de fichier, la vidéo correspondante et l'image à afficher
-            html_content = f"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Vidéo - {experiment_name} - Vidéo {i}</title>
-                <link rel="stylesheet" href="styles_dolphin.css">
-            </head>
-            <body>
-            <div class="container">
-                <div class="content">
-                    <h1>Vidéo: {experiment_name} - Vidéo {i}</h1>
-                    <video width="640" height="480" controls>
-                        <source src="{path}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-                <div class="sidebar">
-                    <h2>Image associée :</h2>
-                    <img src="{image_path}" alt="Positive Image">
-                </div>
-                <!-- Formulaire de soumission -->
-                <form class="contact-form" name="basedatos" action="https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/formResponse" target="_self" method="POST">
-                    <input type="hidden" name="entry.1008522387" value="{experiment_name}">
-                    <input type="hidden" name="entry.971205134" value="{video_name}">
-                    <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Nom" type="text"> </div>
-                    <div class="input-group tm-mb-30">
-                        <textarea name="entry.1104629907" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Commentaire" style="height: 100px;"></textarea>
-                    </div> 
-                    <div class="input-group justify-content-end"> <input class="btn btn-primary tm-btn-pad-2" value="Envoyer" type="submit"> </div>
-                </form>
-            </div>
-            <script>
-                // Vous pouvez conserver le script JavaScript existant ici
-            </script>
-            </body>
-            </html>
-            """
-
-            # Écrire le contenu HTML dans le fichier
-            with open(file_path, "w") as f:
-                f.write(html_content)
-
-            print(f"Fichier HTML '{html_file}' créé avec succès !")
-        else:
-            print(f"L'image associée à la vidéo '{video_name}' n'existe pas.")
+# Supprimer la virgule finale et fermer le tableau JSON
+sed -i '$s/,$//' paths.json
+echo "]" >> paths.json
