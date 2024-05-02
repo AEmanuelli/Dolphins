@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vidéo Aléatoire</title>
+</head>
+<body>
+    <h1>Vidéo Aléatoire</h1>
+    <button id="randomVideoButton">Afficher une Vidéo Aléatoire</button>
+    <div id="videoContainer"></div>
+
+    <script>
+        // Fonction pour charger le fichier JSON
+        function loadJSON(callback) {   
+            var xobj = new XMLHttpRequest();
+            xobj.overrideMimeType("application/json");
+            xobj.open('GET', 'videos.json', true); // Spécifiez le chemin de votre fichier JSON ici
+            xobj.onreadystatechange = function () {
+                if (xobj.readyState == 4 && xobj.status == "200") {
+                    callback(JSON.parse(xobj.responseText));
+                }
+            };
+            xobj.send(null);  
+        }
+
+        // Fonction pour afficher une vidéo aléatoire
+        function showRandomVideo() {
+            loadJSON(function(videos) {
+                var videoContainer = document.getElementById('videoContainer');
+                var randomIndex = Math.floor(Math.random() * videos.length);
+                var randomVideo = videos[randomIndex];
+                var videoElement = document.createElement('video');
+                videoElement.src = randomVideo.url;
+                videoElement.controls = true;
+                videoElement.width = 640;
+                videoElement.height = 480;
+                videoContainer.innerHTML = ''; // Effacer le contenu précédent
+                videoContainer.appendChild(videoElement);
+            });
+        }
+
+        // Associer la fonction showRandomVideo au clic sur le bouton
+        document.getElementById('randomVideoButton').addEventListener('click', showRandomVideo);
+    </script>
+</body>
+</html>
