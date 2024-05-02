@@ -10,25 +10,34 @@ def main(global_folder, output_html):
 
     # Dossier global contenant les expériences
     global_folder = os.path.abspath(global_folder)
-
+    source = "https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com/Vid_demo_Eilat/"
     # Récupérer les noms des expériences
     experiment_names = [experiment for experiment in os.listdir(global_folder) if os.path.isdir(os.path.join(global_folder, experiment))]
-
+    
+    source = "https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com/Vid_demo_Eilat/"
+    
     # Boucle sur chaque expérience
     for experiment_name in experiment_names:
         # Chemin vers le dossier de l'expérience
         experiment_path = os.path.join(global_folder, experiment_name)
-
+        
+        
         # Chemin vers le dossier des extraits vidéos
         video_folder = os.path.join(experiment_path, "extraits_avec_audio")
 
         # Récupérer les chemins des vidéos dans le dossier des extraits
         vid_paths = [os.path.join(video_folder, file) for file in os.listdir(video_folder)]
 
+        source_path = os.path.join(source, experiment_name, "extraits_avec_audio")
+        source_paths = [os.path.join(source_path, file) for file in os.listdir(video_folder)]
+        
         # Chemin vers le dossier des vidéos positives
         positive_folder = os.path.join(experiment_path, "positive")
 
+        positive_folder_source = os.path.join(source, experiment_name, "positive")
+        
         # Récupérer les chemins des vidéos positives
+        positive_images_source = [os.path.join(positive_folder_source, file) for file in os.listdir(positive_folder)]
         positive_images = [os.path.join(positive_folder, file) for file in os.listdir(positive_folder)]
 
         # Boucle pour créer un fichier HTML par extrait vidéo
@@ -56,7 +65,7 @@ def main(global_folder, output_html):
                 <div class="content">
                     <h1>Vidéo: {experiment_name} - Vidéo {i}</h1>
                     <video width="640" height="480" controls>
-                        <source src="{path}" type="video/mp4">
+                        <source src="{source_paths[i]}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>
@@ -66,7 +75,7 @@ def main(global_folder, output_html):
             """
 
             # Ajouter les images positives associées
-            for positive_im in positive_images:
+            for j, positive_im in enumerate(positive_images):
                 name = os.path.splitext(os.path.basename(positive_im))[0]
                 image_start, image_end = map(float, name.split("-"))
                 display_time = round(image_start - video_start -.5, 1)
@@ -83,7 +92,7 @@ def main(global_folder, output_html):
                             if (video.currentTime >= { display_time } && video.currentTime < { display_time + 2 } && !imageDisplayed) {{
                                 // Créez une nouvelle image
                                 var image = document.createElement("img");                    
-                                image.src = "{ positive_im }";
+                                image.src = "{ positive_images_source[j] }";
                                 // Définissez la forme de découpe de l'image pour afficher uniquement la moitié gauche
                                 image.style.width = "15%";
                                 image.style.height = "auto"; // Pour maintenir les proportions d'origine
@@ -140,7 +149,10 @@ def main(global_folder, output_html):
 
             print(f"Fichier HTML '{html_file}' créé avec succès !")
 
+
+
+
 if __name__ == "__main__":
-    global_folder = "/home/alexis/Desktop/Test video_html_gen/"
-    output_html = "Web_interface/videoplayer_no_backend (not finished)/video_html"
+    global_folder = "/home/alexis/Desktop/Demo_Eilat/Vid_demo_Eilat"
+    output_html = "/home/alexis/Desktop/video_html_aws"
     main(global_folder, output_html)
