@@ -3,70 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ experiment_name }} - {{ video_name }}</title>
-    <link rel="stylesheet" href="/path/to/styles_dolphin.css"> <!-- Chemin vers votre fichier CSS -->
+    <title>Vidéo</title>
 </head>
 <body>
-<div class="container">
-    <div class="content">
-        <h1>Vidéo: {{ video_name }}</h1>
-        <video width="640" height="480" controls>
-            <source src="{{ static_video(experiment_name, video_name) }}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-
-        <!-- Section pour afficher un extrait vidéo aléatoire -->
-        <h1>Extraits</h1>
-        <video width="640" height="480" controls preload="metadata" id="randomVideo">
-            <source src="" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    
-        <!-- Input text window -->
-        <form action="/save_text" method="post">
-            <label for="input_text">Input Text:</label><br>
-            <input type="text" id="input_text" name="input_text"><br>
-            <input type="submit" value="Submit">
-        </form>
-
-        <!-- Section pour afficher les anciens commentaires -->
-        <div id="oldComments">
-            <h2>Old Comments</h2>
-            <ul id="commentList">
-                {% for comment in old_comments %}
-                <li>{{ comment }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-    <div class="sidebar">
-        <h2>Images associées :</h2>
-        <ul class="image-list">
-            {% for image in images %}
-            <li><img src="{{ url_for('static_image', experiment_name=experiment_name, image_name=image) }}" alt="{{ image }}" style="width: 200px;"></li>
-            {% endfor %}
-        </ul>
-    </div>
-</div>
-
-<script>
-    // Fonction pour sélectionner une vidéo aléatoire dans la liste des vidéos
-    function getRandomVideo() {
-        var videos = {{ video_list|tojson }};
-        var randomIndex = Math.floor(Math.random() * videos.length);
-        var randomVideoSrc = static_video('{{ experiment_name }}', videos[randomIndex]);
-        var randomVideo = document.getElementById("randomVideo");
-        randomVideo.src = randomVideoSrc;
-    }
-
-    // Appeler la fonction pour sélectionner une vidéo aléatoire lorsque la page se charge
-    window.onload = getRandomVideo;
-
-    // Fonction pour construire l'URL statique d'une vidéo
-    function static_video(experiment_name, video_name) {
-        var base_url = "/path/to/videos/"; // Chemin de base vers le dossier contenant les vidéos
-        return base_url + experiment_name + "/" + video_name;
-    }
-</script>
-
+    <video data-v-1b1b154a="" autoplay="autoplay" playsinline="true" muted controls src="/hub.bio.ens.psl.eu/index.php/s/NQEjfsDpRxMrHyn/download?path=&files=Vid_demo_Eilat/Exp_03_Mar_2024_1345_channel_0/extraits_avec_audio/extrait_16_27.mp4" preload="metadata" style="height: 405px; width: 720px;">
+        Your browser does not support videos.
+    </video>
 </body>
+</html>
+<!-- 
+https://hub.bio.ens.psl.eu/index.php/s/NQEjfsDpRxMrHyn/download?path=&files=Vid_demo_Eilat/Exp_03_Mar_2024_1345_channel_0/extraits_avec_audio/extrait_16_27.mp4
+
+https://hub.bio.ens.psl.eu/index.php/apps/files?dir=/Vid_demo_Eilat/Exp_03_Mar_2024_1345_channel_0/extraits_avec_audio&openfile=10113166
+
+https://hub.bio.ens.psl.eu/remote.php/dav/files/emanuell/ -->

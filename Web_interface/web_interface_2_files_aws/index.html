@@ -1,25 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vidéo Aléatoire</title>
     <style>
         #videoContainer {
-            width: 70%; /* Définir la largeur de la vidéo à 70% de la largeur de la page */
+            width: 75%; /* La vidéo occupe 70% de la largeur de la page */
             margin: 0 auto; /* Centrer la vidéo horizontalement */
+            float: left; /* Flotter la vidéo à gauche */
+        }
+
+        .form-container-right {
+            float: right; /* Flotter le formulaire à droite */
+            margin-top: 50px; /* Ajouter une marge au-dessus pour l'espacer de la vidéo */
+            margin-right: 20px; /* Ajouter une marge à droite pour l'espacer du bord de la page */
         }
     </style>
 </head>
 <body>
     <h1>Vidéo Aléatoire</h1>
     <button id="randomVideoButton">Afficher une Vidéo Aléatoire</button>
-    <div id="videoContainer"></div>
+    <div id="videoContainer"><video src="https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com/Exp_01_Mar_2024_0945_channel_1/extraits_avec_audio/extrait_125_155.mp4" controls="" width="0" height="0"></video></div>
+    <p id="videoName">Nom de la vidéo : </p>
 
 
-
-
-
+    
     <script type="application/json" id="videos">
         [
         "https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com/Exp_02_Dec_2023_0845_channel_0/extraits_avec_audio/extrait_1514_1525.mp4",
@@ -257,16 +262,72 @@
             var videoName = randomVideoUrl.substring(randomVideoUrl.lastIndexOf('/') + 1);
             videoElement.src = randomVideoUrl;
             videoElement.controls = true;
-            videoElement.width = "100%"; // La vidéo occupe 100% de la largeur du conteneur
-            videoElement.height = "auto"; // La hauteur est calculée automatiquement pour maintenir les proportions
+            videoElement.style.width = "100%"; // La vidéo occupe 100% de la largeur du conteneur
+            videoElement.style.height = "auto"; // La hauteur est calculée automatiquement pour maintenir les proportions
             videoContainer.innerHTML = ''; // Effacer le contenu précédent
             videoContainer.appendChild(videoElement);
             document.getElementById('videoName').innerText = "Nom de la vidéo : " + videoName;
+
+        
+
+            // Extraire le nom de l'expérience et le nom de la vidéo
+            var experimentName = randomVideoUrl.split('/')[3];
+            var videoFileName = randomVideoUrl.split('/').pop().split('.')[0];
+            // Mettre à jour les valeurs des champs du formulaire
+            document.querySelector('input[name="entry.1008522387"]').value = experimentName;
+            document.querySelector('input[name="entry.971205134"]').value = videoFileName;
         }
 
         document.getElementById('randomVideoButton').addEventListener('click', showRandomVideo);
     </script>
-</body>
-</html>
+
+    <script>
+        // Récupérer l'élément <video>
+        var videoElement = document.querySelector('video');
+
+        // Récupérer l'élément <p> avec l'ID "videoName"
+        var videoNameElement = document.getElementById('videoName');
+
+        // Lorsque les métadonnées de la vidéo sont chargées
+        videoElement.addEventListener('loadedmetadata', function() {
+            // Extraire le nom de fichier de l'URL de la vidéo
+            var videoUrl = videoElement.src;
+            var videoName = videoUrl.substring(videoUrl.lastIndexOf('/') + 1);
+
+            // Mettre à jour le contenu de l'élément <p> avec le nom de la vidéo
+            videoNameElement.textContent = "Nom de la vidéo : " + videoName;
+        });
+    </script>
+
+    <div class="form-container-right"> <!-- Ajoutez la classe form-container-right ici -->
+        <form class="contact-form" name="basedatos" action="https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/formResponse" target="_self" method="POST">
+            <input type="hidden" name="entry.1008522387" value="">
+            <input type="hidden" name="entry.971205134" value="">
+            <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Name" type="text"> </div>
+            <div class="input-group tm-mb-30"> <input name="entry.634543729" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Dolphin's Name" type="text"> </div>
+            <div class="input-group tm-mb-30">
+                <textarea name="entry.1104629907" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Please describe the dolphins behaviour" style="height: 100px;"></textarea>
+            </div> 
+            <div class="input-group justify-content-end"> <input class="btn btn-primary tm-btn-pad-2" value="Envoyer" type="submit"> </div>
+        </form>
+    </div>
+        
+
+
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vidéo</title>
+
+
+    <video data-v-1b1b154a="" autoplay="autoplay" playsinline="true" src="/index.php/s/ozdLn3XCT3rHoEs/download?path=&amp;files=extrait_231_242.mp4" preload="metadata" style="height: 405px; width: 720px;">
+        Your browser does not support videos.
+    </video>
+
+
+</body></html>
+
 
 
