@@ -8,6 +8,8 @@
             width: 75%; /* La vidéo occupe 70% de la largeur de la page */
             margin: 0 auto; /* Centrer la vidéo horizontalement */
             float: left; /* Flotter la vidéo à gauche */
+            margin-top: 1.5vw;
+            margin-left: 1vw;
         }
 
         .form-container-right {
@@ -16,13 +18,7 @@
             margin-right: 1vw; /* 50px relative to viewport width */
             font-size: 1.2em;
         }
-
-    </style>
-</head>
-<body>
-    <!-- <h1>Vidéo Aléatoire</h1> -->
-    <style>
-       #randomVideoButton {
+        #randomVideoButton {
         font-size: 2vw; /* 24px relative to viewport width */
         background-color: red;
         color: white;
@@ -30,12 +26,24 @@
         border: none;
         border-radius: 1vw; /* 10px relative to viewport width */
         cursor: pointer;
+        margin-top: 1vw; /* 50px relative to viewport width */
+        margin-right: 1vw;
+        margin-left: 4vw
         }
     
         #randomVideoButton:hover {
             background-color: darkred;
         }
+        /* Style CSS pour le texte par défaut */
+        #defaultText {
+            font-size: 2vw;
+            color: #555;
+            text-align: center;
+            margin-top: 5vw;
+        }
     </style>
+</head>
+<body>
     
     <button id="randomVideoButton">Next Video</button>
     <div id="videoContainer"><video src="" controls="" width="0" height="0"></video></div>
@@ -315,11 +323,57 @@
             // videoNameElement.textContent = "Nom de la vidéo : " + videoName;
         });
     </script>
+    <!-- <p id="defaultText">Press the red big button</p> -->
+    <script>
+        function getCountry() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://ipapi.co/json/', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    var country = response.country_name;
+                    // document.getElementById('country').innerText = "Pays: " + country;
+                    document.getElementById('countryInput').value = country; // Mettez à jour le champ du formulaire avec le nom du pays
+                }
+            };
+            xhr.send();
+        }
 
+        // Appeler la fonction pour obtenir le pays lorsque la page est chargée
+        window.onload = function() {
+            getCountry();
+            showDefaultText(); // Appel de la fonction pour afficher le texte par défaut
+        };
+
+        // Fonction pour afficher le texte par défaut
+        function showDefaultText() {
+            document.getElementById('videoContainer').innerHTML = '<p id="defaultText">Press the big red button</p>';
+        }
+
+    //     document.getElementById('form').addEventListener('submit', function(event) {
+    //     // Empêche le comportement par défaut du formulaire qui est de soumettre les données et de recharger la page
+    //     event.preventDefault();
+
+    //     // Tu peux ajouter ici le code pour ouvrir et fermer la page comme tu le souhaites
+    //     // Par exemple, ouvrir une fenêtre modale pour afficher un message de confirmation
+    //     alert("Le formulaire a été soumis avec succès!");
+
+    //     // Tu peux également rediriger l'utilisateur vers une autre page
+    //     // window.location.href = 'https://example.com/thank-you-page';
+
+    //     // Si tu veux que le formulaire soit finalement soumis, tu peux le faire ainsi :
+    //     // this.submit();
+    // });
+
+    </script>
+    
+
+    
     <div class="form-container-right" style="font-size: 1.2em;"> <!-- Ajoutez la classe form-container-right ici -->
-        <form name="basedatos" action="https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/formResponse" target="_blank" method="POST">
-            <input type="hidden" name="entry.1008522387" value="">
-            <input type="hidden" name="entry.971205134" value="">
+        <form id = "form" name="basedatos" action="https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/formResponse" target="_blank" method="POST">
+            <input type="hidden" name="entry.1008522387" value=""> <!-- Date  -->
+            <input type="hidden" name="entry.971205134" value=""><!-- Extrait de cette date -->
+            <input type="hidden" id="countryInput" name="entry.1079664615" value=""> <!-- Pays  -->
             <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Reviewer's Name" style="font-size: 1em; width: 20vw;" type="text"> </div>
             <div class="input-group tm-mb-30"> <input name="entry.634543729" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Dolphin's Name (type na if none)" style="font-size: 1em; width: 20vw;" type="text"> </div>
             <div class="input-group tm-mb-30">
@@ -328,9 +382,6 @@
             <div class="input-group justify-content-end"> <input class="btn btn-primary tm-btn-pad-2" value="SUBMIT" type="submit"> </div>
         </form>
     </div>
-
-        
-
 
 </body></html>
 
