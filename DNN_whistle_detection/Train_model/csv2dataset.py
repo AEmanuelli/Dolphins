@@ -75,6 +75,7 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
                 # # Traitement de l'intervalle audio POSITIF 
                 process_audio_file(audio_file_path, saving_folder=saving_folder_pos, start_time=start_time_processed_pos, 
                                    end_time=end_time_processed_pos, save=True)
+                print(start_time_processed_pos)
                 if ok_neg:
                     # Traitement de l'intervalle audio NÉGATIF
                     process_audio_file(audio_file_path, saving_folder=saving_folder_neg, start_time=start_time_processed_neg, 
@@ -151,3 +152,6 @@ def create_dataset_from_csv(HD, csv_file_path = "/home/alexis/Documents/GitHub/D
 
 if __name__ == "__main__":
     create_dataset_from_csv(HD = False, folder_name="Model_eval")
+
+
+# NE PROCESS QUE LE PREMIER MOMENT DE CHAQUE FICHIER !!!!!!
