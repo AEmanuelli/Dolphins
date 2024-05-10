@@ -7,7 +7,9 @@ output_directory = os.path.abspath("Web_interface/videoplayer_no_backend (not fi
 os.makedirs(output_directory, exist_ok=True)
 
 folder = "/home/alexis/Documents/GitHub/Dolphins/Web_interface/videoplayer_no_backend (not finished)/extraits_avec_audio"
-base_path = ""
+
+
+base_path = "https://bucket-test-emanuelli-alexis-2.s3.eu-west-3.amazonaws.com/Vid_demo_Eilat/"
 vid_paths = [os.path.join(folder, file) for file in os.listdir(folder)]
 source_paths = [os.path.join(base_path, file) for file in os.listdir(folder)]
 

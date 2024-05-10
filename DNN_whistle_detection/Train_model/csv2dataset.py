@@ -38,13 +38,13 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
     # Process each interval for this recording
 
 
-    end_time_pos_cache = 20
+    end_time_pos_cache = 0
     for row in csv_rows:
         start_time_neg = end_time_pos_cache
-        start_time_pos = float(row[2]) + margin*window_size
+        start_time_pos = float(row[1])-1
 
-        end_time_neg = float(row[2])- margin*window_size
-        end_time_pos = float(row[3]) - margin*window_size
+        end_time_neg = float(row[1])- margin*window_size
+        end_time_pos = float(row[2]) + margin*window_size
 
         ok_neg = (end_time_neg-start_time_neg) >= 24 # Si les whistles sont espacés de moins de 30s on ne prélève pas de négatifs
 
@@ -55,13 +55,12 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
         # start_time_processed = round(math.floor(start_time * 10) / 10, 1) # Arrondi au supérieur, à un chiffre après la virgule 
         # end_time_processed = round(math.ceil(end_time * 10) / 10, 1)   # Arrondi à l'inférieur, à un chiffre après la virgule
 
-        # Option 2 : découper dans le même format que notre convertisseur audio-->image
-        start_time_processed_pos = start_time_pos - (start_time_pos % 0.4)
-        end_time_processed_pos = end_time_pos + (0.4 - (end_time_pos % 0.4))
-        
+        # Option 2 : découper dans le même format que notre convertisseur audio-->image pour obtenir direct des fenêtres de .4s 
+        start_time_processed_pos = start_time_pos - (start_time_pos % window_size)- 3*window_size
+        end_time_processed_pos = end_time_pos +100
         
         start_time_processed_neg = start_time_neg - (start_time_neg % window_size) + 3*window_size
-        end_time_processed_neg = end_time_neg + (window_size - (end_time_pos % window_size)) - 3*window_size
+        end_time_processed_neg = end_time_neg + (window_size - (end_time_neg % window_size)) - 3*window_size
 
         try:
             if HD : 
@@ -74,8 +73,8 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
                                                 end_time=end_time_processed_neg, batch_size = neg_per_int, save=True)
             else:   
                 # # Traitement de l'intervalle audio POSITIF 
-                # process_audio_file(audio_file_path, saving_folder=saving_folder_pos, start_time=start_time_processed_pos, 
-                #                    end_time=end_time_processed_pos, save=True)
+                process_audio_file(audio_file_path, saving_folder=saving_folder_pos, start_time=start_time_processed_pos, 
+                                   end_time=end_time_processed_pos, save=True)
                 if ok_neg:
                     # Traitement de l'intervalle audio NÉGATIF
                     process_audio_file(audio_file_path, saving_folder=saving_folder_neg, start_time=start_time_processed_neg, 
@@ -87,7 +86,7 @@ def process_recording(csv_rows, audio_file_path, saving_folder, HD = False, wind
         
 
 # Main function
-def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_model/AllWhistlesSubClustering_final.csv", 
+def create_dataset_from_csv(HD, csv_file_path = "/home/alexis/Documents/GitHub/Dolphins/DNN_whistle_detection/DNN précision - CSV_EVAL.csv", 
                             HD_name = "HD", Ugly_coherent_name="Ugly_coherent" ,folder_name = None):
     """
     Crée un ensemble d'images spectrogrammes à partir d'un fichier CSV contenant des timestamps des whistles positifs.
@@ -108,7 +107,7 @@ def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_mod
     
     total_lines = count_lines_in_csv(csv_file_path)
     # Chemin du dossier contenant les fichiers audio WAV
-    audio_folder_path = "/media/zf31/Dolphins/Sound/" 
+    audio_folder_path = "/media/DOLPHIN/2023" 
 
     if folder_name : 
         base_folder = f"DNN_whistle_detection/Train_model/whistles_from_csv/{folder_name}"
@@ -127,16 +126,14 @@ def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_mod
     # Lecture du fichier CSV
     with open(csv_file_path, 'r') as file:
         reader = csv.reader(file)
-        # next(reader)  # Skip header
-        for _ in range(1058):  # Skip 1058 lines
-            next(reader)
+        next(reader)  # Skip header
 
         current_recording_id = None
         current_recording_intervals = []
 
         for row in tqdm(reader, desc="Processing", total=total_lines, unit="row", colour="blue", bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"):
-            recording_id = row[0]  # Recording ID is assumed to be the first column
-            recording_id = row[0]  # Recording ID is assumed to be the first column
+            recording_id = os.path.basename(row[0])  # Recording ID is assumed to be the first column
+
             if recording_id != current_recording_id:
                 # Process intervals for the previous recording
                 if current_recording_intervals:
@@ -153,4 +150,4 @@ def create_dataset_from_csv(HD, csv_file_path = "DNN_whistle_detection/Train_mod
             process_recording(current_recording_intervals, os.path.join(audio_folder_path, current_recording_id + ".wav"), saving_folder, HD = HD)
 
 if __name__ == "__main__":
-    create_dataset_from_csv(HD = False, folder_name="Ugly_coherent_negative")
+    create_dataset_from_csv(HD = False, folder_name="Model_eval")

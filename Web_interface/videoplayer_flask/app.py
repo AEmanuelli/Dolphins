@@ -183,7 +183,7 @@ def submit_form():
         entry_971205134 = request.form["entry.971205134"]
         entry_1637143753 = request.form["entry.1637143753"]
         entry_1104629907 = request.form["entry.1104629907"]
-        
+        # https://docs.google.com/forms/d/e/1FAIpQLSeOteTktbzc6kLPKKQW8uHde1ml3WWcyfolzj0m9CRPdJctaA/formResponse
         # "Thank You" page after successful submission
         return render_template("thank_you.html")
     except Exception as e:
