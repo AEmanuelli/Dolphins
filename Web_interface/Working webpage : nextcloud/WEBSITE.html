@@ -350,20 +350,34 @@
 
         // Appeler la fonction pour obtenir le pays lorsque la page est chargée
         window.onload = function() {
-            
+            getCountry()
             showDefaultText(); // Appel de la fonction pour afficher le texte par défaut
         };
 
         
 
-    document.getElementById('form').addEventListener('submit', function(event) {
+        document.getElementById('form').addEventListener('submit', function(event) {
     // Vérifier si les champs du formulaire sont remplis
     if (document.querySelector('input[name="entry.1008522387"]').value && document.querySelector('input[name="entry.971205134"]').value) {
-        // Les champs sont remplis, empêcher le comportement par défaut du formulaire
+        // Empêcher le comportement par défaut du formulaire qui est de soumettre les données et de recharger la page
         event.preventDefault();
-        getCountry();
+
+        // Récupérer les valeurs des champs du formulaire
+        var experimentName = document.querySelector('input[name="entry.1008522387"]').value;
+        var videoFileName = document.querySelector('input[name="entry.971205134"]').value;
+        var reviewerName = document.querySelector('input[name="entry.1637143753"]').value;
+        var dolphinName = document.querySelector('input[name="entry.634543729"]').value;
+        var behaviorDescription = document.querySelector('textarea[name="entry.1104629907"]').value;
+        var country_name = document.querySelector('input[name="entry.1079664615"]').value;
+
+        // Construire l'URL avec les valeurs des champs du formulaire
+        var url = this.action + '?entry.1008522387=' + encodeURIComponent(experimentName) + '&entry.971205134=' + encodeURIComponent(videoFileName) + 
+            '&entry.1079664615=' + encodeURIComponent(country_name) +
+            '&entry.1637143753=' + encodeURIComponent(reviewerName) + '&entry.634543729=' + encodeURIComponent(dolphinName) +
+            '&entry.1104629907=' + encodeURIComponent(behaviorDescription);
+
         // Ouvrir le lien du formulaire dans un nouvel onglet
-        var newTab = window.open(this.action, "_blank");
+        var newTab = window.open(url, "_blank");
 
         // Attendre 2 secondes avant de revenir en arrière
         setTimeout(function() {
@@ -371,7 +385,7 @@
             newTab.close();
             // Revenir en arrière dans l'onglet actuel
             window.history.back();
-        }, 20000);
+        }, 2000);
     } else {
         // Les champs ne sont pas remplis, empêcher la soumission du formulaire
         event.preventDefault();
