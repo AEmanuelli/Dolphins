@@ -284,10 +284,10 @@
             <input type="hidden" name="entry.1008522387" value=""> <!-- Date  -->
             <input type="hidden" name="entry.971205134" value=""><!-- Extrait de cette date -->
             <input type="hidden" id="countryInput" name="entry.1079664615" value=""> <!-- Pays  -->
-            <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Reviewer's Name" style="font-size: 1em; width: 20vw;" type="text"> </div>
-            <div class="input-group tm-mb-30"> <input name="entry.634543729" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Dolphin's Name (type na if none)" value = "None" style="font-size: 1em; width: 20vw;" type="text"> </div>
+            <div class="input-group tm-mb-30"> <input name="entry.1637143753" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Reviewer's Name" style="font-size: 0.5em; width: 20vw;" type="text"> </div>
+            <div class="input-group tm-mb-30"> <input name="entry.634543729" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Dolphin's Name (type na if none)" style="font-size: 0.5em; width: 20vw;" type="text"> </div>
             <div class="input-group tm-mb-30">
-                <textarea name="entry.1104629907" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Please describe the dolphins behaviour" style="height: 40vh; font-size: 1em; width: 20vw;"></textarea>
+                <textarea name="entry.1104629907" class="form-control rounded-0 border-top-0 border-end-0 border-start-0" placeholder="Please describe the dolphins behaviour" style="height: 40vh; font-size: 0.5em; width: 20vw;"></textarea>
             </div> 
             <div class="input-group justify-content-end"> <input class="btn btn-primary tm-btn-pad-2" value="SUBMIT" type="submit"> </div>
         </form>
@@ -345,7 +345,7 @@
 
         // Fonction pour afficher le texte par défaut
         function showDefaultText() {
-            document.getElementById('videoContainer').innerHTML = '<p id="defaultText">Press the big red button</p>';
+            document.getElementById('videoContainer').innerHTML = '<p id="defaultText">Click the big red button below to display a random dolphin video. Please fill out the form to indicate if the dolphins are present and well-visible in the video.</p>';
         }
 
         // Appeler la fonction pour obtenir le pays lorsque la page est chargée
@@ -358,40 +358,46 @@
 
         document.getElementById('form').addEventListener('submit', function(event) {
     // Vérifier si les champs du formulaire sont remplis
-    if (document.querySelector('input[name="entry.1008522387"]').value && document.querySelector('input[name="entry.971205134"]').value) {
-        // Empêcher le comportement par défaut du formulaire qui est de soumettre les données et de recharger la page
-        event.preventDefault();
+            if (document.querySelector('input[name="entry.1008522387"]').value && document.querySelector('input[name="entry.971205134"]').value) {
+                // Empêcher le comportement par défaut du formulaire qui est de soumettre les données et de recharger la page
+                event.preventDefault();
 
-        // Récupérer les valeurs des champs du formulaire
-        var experimentName = document.querySelector('input[name="entry.1008522387"]').value;
-        var videoFileName = document.querySelector('input[name="entry.971205134"]').value;
-        var reviewerName = document.querySelector('input[name="entry.1637143753"]').value;
-        var dolphinName = document.querySelector('input[name="entry.634543729"]').value;
-        var behaviorDescription = document.querySelector('textarea[name="entry.1104629907"]').value;
-        var country_name = document.querySelector('input[name="entry.1079664615"]').value;
+                // Récupérer les valeurs des champs du formulaire
+                var experimentName = document.querySelector('input[name="entry.1008522387"]').value;
+                var videoFileName = document.querySelector('input[name="entry.971205134"]').value;
+                var reviewerName = document.querySelector('input[name="entry.1637143753"]').value;
+                var dolphinName = document.querySelector('input[name="entry.634543729"]').value;
+                var behaviorDescription = document.querySelector('textarea[name="entry.1104629907"]').value;
+                var country_name = document.querySelector('input[name="entry.1079664615"]').value;
 
-        // Construire l'URL avec les valeurs des champs du formulaire
-        var url = this.action + '?entry.1008522387=' + encodeURIComponent(experimentName) + '&entry.971205134=' + encodeURIComponent(videoFileName) + 
-            '&entry.1079664615=' + encodeURIComponent(country_name) +
-            '&entry.1637143753=' + encodeURIComponent(reviewerName) + '&entry.634543729=' + encodeURIComponent(dolphinName) +
-            '&entry.1104629907=' + encodeURIComponent(behaviorDescription);
+                // Construire l'URL avec les valeurs des champs du formulaire
+                var url = this.action + '?entry.1008522387=' + encodeURIComponent(experimentName) + 
+                '&entry.971205134=' + encodeURIComponent(videoFileName) + 
+                    '&entry.1079664615=' + encodeURIComponent(country_name) +
+                    '&entry.1637143753=' + encodeURIComponent(reviewerName) + 
+                    '&entry.634543729=' + encodeURIComponent(dolphinName) +
+                    '&entry.1104629907=' + encodeURIComponent(behaviorDescription);
 
-        // Ouvrir le lien du formulaire dans un nouvel onglet
-        var newTab = window.open(url, "_blank");
+                // Ouvrir le lien du formulaire dans un nouvel onglet
+                var newTab = window.open(url, "_blank");
 
-        // Attendre 2 secondes avant de revenir en arrière
-        setTimeout(function() {
-            // Fermer le nouvel onglet ouvert
-            newTab.close();
-            // Revenir en arrière dans l'onglet actuel
-            window.history.back();
-        }, 2000);
-    } else {
-        // Les champs ne sont pas remplis, empêcher la soumission du formulaire
-        event.preventDefault();
-        alert('Veuillez remplir tous les champs avant de soumettre le formulaire.');
-    }
-});
+                // Attendre 2 secondes avant de revenir en arrière
+                setTimeout(function() {
+                    // Fermer le nouvel onglet ouvert
+                    newTab.close();
+                    // Revenir en arrière dans l'onglet actuel
+                    window.history.back();
+                    // Réinitialiser les champs du formulaire
+                    document.querySelector('input[name="entry.634543729"]').value = '';
+                    document.querySelector('textarea[name="entry.1104629907"]').value = '';
+                }, 2000);
+                
+            } else {
+                // Les champs ne sont pas remplis, empêcher la soumission du formulaire
+                event.preventDefault();
+                alert('Veuillez remplir tous les champs avant de soumettre le formulaire.');
+            }
+        });
 
 
 
