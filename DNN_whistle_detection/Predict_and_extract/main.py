@@ -8,9 +8,9 @@ from predict_and_extract_online import process_predict_extract
 if __name__ == "__main__":
     # Définition des paramètres par défaut
     default_model_path = "DNN_whistle_detection/models/model_vgg.h5"
-    default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
-    default_recordings = "/media/DOLPHIN_ALEXIS/2023/"
-    default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/'
+    default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/" # root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed" 
+    default_recordings = "/media/DOLPHIN_ALEXIS/2023/" # recordings = "/media/DOLPHIN_ALEXIS/2023"  
+    default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/' # saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed' 
     default_dossier_anciens_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
     default_start_time = 0
     default_end_time = 1800
