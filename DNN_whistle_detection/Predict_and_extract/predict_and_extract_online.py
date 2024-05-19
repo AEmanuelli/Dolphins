@@ -83,7 +83,7 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
 
     file_path = os.path.join(recording_folder_path, file_name)
 
-    if os.path.isdir(file_path) or not file_name.lower().endswith(('1.wav', '.wave', "0.wav")) or (os.path.exists(prediction_file_path)): #and os.path.exists(saving_positive)):
+    if os.path.isdir(file_path) or not file_name.lower().endswith(".wav")) or (os.path.exists(prediction_file_path)): #and os.path.exists(saving_positive)):
         print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
         return
     batch_duration = batch_size * 0.4
@@ -107,7 +107,7 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
                 prediction_file_path = os.path.join(saving_folder, f"{file_name}_predictions.csv")
                 old_pp = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
                 mask = (os.path.isdir(file_path) or 
-                            not file_name.lower().endswith(('1.wav', "0.wav")) or 
+                            not file_name.lower().endswith('.wav') or 
                             os.path.exists(prediction_file_path) or 
                             os.path.exists(os.path.join(old_pp, f"{file_name}_predictions.csv")))
                     
