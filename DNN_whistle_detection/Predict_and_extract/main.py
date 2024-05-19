@@ -13,7 +13,7 @@ if __name__ == "__main__":
     default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/' # saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed' 
     default_dossier_anciens_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
     default_start_time = 0
-    default_end_time = 1800
+    default_end_time = None
     default_batch_size = 75
     default_save = False
     default_save_p = True
