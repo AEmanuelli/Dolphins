@@ -43,5 +43,5 @@ if __name__ == "__main__":
 
     # Appel des fonctions avec les paramètres définis
     process_predict_extract(args.recordings, args.saving_folder, args.start_time, args.end_time, args.batch_size, args.save, args.save_p, args.model_path, args.max_workers, specific_files = specific_files)
-    process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, audio=True)
+    # process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, audio=True)
 
