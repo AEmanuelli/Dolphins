@@ -1,16 +1,20 @@
-import os 
-import sys
 import argparse
 
 from process_predictions import process_prediction_files_in_folder
 from predict_and_extract_online import process_predict_extract
 
+def read_file_list(file_path):
+    """Read a list of files from a text file."""
+    with open(file_path, 'r') as file:
+        files = file.read().splitlines()
+    return files
+
 if __name__ == "__main__":
     # Définition des paramètres par défaut
     default_model_path = "DNN_whistle_detection/models/model_vgg.h5"
-    default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/" # root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed" 
-    default_recordings = "/media/DOLPHIN_ALEXIS/2023/" # recordings = "/media/DOLPHIN_ALEXIS/2023"  
-    default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/' # saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed' 
+    default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
+    default_recordings = "/media/DOLPHIN_ALEXIS/2023/"
+    default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/'
     default_dossier_anciens_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
     default_start_time = 0
     default_end_time = None
@@ -27,14 +31,18 @@ if __name__ == "__main__":
     parser.add_argument('--saving_folder', default=default_saving_folder, help='Dossier de sauvegarde')
     parser.add_argument('--dossier_anciens_csv', default=default_dossier_anciens_csv, help='Dossier des anciens fichiers CSV')
     parser.add_argument('--start_time', type=int, default=default_start_time, help='Temps de début')
-    parser.add_argument('--end_time', default=default_end_time, help='Temps de fin')
+    parser.add_argument('--end_time', type=int, default=default_end_time, help='Temps de fin')
     parser.add_argument('--batch_size', type=int, default=default_batch_size, help='Taille du lot')
     parser.add_argument('--save', type=bool, default=default_save, help='Enregistrer ou non')
     parser.add_argument('--save_p', type=bool, default=default_save_p, help='Enregistrer ou non Positifs')
     parser.add_argument('--max_workers', type=int, default=default_max_workers, help='Nombre maximal de travailleurs')
+    parser.add_argument('--specific_files', help='Chemin vers un fichier contenant la liste des fichiers à traiter')
 
     args = parser.parse_args()
 
+    # Lire la liste des fichiers spécifiques si fournie
+    specific_files = read_file_list(args.specific_files) if args.specific_files else None
+
     # Appel des fonctions avec les paramètres définis
-    process_predict_extract(args.recordings, args.saving_folder, args.start_time, args.end_time, args.batch_size, args.save, args.save_p, args.model_path, args.max_workers)
+    process_predict_extract(args.recordings, args.saving_folder, specific_files, args.start_time, args.end_time, args.batch_size, args.save, args.save_p, args.model_path, args.max_workers)
     process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, audio=True)

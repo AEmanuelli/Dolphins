@@ -93,9 +93,11 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
     pbar.update()
 
 def process_predict_extract(recording_folder_path, saving_folder, start_time=0, end_time=1800, batch_size=50, 
-                            save=False, save_p=True, model_path="models/model_vgg.h5", max_workers = 16):
+                            save=False, save_p=True, model_path="models/model_vgg.h5", max_workers = 16, specific_files = None):
     files = os.listdir(recording_folder_path)
     sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(recording_folder_path, x)), reverse=True)
+    if specific_files:
+        sorted_files = [file for file in sorted_files if file in specific_files]
     mask_count = 0  # Compteur pour les fichiers filtrés par le masque
     model = tf.keras.models.load_model(model_path)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
