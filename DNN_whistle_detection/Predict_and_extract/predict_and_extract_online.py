@@ -22,6 +22,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
+
 def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file):
     file_name = os.path.basename(file_path)
     transformed_file_name = transform_file_name(file_name)
@@ -43,6 +44,9 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
         images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
         saving_positive = os.path.join(saving_folder_file, "positive")
         
+        image_batch = []
+        time_batch = []
+
         for idx, image in enumerate(images):
             im_cop = image
             image_start_time = round(start + idx * 0.4, 2)
@@ -51,26 +55,26 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
             image = cv2.resize(image, (224, 224))
             image = np.expand_dims(image, axis=0)
             image = preprocess_input(image)
-            prediction = model.predict(image)
             
-            if prediction[0][1] > prediction[0][0]:
-                record_names.append(file_name)
-                positive_initial.append(image_start_time)
-                positive_finish.append(image_end_time)
-                class_1_scores.append(prediction[0][1])
-            
-                if save_p:
-                    if not os.path.exists(saving_folder_file):
-                        os.makedirs(saving_positive)
-                    image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
-                    cv2.imwrite(image_name, im_cop)
+            image_batch.append(image)
+            time_batch.append((im_cop, image_start_time, image_end_time))
 
-            # Libérer les ressources TensorFlow après chaque prédiction
-            # tf.keras.backend.clear_session()
-        
-    # Libérer les ressources GPU explicitement
-    # tf.config.experimental.clear_memory()
-    
+        if image_batch:
+            image_batch = np.vstack(image_batch)
+            predictions = model.predict(image_batch, verbose=0)
+            for idx, prediction in enumerate(predictions):
+                im_cop, image_start_time, image_end_time = time_batch[idx]
+                if prediction[1] > prediction[0]:
+                    record_names.append(file_name)
+                    positive_initial.append(image_start_time)
+                    positive_finish.append(image_end_time)
+                    class_1_scores.append(prediction[1])
+                    if save_p:
+                        if not os.path.exists(saving_folder_file):
+                            os.makedirs(saving_positive)
+                        image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
+                        cv2.imwrite(image_name, im_cop)
+
     return record_names, positive_initial, positive_finish, class_1_scores
 
 def process_predict_extract_worker(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, 
