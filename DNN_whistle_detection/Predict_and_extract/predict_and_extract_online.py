@@ -16,7 +16,7 @@ from utils import *
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Igno    rer les messages d'information et de débogage de TensorFlow
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Ignorer les messages d'information et de débogage de TensorFlow
 
 
 # =============================================================================
