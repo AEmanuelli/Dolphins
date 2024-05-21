@@ -15,7 +15,6 @@ if __name__ == "__main__":
     default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
     default_recordings = "/media/DOLPHIN_ALEXIS/2023/"
     default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/'
-    default_dossier_anciens_csv = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
     default_start_time = 0
     default_end_time = None
     default_batch_size = 64
@@ -29,7 +28,6 @@ if __name__ == "__main__":
     parser.add_argument('--root', default=default_root, help='Chemin vers le répertoire racine')
     parser.add_argument('--recordings', default=default_recordings, help='Chemin vers les enregistrements')
     parser.add_argument('--saving_folder', default=default_saving_folder, help='Dossier de sauvegarde')
-    parser.add_argument('--dossier_anciens_csv', default=default_dossier_anciens_csv, help='Dossier des anciens fichiers CSV')
     parser.add_argument('--start_time', type=int, default=default_start_time, help='Temps de début')
     parser.add_argument('--end_time', type=int, default=default_end_time, help='Temps de fin')
     parser.add_argument('--batch_size', type=int, default=default_batch_size, help='Taille du lot')
