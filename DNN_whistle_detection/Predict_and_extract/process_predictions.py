@@ -77,13 +77,12 @@ def process_non_empty_file(prediction_file_path, folder_name, recording_folder_p
             extraire_extraits_video(intervalles_fusionnes, fichier_video, dossier_sortie_video)
     
     else : 
-        t_file_name = transform_file_name(folder_name)
         dossier_sortie_video = os.path.join(folder_path, "pas_d_extraits")
         os.makedirs(dossier_sortie_video, exist_ok=True)
         txt_file_path = os.path.join(dossier_sortie_video, f"No_Video_found.txt")
         with open(txt_file_path, 'w') as txt_file:
-            txt_file.write(f"No video found for {t_file_name}")
-        print(f"Missing video file for {t_file_name}. No video extraction can be performed.")
+            txt_file.write(f"No video found for {folder_name}")
+        print(f"Missing video file for {folder_name}. No video extraction can be performed.")
 
 def handle_empty_file(folder_path, folder_name):
     dossier_sortie_video = os.path.join(folder_path, "pas_d_extraits")
