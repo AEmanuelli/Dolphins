@@ -282,3 +282,37 @@ video_files = get_videos_extracts_list()
 
 for file in video_files:
     print(file)
+import os
+import shutil
+
+def move_folders_with_2024(src_directory, dst_directory):
+    # Vérifie si le répertoire source existe
+    if not os.path.exists(src_directory):
+        print(f"Le répertoire source {src_directory} n'existe pas.")
+        return
+    
+    # Vérifie si le répertoire destination existe, sinon le crée
+    if not os.path.exists(dst_directory):
+        os.makedirs(dst_directory)
+        print(f"Le répertoire destination {dst_directory} a été créé.")
+    
+    # Parcourt tous les éléments du répertoire source
+    for folder_name in os.listdir(src_directory):
+        # Vérifie si l'élément est un dossier et s'il contient "2024"
+        if os.path.isdir(os.path.join(src_directory, folder_name)) and "2019" in folder_name:
+            # Chemin complet du dossier source
+            src_folder_path = os.path.join(src_directory, folder_name)
+            # Chemin complet du dossier de destination
+            dst_folder_path = os.path.join(dst_directory, folder_name)
+            
+            # Déplace le dossier
+            shutil.move(src_folder_path, dst_folder_path)
+            print(f"Dossier déplacé: {folder_name}")
+
+# Chemin du répertoire source
+source_directory = '/media/DOLPHIN/Analyses_alexis/2023_analysed'
+# Chemin du répertoire de destination
+destination_directory = '/media/DOLPHIN/Analyses_alexis/2019_analysed'
+
+# Appelle la fonction pour déplacer les dossiers
+move_folders_with_2024(source_directory, destination_directory)
