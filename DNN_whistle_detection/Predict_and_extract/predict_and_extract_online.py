@@ -107,15 +107,13 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
 
-        with tqdm(total=len(files), desc="Processing Files", position=0, leave=True, colour='green') as pbar:
+        with tqdm(total=len(files), desc="Files that are not going to be processed right now : ", position=0, leave=True, colour='green') as pbar:
             for file_name in sorted_files:
                 file_path = os.path.join(recording_folder_path, file_name)
                 prediction_file_path = os.path.join(saving_folder, f"{file_name}_predictions.csv")
-                old_pp = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/predictions"
                 mask = (os.path.isdir(file_path) or 
                             not file_name.lower().endswith('.wav') or 
-                            os.path.exists(prediction_file_path) or 
-                            os.path.exists(os.path.join(old_pp, f"{file_name}_predictions.csv")))
+                            os.path.exists(prediction_file_path))
                     
                 if mask:
                     mask_count += 1
