@@ -28,6 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('--root', default=default_root, help='Chemin vers le répertoire racine')
     parser.add_argument('--recordings', default=default_recordings, help='Chemin vers les enregistrements')
     parser.add_argument('--saving_folder', default=default_saving_folder, help='Dossier de sauvegarde')
+
     parser.add_argument('--start_time', type=int, default=default_start_time, help='Temps de début')
     parser.add_argument('--end_time', type=int, default=default_end_time, help='Temps de fin')
     parser.add_argument('--batch_size', type=int, default=default_batch_size, help='Taille du lot')
