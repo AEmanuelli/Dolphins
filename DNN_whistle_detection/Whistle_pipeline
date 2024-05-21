@@ -1,1 +1,377 @@
-{"metadata":{"kernelspec":{"language":"python","display_name":"Python 3","name":"python3"},"language_info":{"name":"python","version":"3.10.13","mimetype":"text/x-python","codemirror_mode":{"name":"ipython","version":3},"pygments_lexer":"ipython3","nbconvert_exporter":"python","file_extension":".py"},"kaggle":{"accelerator":"none","dataSources":[{"sourceId":8442558,"sourceType":"datasetVersion","datasetId":5029955},{"sourceId":8451128,"sourceType":"datasetVersion","datasetId":5036409},{"sourceId":46185,"sourceType":"modelInstanceVersion","isSourceIdPinned":true,"modelInstanceId":38718},{"sourceId":48683,"sourceType":"modelInstanceVersion","isSourceIdPinned":true,"modelInstanceId":40717}],"dockerImageVersionId":30698,"isInternetEnabled":true,"language":"python","sourceType":"notebook","isGpuEnabled":false}},"nbformat_minor":4,"nbformat":4,"cells":[{"cell_type":"code","source":"# Installer git\n!apt-get install git\n\n# Initialiser un nouveau dépôt git\n!git init Pipeline_extraction\n%cd /kaggle/working/Pipeline_extraction\n\n# Configurer sparse-checkout\n!git config core.sparseCheckout true\n\n# Ajouter l'URL du dépôt distant\n!git remote add -f origin https://github.com/AEmanuelli/Dolphins.git\n\n# Spécifier le chemin du sous-répertoire à cloner\n!echo \"DNN_whistle_detection/Predict_and_extract\" > .git/info/sparse-checkout\n\n# Tirer les fichiers du sous-répertoire spécifié\n!git pull origin main\n\n# Vérifier que les fichiers ont été clonés\n!ls DNN_whistle_detection/Predict_and_extract","metadata":{"_uuid":"8f2839f25d086af736a60e9eeb907d3b93b6e0e5","_cell_guid":"b1076dfc-b9ad-4769-8c92-a6c4dae69d19","execution":{"iopub.status.busy":"2024-05-19T16:09:27.017859Z","iopub.execute_input":"2024-05-19T16:09:27.018810Z","iopub.status.idle":"2024-05-19T16:09:36.262794Z","shell.execute_reply.started":"2024-05-19T16:09:27.018715Z","shell.execute_reply":"2024-05-19T16:09:36.259434Z"},"trusted":true},"execution_count":33,"outputs":[{"name":"stdout","text":"Reading package lists... Done\nBuilding dependency tree       \nReading state information... Done\ngit is already the newest version (1:2.25.1-1ubuntu3.11).\n0 upgraded, 0 newly installed, 0 to remove and 54 not upgraded.\n/kaggle/working/Pipeline_extraction\nfatal: remote origin already exists.\nremote: Enumerating objects: 9, done.\u001b[K\nremote: Counting objects: 100% (9/9), done.\u001b[K\nremote: Compressing objects: 100% (5/5), done.\u001b[K\nremote: Total 5 (delta 4), reused 0 (delta 0), pack-reused 0\u001b[K\nUnpacking objects: 100% (5/5), 1.06 KiB | 1.06 MiB/s, done.\nFrom https://github.com/AEmanuelli/Dolphins\n * branch            main       -> FETCH_HEAD\n   291972f..3d42b5d  main       -> origin/main\nUpdating 291972f..3d42b5d\nFast-forward\n DNN_whistle_detection/Predict_and_extract/predict_and_extract_online.py | 2 \u001b[32m+\u001b[m\u001b[31m-\u001b[m\n 1 file changed, 1 insertion(+), 1 deletion(-)\n __init__.py   maintenance.py\t\t       process_predictions.py\n __pycache__   predict_and_extract_online.py   utils.py\n main.py       predict_online.py\t      'vid'$'\\303\\251''oaudio.py'\n","output_type":"stream"}]},{"cell_type":"code","source":"!pip install moviepy keras==2.15.0 tensorflow==2.15.0","metadata":{"execution":{"iopub.status.busy":"2024-05-19T16:05:28.818751Z","iopub.execute_input":"2024-05-19T16:05:28.819268Z","iopub.status.idle":"2024-05-19T16:05:39.922677Z","shell.execute_reply.started":"2024-05-19T16:05:28.819218Z","shell.execute_reply":"2024-05-19T16:05:39.921023Z"},"trusted":true},"execution_count":22,"outputs":[{"name":"stdout","text":"Requirement already satisfied: moviepy in /opt/conda/lib/python3.10/site-packages (1.0.3)\nRequirement already satisfied: keras==2.15.0 in /opt/conda/lib/python3.10/site-packages (2.15.0)\nRequirement already satisfied: tensorflow==2.15.0 in /opt/conda/lib/python3.10/site-packages (2.15.0)\nRequirement already satisfied: absl-py>=1.0.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.4.0)\nRequirement already satisfied: astunparse>=1.6.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.6.3)\nRequirement already satisfied: flatbuffers>=23.5.26 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (23.5.26)\nRequirement already satisfied: gast!=0.5.0,!=0.5.1,!=0.5.2,>=0.2.1 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (0.5.4)\nRequirement already satisfied: google-pasta>=0.1.1 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (0.2.0)\nRequirement already satisfied: h5py>=2.9.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (3.10.0)\nRequirement already satisfied: libclang>=13.0.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (16.0.6)\nRequirement already satisfied: ml-dtypes~=0.2.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (0.2.0)\nRequirement already satisfied: numpy<2.0.0,>=1.23.5 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.26.4)\nRequirement already satisfied: opt-einsum>=2.3.2 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (3.3.0)\nRequirement already satisfied: packaging in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (21.3)\nRequirement already satisfied: protobuf!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<5.0.0dev,>=3.20.3 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (3.20.3)\nRequirement already satisfied: setuptools in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (69.0.3)\nRequirement already satisfied: six>=1.12.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.16.0)\nRequirement already satisfied: termcolor>=1.1.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (2.4.0)\nRequirement already satisfied: typing-extensions>=3.6.6 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (4.9.0)\nRequirement already satisfied: wrapt<1.15,>=1.11.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.14.1)\nRequirement already satisfied: tensorflow-io-gcs-filesystem>=0.23.1 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (0.35.0)\nRequirement already satisfied: grpcio<2.0,>=1.24.3 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.60.0)\nRequirement already satisfied: tensorboard<2.16,>=2.15 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (2.15.1)\nRequirement already satisfied: tensorflow-estimator<2.16,>=2.15.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (2.15.0)\nRequirement already satisfied: decorator<5.0,>=4.0.2 in /opt/conda/lib/python3.10/site-packages (from moviepy) (4.4.2)\nRequirement already satisfied: tqdm<5.0,>=4.11.2 in /opt/conda/lib/python3.10/site-packages (from moviepy) (4.66.1)\nRequirement already satisfied: requests<3.0,>=2.8.1 in /opt/conda/lib/python3.10/site-packages (from moviepy) (2.31.0)\nRequirement already satisfied: proglog<=1.0.0 in /opt/conda/lib/python3.10/site-packages (from moviepy) (0.1.10)\nRequirement already satisfied: imageio<3.0,>=2.5 in /opt/conda/lib/python3.10/site-packages (from moviepy) (2.33.1)\nRequirement already satisfied: imageio-ffmpeg>=0.2.0 in /opt/conda/lib/python3.10/site-packages (from moviepy) (0.4.9)\nRequirement already satisfied: wheel<1.0,>=0.23.0 in /opt/conda/lib/python3.10/site-packages (from astunparse>=1.6.0->tensorflow==2.15.0) (0.42.0)\nRequirement already satisfied: pillow>=8.3.2 in /opt/conda/lib/python3.10/site-packages (from imageio<3.0,>=2.5->moviepy) (9.5.0)\nRequirement already satisfied: charset-normalizer<4,>=2 in /opt/conda/lib/python3.10/site-packages (from requests<3.0,>=2.8.1->moviepy) (3.3.2)\nRequirement already satisfied: idna<4,>=2.5 in /opt/conda/lib/python3.10/site-packages (from requests<3.0,>=2.8.1->moviepy) (3.6)\nRequirement already satisfied: urllib3<3,>=1.21.1 in /opt/conda/lib/python3.10/site-packages (from requests<3.0,>=2.8.1->moviepy) (1.26.18)\nRequirement already satisfied: certifi>=2017.4.17 in /opt/conda/lib/python3.10/site-packages (from requests<3.0,>=2.8.1->moviepy) (2024.2.2)\nRequirement already satisfied: google-auth<3,>=1.6.3 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (2.26.1)\nRequirement already satisfied: google-auth-oauthlib<2,>=0.5 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (1.2.0)\nRequirement already satisfied: markdown>=2.6.8 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (3.5.2)\nRequirement already satisfied: tensorboard-data-server<0.8.0,>=0.7.0 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (0.7.2)\nRequirement already satisfied: werkzeug>=1.0.1 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (3.0.2)\nRequirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /opt/conda/lib/python3.10/site-packages (from packaging->tensorflow==2.15.0) (3.1.1)\nRequirement already satisfied: cachetools<6.0,>=2.0.0 in /opt/conda/lib/python3.10/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (4.2.4)\nRequirement already satisfied: pyasn1-modules>=0.2.1 in /opt/conda/lib/python3.10/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (0.3.0)\nRequirement already satisfied: rsa<5,>=3.1.4 in /opt/conda/lib/python3.10/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (4.9)\nRequirement already satisfied: requests-oauthlib>=0.7.0 in /opt/conda/lib/python3.10/site-packages (from google-auth-oauthlib<2,>=0.5->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (1.3.1)\nRequirement already satisfied: MarkupSafe>=2.1.1 in /opt/conda/lib/python3.10/site-packages (from werkzeug>=1.0.1->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (2.1.3)\nRequirement already satisfied: pyasn1<0.6.0,>=0.4.6 in /opt/conda/lib/python3.10/site-packages (from pyasn1-modules>=0.2.1->google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (0.5.1)\nRequirement already satisfied: oauthlib>=3.0.0 in /opt/conda/lib/python3.10/site-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib<2,>=0.5->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (3.2.2)\n^C\n\u001b[31mERROR: Operation cancelled by user\u001b[0m\u001b[31m\n\u001b[0m","output_type":"stream"}]},{"cell_type":"code","source":"!python DNN_whistle_detection/Predict_and_extract/main.py --model_path \"/kaggle/input/cnn_v1_xception/tensorflow2/initial_model/1/model_vgg.h5\" --recordings \"/kaggle/input/batch01/\" --saving_folder \"kaggle/workingAnalyses_alexis/2023_analysed/\" --start_time 0 --batch_size 75 --save False --save_p True --max_workers 8","metadata":{"trusted":true},"execution_count":35,"outputs":[{"traceback":["\u001b[0;31m---------------------------------------------------------------------------\u001b[0m","\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)","Cell \u001b[0;32mIn[35], line 1\u001b[0m\n\u001b[0;32m----> 1\u001b[0m \u001b[43mDNN_whistle_detection\u001b[49m\n","\u001b[0;31mNameError\u001b[0m: name 'DNN_whistle_detection' is not defined"],"ename":"NameError","evalue":"name 'DNN_whistle_detection' is not defined","output_type":"error"}]},{"cell_type":"code","source":"","metadata":{"execution":{"iopub.status.busy":"2024-05-19T16:08:19.654870Z","iopub.execute_input":"2024-05-19T16:08:19.655354Z","iopub.status.idle":"2024-05-19T16:08:20.708535Z","shell.execute_reply.started":"2024-05-19T16:08:19.655312Z","shell.execute_reply":"2024-05-19T16:08:20.706684Z"},"trusted":true},"execution_count":31,"outputs":[{"name":"stdout","text":"total 8\ndrwxr-xr-x 3 root root 4096 May 19 15:10 DNN_whistle_detection\ndrwxr-xr-x 5 root root 4096 May 19 16:05 Pipeline_extraction\n","output_type":"stream"}]}]}
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "24f92492",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2024-05-21T13:20:00.302253Z",
+     "iopub.status.busy": "2024-05-21T13:20:00.301848Z",
+     "iopub.status.idle": "2024-05-21T13:20:34.368186Z",
+     "shell.execute_reply": "2024-05-21T13:20:34.367037Z"
+    },
+    "papermill": {
+     "duration": 34.07468,
+     "end_time": "2024-05-21T13:20:34.370686",
+     "exception": false,
+     "start_time": "2024-05-21T13:20:00.296006",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\r\n",
+      "\r\n",
+      "\r\n",
+      "git is already the newest version (1:2.25.1-1ubuntu3.11).\r\n",
+      "0 upgraded, 0 newly installed, 0 to remove and 54 not upgraded.\r\n",
+      "Initialized empty Git repository in /kaggle/working/Pipeline_extraction/.git/\r\n",
+      "/kaggle/working/Pipeline_extraction\n",
+      "Updating origin\r\n",
+      "remote: Enumerating objects: 9227, done.\u001b[K\r\n",
+      "remote: Counting objects: 100% (1822/1822), done.\u001b[K\r\n",
+      "remote: Compressing objects: 100% (876/876), done.\u001b[K\r\n",
+      "remote: Total 9227 (delta 926), reused 1808 (delta 913), pack-reused 7405\u001b[K\r\n",
+      "Receiving objects: 100% (9227/9227), 613.98 MiB | 29.22 MiB/s, done.\r\n",
+      "Resolving deltas: 100% (926/926), done.\r\n",
+      "From https://github.com/AEmanuelli/Dolphins\r\n",
+      " * [new branch]      main               -> origin/main\r\n",
+      " * [new branch]      previous_structure -> origin/previous_structure\r\n",
+      " * [new branch]      restructuration    -> origin/restructuration\r\n",
+      "From https://github.com/AEmanuelli/Dolphins\r\n",
+      " * branch            main       -> FETCH_HEAD\r\n",
+      " __init__.py\t  predict_and_extract_online.py   utils.py\r\n",
+      " main.py\t  predict_online.py\t\t 'vid'$'\\303\\251''oaudio.py'\r\n",
+      " maintenance.py   process_predictions.py\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Installer git\n",
+    "!apt-get install git\n",
+    "\n",
+    "# Initialiser un nouveau dépôt git\n",
+    "!git init Pipeline_extraction\n",
+    "%cd /kaggle/working/Pipeline_extraction\n",
+    "\n",
+    "# Configurer sparse-checkout\n",
+    "!git config core.sparseCheckout true\n",
+    "\n",
+    "# Ajouter l'URL du dépôt distant\n",
+    "!git remote add -f origin https://github.com/AEmanuelli/Dolphins.git\n",
+    "\n",
+    "# Spécifier le chemin du sous-répertoire à cloner\n",
+    "!echo \"DNN_whistle_detection/Predict_and_extract\" > .git/info/sparse-checkout\n",
+    "\n",
+    "# Tirer les fichiers du sous-répertoire spécifié\n",
+    "!git pull origin main\n",
+    "\n",
+    "# Vérifier que les fichiers ont été clonés\n",
+    "!ls DNN_whistle_detection/Predict_and_extract"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "cc238c0e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-21T13:20:34.403795Z",
+     "iopub.status.busy": "2024-05-21T13:20:34.403340Z",
+     "iopub.status.idle": "2024-05-21T13:21:13.828317Z",
+     "shell.execute_reply": "2024-05-21T13:21:13.827178Z"
+    },
+    "papermill": {
+     "duration": 39.444486,
+     "end_time": "2024-05-21T13:21:13.830951",
+     "exception": false,
+     "start_time": "2024-05-21T13:20:34.386465",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting moviepy\r\n",
+      "  Downloading moviepy-1.0.3.tar.gz (388 kB)\r\n",
+      "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m388.3/388.3 kB\u001b[0m \u001b[31m10.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25h  Preparing metadata (setup.py) ... \u001b[?25l-\b \bdone\r\n",
+      "\u001b[?25hCollecting keras==2.15.0\r\n",
+      "  Downloading keras-2.15.0-py3-none-any.whl.metadata (2.4 kB)\r\n",
+      "Requirement already satisfied: tensorflow==2.15.0 in /opt/conda/lib/python3.10/site-packages (2.15.0)\r\n",
+      "Requirement already satisfied: absl-py>=1.0.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.4.0)\r\n",
+      "Requirement already satisfied: astunparse>=1.6.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.6.3)\r\n",
+      "Requirement already satisfied: flatbuffers>=23.5.26 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (23.5.26)\r\n",
+      "Requirement already satisfied: gast!=0.5.0,!=0.5.1,!=0.5.2,>=0.2.1 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (0.5.4)\r\n",
+      "Requirement already satisfied: google-pasta>=0.1.1 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (0.2.0)\r\n",
+      "Requirement already satisfied: h5py>=2.9.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (3.10.0)\r\n",
+      "Requirement already satisfied: libclang>=13.0.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (16.0.6)\r\n",
+      "Requirement already satisfied: ml-dtypes~=0.2.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (0.2.0)\r\n",
+      "Requirement already satisfied: numpy<2.0.0,>=1.23.5 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.26.4)\r\n",
+      "Requirement already satisfied: opt-einsum>=2.3.2 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (3.3.0)\r\n",
+      "Requirement already satisfied: packaging in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (21.3)\r\n",
+      "Requirement already satisfied: protobuf!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<5.0.0dev,>=3.20.3 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (3.20.3)\r\n",
+      "Requirement already satisfied: setuptools in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (69.0.3)\r\n",
+      "Requirement already satisfied: six>=1.12.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.16.0)\r\n",
+      "Requirement already satisfied: termcolor>=1.1.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (2.4.0)\r\n",
+      "Requirement already satisfied: typing-extensions>=3.6.6 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (4.9.0)\r\n",
+      "Requirement already satisfied: wrapt<1.15,>=1.11.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.14.1)\r\n",
+      "Requirement already satisfied: tensorflow-io-gcs-filesystem>=0.23.1 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (0.35.0)\r\n",
+      "Requirement already satisfied: grpcio<2.0,>=1.24.3 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (1.60.0)\r\n",
+      "Requirement already satisfied: tensorboard<2.16,>=2.15 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (2.15.1)\r\n",
+      "Requirement already satisfied: tensorflow-estimator<2.16,>=2.15.0 in /opt/conda/lib/python3.10/site-packages (from tensorflow==2.15.0) (2.15.0)\r\n",
+      "Collecting decorator<5.0,>=4.0.2 (from moviepy)\r\n",
+      "  Downloading decorator-4.4.2-py2.py3-none-any.whl.metadata (4.2 kB)\r\n",
+      "Requirement already satisfied: tqdm<5.0,>=4.11.2 in /opt/conda/lib/python3.10/site-packages (from moviepy) (4.66.1)\r\n",
+      "Requirement already satisfied: requests<3.0,>=2.8.1 in /opt/conda/lib/python3.10/site-packages (from moviepy) (2.31.0)\r\n",
+      "Collecting proglog<=1.0.0 (from moviepy)\r\n",
+      "  Downloading proglog-0.1.10-py3-none-any.whl.metadata (639 bytes)\r\n",
+      "Requirement already satisfied: imageio<3.0,>=2.5 in /opt/conda/lib/python3.10/site-packages (from moviepy) (2.33.1)\r\n",
+      "Collecting imageio_ffmpeg>=0.2.0 (from moviepy)\r\n",
+      "  Downloading imageio_ffmpeg-0.4.9-py3-none-manylinux2010_x86_64.whl.metadata (1.7 kB)\r\n",
+      "Requirement already satisfied: wheel<1.0,>=0.23.0 in /opt/conda/lib/python3.10/site-packages (from astunparse>=1.6.0->tensorflow==2.15.0) (0.42.0)\r\n",
+      "Requirement already satisfied: pillow>=8.3.2 in /opt/conda/lib/python3.10/site-packages (from imageio<3.0,>=2.5->moviepy) (9.5.0)\r\n",
+      "Requirement already satisfied: charset-normalizer<4,>=2 in /opt/conda/lib/python3.10/site-packages (from requests<3.0,>=2.8.1->moviepy) (3.3.2)\r\n",
+      "Requirement already satisfied: idna<4,>=2.5 in /opt/conda/lib/python3.10/site-packages (from requests<3.0,>=2.8.1->moviepy) (3.6)\r\n",
+      "Requirement already satisfied: urllib3<3,>=1.21.1 in /opt/conda/lib/python3.10/site-packages (from requests<3.0,>=2.8.1->moviepy) (1.26.18)\r\n",
+      "Requirement already satisfied: certifi>=2017.4.17 in /opt/conda/lib/python3.10/site-packages (from requests<3.0,>=2.8.1->moviepy) (2024.2.2)\r\n",
+      "Requirement already satisfied: google-auth<3,>=1.6.3 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (2.26.1)\r\n",
+      "Requirement already satisfied: google-auth-oauthlib<2,>=0.5 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (1.2.0)\r\n",
+      "Requirement already satisfied: markdown>=2.6.8 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (3.5.2)\r\n",
+      "Requirement already satisfied: tensorboard-data-server<0.8.0,>=0.7.0 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (0.7.2)\r\n",
+      "Requirement already satisfied: werkzeug>=1.0.1 in /opt/conda/lib/python3.10/site-packages (from tensorboard<2.16,>=2.15->tensorflow==2.15.0) (3.0.2)\r\n",
+      "Requirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /opt/conda/lib/python3.10/site-packages (from packaging->tensorflow==2.15.0) (3.1.1)\r\n",
+      "Requirement already satisfied: cachetools<6.0,>=2.0.0 in /opt/conda/lib/python3.10/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (4.2.4)\r\n",
+      "Requirement already satisfied: pyasn1-modules>=0.2.1 in /opt/conda/lib/python3.10/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (0.3.0)\r\n",
+      "Requirement already satisfied: rsa<5,>=3.1.4 in /opt/conda/lib/python3.10/site-packages (from google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (4.9)\r\n",
+      "Requirement already satisfied: requests-oauthlib>=0.7.0 in /opt/conda/lib/python3.10/site-packages (from google-auth-oauthlib<2,>=0.5->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (1.3.1)\r\n",
+      "Requirement already satisfied: MarkupSafe>=2.1.1 in /opt/conda/lib/python3.10/site-packages (from werkzeug>=1.0.1->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (2.1.3)\r\n",
+      "Requirement already satisfied: pyasn1<0.6.0,>=0.4.6 in /opt/conda/lib/python3.10/site-packages (from pyasn1-modules>=0.2.1->google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (0.5.1)\r\n",
+      "Requirement already satisfied: oauthlib>=3.0.0 in /opt/conda/lib/python3.10/site-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib<2,>=0.5->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (3.2.2)\r\n",
+      "Downloading keras-2.15.0-py3-none-any.whl (1.7 MB)\r\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m1.7/1.7 MB\u001b[0m \u001b[31m45.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hDownloading decorator-4.4.2-py2.py3-none-any.whl (9.2 kB)\r\n",
+      "Downloading imageio_ffmpeg-0.4.9-py3-none-manylinux2010_x86_64.whl (26.9 MB)\r\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m26.9/26.9 MB\u001b[0m \u001b[31m51.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hDownloading proglog-0.1.10-py3-none-any.whl (6.1 kB)\r\n",
+      "Building wheels for collected packages: moviepy\r\n",
+      "  Building wheel for moviepy (setup.py) ... \u001b[?25l-\b \b\\\b \bdone\r\n",
+      "\u001b[?25h  Created wheel for moviepy: filename=moviepy-1.0.3-py3-none-any.whl size=110720 sha256=aa2057ce203b7bf87a748eb8831049d28c4b9081689cbf2a23181e42942fde45\r\n",
+      "  Stored in directory: /root/.cache/pip/wheels/96/32/2d/e10123bd88fbfc02fed53cc18c80a171d3c87479ed845fa7c1\r\n",
+      "Successfully built moviepy\r\n",
+      "Installing collected packages: proglog, keras, imageio_ffmpeg, decorator, moviepy\r\n",
+      "  Attempting uninstall: keras\r\n",
+      "    Found existing installation: keras 3.2.1\r\n",
+      "    Uninstalling keras-3.2.1:\r\n",
+      "      Successfully uninstalled keras-3.2.1\r\n",
+      "  Attempting uninstall: decorator\r\n",
+      "    Found existing installation: decorator 5.1.1\r\n",
+      "    Uninstalling decorator-5.1.1:\r\n",
+      "      Successfully uninstalled decorator-5.1.1\r\n",
+      "\u001b[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\r\n",
+      "tensorflow-decision-forests 1.8.1 requires wurlitzer, which is not installed.\u001b[0m\u001b[31m\r\n",
+      "\u001b[0mSuccessfully installed decorator-4.4.2 imageio_ffmpeg-0.4.9 keras-2.15.0 moviepy-1.0.3 proglog-0.1.10\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install moviepy keras==2.15.0 tensorflow==2.15.0"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "e9d6d122",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-21T13:21:13.871212Z",
+     "iopub.status.busy": "2024-05-21T13:21:13.870471Z",
+     "iopub.status.idle": "2024-05-21T13:21:13.971491Z",
+     "shell.execute_reply": "2024-05-21T13:21:13.969950Z"
+    },
+    "papermill": {
+     "duration": 0.123969,
+     "end_time": "2024-05-21T13:21:13.974011",
+     "exception": false,
+     "start_time": "2024-05-21T13:21:13.850042",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Created 13 files in '/kaggle/working/' directory.\n"
+     ]
+    }
+   ],
+   "source": [
+    "import os\n",
+    "\n",
+    "def split_files_into_chunks(directory_path, chunk_size=12, output_directory='output'):\n",
+    "    \"\"\"\n",
+    "    Splits the list of files in the specified directory into chunks and writes each chunk to a separate text file.\n",
+    "\n",
+    "    :param directory_path: Path to the directory containing the files.\n",
+    "    :param chunk_size: Number of files per chunk.\n",
+    "    :param output_directory: Directory to save the output text files.\n",
+    "    \"\"\"\n",
+    "    # Get the list of files in the directory\n",
+    "    file_list = [os.path.join(directory_path, file) for file in os.listdir(directory_path)]\n",
+    "    \n",
+    "    # Split the list into chunks of specified size\n",
+    "    chunks = [file_list[i:i + chunk_size] for i in range(0, len(file_list), chunk_size)]\n",
+    "    \n",
+    "    # Create the output directory if it does not exist\n",
+    "    os.makedirs(output_directory, exist_ok=True)\n",
+    "    \n",
+    "    # Create text files for each chunk\n",
+    "    for idx, chunk in enumerate(chunks):\n",
+    "        chunk_file_path = os.path.join(output_directory, f'file_list_{idx + 1}.txt')\n",
+    "        with open(chunk_file_path, 'w') as file:\n",
+    "            for filename in chunk:\n",
+    "                file.write(filename + '\\n')\n",
+    "    \n",
+    "    print(f\"Created {len(chunks)} files in '{output_directory}' directory.\")\n",
+    "\n",
+    "# Example usage\n",
+    "directory_path = '/kaggle/input/batch01'  # Change this to your directory path\n",
+    "output_directory = '/kaggle/working/'  # Change this to your desired output directory\n",
+    "\n",
+    "split_files_into_chunks(directory_path, chunk_size=12, output_directory=output_directory)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "72cb0e06",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-21T13:21:14.017182Z",
+     "iopub.status.busy": "2024-05-21T13:21:14.016127Z",
+     "iopub.status.idle": "2024-05-21T13:21:38.545041Z",
+     "shell.execute_reply": "2024-05-21T13:21:38.544083Z"
+    },
+    "papermill": {
+     "duration": 24.552413,
+     "end_time": "2024-05-21T13:21:38.547548",
+     "exception": false,
+     "start_time": "2024-05-21T13:21:13.995135",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "2024-05-21 13:21:21.785225: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\r\n",
+      "2024-05-21 13:21:21.785349: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered\r\n",
+      "2024-05-21 13:21:21.960992: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\r\n",
+      "Files that are not going to be processed right now :   0%|\u001b[32m \u001b[0m| 0/150 [00:00<?, ?it\u001b[0m\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "!python DNN_whistle_detection/Predict_and_extract/main.py \\\n",
+    "    --model_path \"/kaggle/input/cnn_v1_xception/tensorflow2/initial_model/1/model_vgg.h5\" \\\n",
+    "    --recordings \"/kaggle/input/batch01/\" \\\n",
+    "    --saving_folder \"/kaggle/working/Analyses_alexis/2019_analysed/\" \\\n",
+    "    --start_time 0 \\\n",
+    "    --batch_size 64 \\\n",
+    "    --save False \\\n",
+    "    --save_p True \\\n",
+    "    --max_workers 8 \\\n",
+    "    --specific_files \"/kaggle/working/file_list_1.txt\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fb5e25e4",
+   "metadata": {
+    "papermill": {
+     "duration": 0.018672,
+     "end_time": "2024-05-21T13:21:38.584895",
+     "exception": false,
+     "start_time": "2024-05-21T13:21:38.566223",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "datasetId": 5036409,
+     "sourceId": 8451128,
+     "sourceType": "datasetVersion"
+    },
+    {
+     "modelInstanceId": 38718,
+     "sourceId": 46185,
+     "sourceType": "modelInstanceVersion"
+    },
+    {
+     "modelInstanceId": 40717,
+     "sourceId": 48683,
+     "sourceType": "modelInstanceVersion"
+    }
+   ],
+   "dockerImageVersionId": 30698,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.13"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 101.785419,
+   "end_time": "2024-05-21T13:21:39.024701",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-05-21T13:19:57.239282",
+   "version": "2.5.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
