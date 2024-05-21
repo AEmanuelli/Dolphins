@@ -102,7 +102,7 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
     sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(recording_folder_path, x)), reverse=False)
     
     if specific_files:
-        sorted_files = [file for file in specific_files]
+        sorted_files = sorted(specific_files, key=lambda x: os.path.getctime(os.path.join(recording_folder_path, x)), reverse=False)
 
 
     mask_count = 0  # Compteur pour les fichiers filtrés par le masque
