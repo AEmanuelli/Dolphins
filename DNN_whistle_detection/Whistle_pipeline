@@ -3,21 +3,21 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "2c23b27e",
+   "id": "ed10dd7f",
    "metadata": {
     "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
     "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
     "execution": {
-     "iopub.execute_input": "2024-05-22T10:12:58.353870Z",
-     "iopub.status.busy": "2024-05-22T10:12:58.353266Z",
-     "iopub.status.idle": "2024-05-22T10:13:24.424130Z",
-     "shell.execute_reply": "2024-05-22T10:13:24.423033Z"
+     "iopub.execute_input": "2024-05-22T11:17:19.315592Z",
+     "iopub.status.busy": "2024-05-22T11:17:19.313606Z",
+     "iopub.status.idle": "2024-05-22T11:17:46.718843Z",
+     "shell.execute_reply": "2024-05-22T11:17:46.717314Z"
     },
     "papermill": {
-     "duration": 26.077803,
-     "end_time": "2024-05-22T10:13:24.426320",
+     "duration": 27.414289,
+     "end_time": "2024-05-22T11:17:46.721978",
      "exception": false,
-     "start_time": "2024-05-22T10:12:58.348517",
+     "start_time": "2024-05-22T11:17:19.307689",
      "status": "completed"
     },
     "tags": []
@@ -35,12 +35,12 @@
       "Initialized empty Git repository in /kaggle/working/Pipeline_extraction/.git/\r\n",
       "/kaggle/working/Pipeline_extraction\n",
       "Updating origin\r\n",
-      "remote: Enumerating objects: 9280, done.\u001b[K\r\n",
-      "remote: Counting objects: 100% (1875/1875), done.\u001b[K\r\n",
-      "remote: Compressing objects: 100% (920/920), done.\u001b[K\r\n",
-      "remote: Total 9280 (delta 964), reused 1824 (delta 922), pack-reused 7405\u001b[K\r\n",
-      "Receiving objects: 100% (9280/9280), 614.37 MiB | 44.41 MiB/s, done.\r\n",
-      "Resolving deltas: 100% (964/964), done.\r\n",
+      "remote: Enumerating objects: 9292, done.\u001b[K\r\n",
+      "remote: Counting objects: 100% (1887/1887), done.\u001b[K\r\n",
+      "remote: Compressing objects: 100% (932/932), done.\u001b[K\r\n",
+      "remote: Total 9292 (delta 973), reused 1824 (delta 922), pack-reused 7405\u001b[K\r\n",
+      "Receiving objects: 100% (9292/9292), 614.37 MiB | 41.37 MiB/s, done.\r\n",
+      "Resolving deltas: 100% (973/973), done.\r\n",
       "From https://github.com/AEmanuelli/Dolphins\r\n",
       " * [new branch]      main               -> origin/main\r\n",
       " * [new branch]      previous_structure -> origin/previous_structure\r\n",
@@ -80,19 +80,19 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "0948a1b8",
+   "id": "7db41010",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-22T10:13:24.451670Z",
-     "iopub.status.busy": "2024-05-22T10:13:24.450484Z",
-     "iopub.status.idle": "2024-05-22T10:13:55.885483Z",
-     "shell.execute_reply": "2024-05-22T10:13:55.884415Z"
+     "iopub.execute_input": "2024-05-22T11:17:46.755808Z",
+     "iopub.status.busy": "2024-05-22T11:17:46.755394Z",
+     "iopub.status.idle": "2024-05-22T11:18:26.844693Z",
+     "shell.execute_reply": "2024-05-22T11:18:26.843308Z"
     },
     "papermill": {
-     "duration": 31.450701,
-     "end_time": "2024-05-22T10:13:55.887989",
+     "duration": 40.110095,
+     "end_time": "2024-05-22T11:18:26.847888",
      "exception": false,
-     "start_time": "2024-05-22T10:13:24.437288",
+     "start_time": "2024-05-22T11:17:46.737793",
      "status": "completed"
     },
     "tags": []
@@ -104,7 +104,7 @@
      "text": [
       "Collecting moviepy\r\n",
       "  Downloading moviepy-1.0.3.tar.gz (388 kB)\r\n",
-      "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m388.3/388.3 kB\u001b[0m \u001b[31m6.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m388.3/388.3 kB\u001b[0m \u001b[31m6.3 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
       "\u001b[?25h  Preparing metadata (setup.py) ... \u001b[?25l-\b \bdone\r\n",
       "\u001b[?25hCollecting keras==2.15.0\r\n",
       "  Downloading keras-2.15.0-py3-none-any.whl.metadata (2.4 kB)\r\n",
@@ -159,14 +159,14 @@
       "Requirement already satisfied: pyasn1<0.6.0,>=0.4.6 in /opt/conda/lib/python3.10/site-packages (from pyasn1-modules>=0.2.1->google-auth<3,>=1.6.3->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (0.5.1)\r\n",
       "Requirement already satisfied: oauthlib>=3.0.0 in /opt/conda/lib/python3.10/site-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib<2,>=0.5->tensorboard<2.16,>=2.15->tensorflow==2.15.0) (3.2.2)\r\n",
       "Downloading keras-2.15.0-py3-none-any.whl (1.7 MB)\r\n",
-      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m1.7/1.7 MB\u001b[0m \u001b[31m37.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m1.7/1.7 MB\u001b[0m \u001b[31m46.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
       "\u001b[?25hDownloading decorator-4.4.2-py2.py3-none-any.whl (9.2 kB)\r\n",
       "Downloading imageio_ffmpeg-0.4.9-py3-none-manylinux2010_x86_64.whl (26.9 MB)\r\n",
-      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m26.9/26.9 MB\u001b[0m \u001b[31m61.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m26.9/26.9 MB\u001b[0m \u001b[31m52.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
       "\u001b[?25hDownloading proglog-0.1.10-py3-none-any.whl (6.1 kB)\r\n",
       "Building wheels for collected packages: moviepy\r\n",
       "  Building wheel for moviepy (setup.py) ... \u001b[?25l-\b \b\\\b \bdone\r\n",
-      "\u001b[?25h  Created wheel for moviepy: filename=moviepy-1.0.3-py3-none-any.whl size=110720 sha256=867ce874dcbd323e02c7c8a622bcd6373422375268407223a07c40d923c19cd7\r\n",
+      "\u001b[?25h  Created wheel for moviepy: filename=moviepy-1.0.3-py3-none-any.whl size=110720 sha256=7fd22d3ed1aa55533ccc69528be03f348cf1be8f8e5486d46f8d011b30b2c190\r\n",
       "  Stored in directory: /root/.cache/pip/wheels/96/32/2d/e10123bd88fbfc02fed53cc18c80a171d3c87479ed845fa7c1\r\n",
       "Successfully built moviepy\r\n",
       "Installing collected packages: proglog, keras, imageio_ffmpeg, decorator, moviepy\r\n",
@@ -191,19 +191,19 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "ccbe2789",
+   "id": "d48a859e",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-22T10:13:55.916157Z",
-     "iopub.status.busy": "2024-05-22T10:13:55.915719Z",
-     "iopub.status.idle": "2024-05-22T10:13:55.987923Z",
-     "shell.execute_reply": "2024-05-22T10:13:55.986917Z"
+     "iopub.execute_input": "2024-05-22T11:18:26.888539Z",
+     "iopub.status.busy": "2024-05-22T11:18:26.888091Z",
+     "iopub.status.idle": "2024-05-22T11:18:26.965117Z",
+     "shell.execute_reply": "2024-05-22T11:18:26.963496Z"
     },
     "papermill": {
-     "duration": 0.089083,
-     "end_time": "2024-05-22T10:13:55.990188",
+     "duration": 0.101079,
+     "end_time": "2024-05-22T11:18:26.968097",
      "exception": false,
-     "start_time": "2024-05-22T10:13:55.901105",
+     "start_time": "2024-05-22T11:18:26.867018",
      "status": "completed"
     },
     "tags": []
@@ -256,19 +256,19 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "287a3e1d",
+   "id": "993ba778",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-22T10:13:56.019731Z",
-     "iopub.status.busy": "2024-05-22T10:13:56.019353Z",
-     "iopub.status.idle": "2024-05-22T10:14:12.566242Z",
-     "shell.execute_reply": "2024-05-22T10:14:12.565193Z"
+     "iopub.execute_input": "2024-05-22T11:18:27.010850Z",
+     "iopub.status.busy": "2024-05-22T11:18:27.010401Z",
+     "iopub.status.idle": "2024-05-22T11:18:47.057051Z",
+     "shell.execute_reply": "2024-05-22T11:18:47.055954Z"
     },
     "papermill": {
-     "duration": 16.564925,
-     "end_time": "2024-05-22T10:14:12.568757",
+     "duration": 20.072282,
+     "end_time": "2024-05-22T11:18:47.060001",
      "exception": false,
-     "start_time": "2024-05-22T10:13:56.003832",
+     "start_time": "2024-05-22T11:18:26.987719",
      "status": "completed"
     },
     "tags": []
@@ -278,9 +278,9 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "2024-05-22 10:14:01.615644: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
-      "2024-05-22 10:14:01.615788: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered\n",
-      "2024-05-22 10:14:01.763783: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n",
+      "2024-05-22 11:18:33.615390: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "2024-05-22 11:18:33.615545: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered\n",
+      "2024-05-22 11:18:33.759475: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n",
       "Traceback (most recent call last):\n",
       "  File \"/kaggle/working/Pipeline_extraction/DNN_whistle_detection/Predict_and_extract/main.py\", line 46, in <module>\n",
       "    process_predict_extract(args.recordings, args.saving_folder, args.start_time, args.end_time, args.batch_size, args.save, args.save_p, args.model_path, args.max_workers, specific_files = specific_files)\n",
@@ -292,7 +292,7 @@
    ],
    "source": [
     "import os\n",
-    "idxs = [13] #idxs = [1,2,3,4,5]\n",
+    "idxs = [11] #idxs = [1,2,3,4,5]\n",
     "for idx in idxs : \n",
     "    command = f\"\"\"\n",
     "    python DNN_whistle_detection/Predict_and_extract/main.py \\\n",
@@ -313,19 +313,19 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "6f7c7e6c",
+   "id": "802c0cea",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2024-05-22T10:14:12.598893Z",
-     "iopub.status.busy": "2024-05-22T10:14:12.598542Z",
-     "iopub.status.idle": "2024-05-22T10:14:12.606003Z",
-     "shell.execute_reply": "2024-05-22T10:14:12.604684Z"
+     "iopub.execute_input": "2024-05-22T11:18:47.102599Z",
+     "iopub.status.busy": "2024-05-22T11:18:47.102124Z",
+     "iopub.status.idle": "2024-05-22T11:18:47.111940Z",
+     "shell.execute_reply": "2024-05-22T11:18:47.110113Z"
     },
     "papermill": {
-     "duration": 0.025809,
-     "end_time": "2024-05-22T10:14:12.608139",
+     "duration": 0.033719,
+     "end_time": "2024-05-22T11:18:47.114450",
      "exception": false,
-     "start_time": "2024-05-22T10:14:12.582330",
+     "start_time": "2024-05-22T11:18:47.080731",
      "status": "completed"
     },
     "tags": []
@@ -361,13 +361,13 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "id": "a0b35415",
+   "id": "22f202eb",
    "metadata": {
     "papermill": {
-     "duration": 0.013265,
-     "end_time": "2024-05-22T10:14:12.636319",
+     "duration": 0.01947,
+     "end_time": "2024-05-22T11:18:47.155789",
      "exception": false,
-     "start_time": "2024-05-22T10:14:12.623054",
+     "start_time": "2024-05-22T11:18:47.136319",
      "status": "completed"
     },
     "tags": []
@@ -421,14 +421,14 @@
   },
   "papermill": {
    "default_parameters": {},
-   "duration": 77.406794,
-   "end_time": "2024-05-22T10:14:13.069363",
+   "duration": 91.454058,
+   "end_time": "2024-05-22T11:18:47.699467",
    "environment_variables": {},
    "exception": null,
    "input_path": "__notebook__.ipynb",
    "output_path": "__notebook__.ipynb",
    "parameters": {},
-   "start_time": "2024-05-22T10:12:55.662569",
+   "start_time": "2024-05-22T11:17:16.245409",
    "version": "2.5.0"
   }
  },
