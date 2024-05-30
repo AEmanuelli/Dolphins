@@ -139,8 +139,8 @@ def fusionner_intervalles(intervalles, hwindow=4):
         if premier_intervalle[0] < 0:
             premier_intervalle = (0, premier_intervalle[1])
         
-        if dernier_intervalle[1] > 1800:
-            dernier_intervalle = (dernier_intervalle[0], 1800)
+        # if dernier_intervalle[1] > 1800:
+        #     dernier_intervalle = (dernier_intervalle[0], 1800)
         
         intervalles_fusionnes[0] = premier_intervalle
         intervalles_fusionnes[-1] = dernier_intervalle

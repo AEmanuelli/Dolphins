@@ -1,7 +1,7 @@
 import argparse
 
 from process_predictions import process_prediction_files_in_folder
-from predict_and_extract_online import process_predict_extract
+# from predict_and_extract_online import process_predict_extract
 
 def read_file_list(file_path):
     """Read a list of files from a text file."""
@@ -12,8 +12,8 @@ def read_file_list(file_path):
 if __name__ == "__main__":
     # Définition des paramètres par défaut
     default_model_path = "DNN_whistle_detection/models/model_vgg.h5"
-    default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
-    default_recordings = "/media/DOLPHIN_ALEXIS/2023/"
+    default_root = "/media/DOLPHIN/Analyses_alexis/2023_analysed/"
+    default_recordings = "/media/DOLPHIN/2023/"
     default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/'
     default_start_time = 0
     default_end_time = None
@@ -44,5 +44,5 @@ if __name__ == "__main__":
 
     # Appel des fonctions avec les paramètres définis
     # process_predict_extract(args.recordings, args.saving_folder, args.start_time, args.end_time, args.batch_size, args.save, args.save_p, args.model_path, args.max_workers, specific_files = specific_files)
-    process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, audio=True)
+    process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, audio=False, audio_only= True)
 
