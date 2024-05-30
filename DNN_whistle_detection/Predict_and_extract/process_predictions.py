@@ -28,7 +28,7 @@ def audioextraits(intervalles, fichier_audio, dossier_sortie_audio):
         # Parcourir les intervalles
         for i, intervalle in enumerate(intervalles):
             debut, fin = intervalle
-            nom_sortie = f'extrait_{debut}_{fin}.mp3'  # Nom de sortie basé sur l'intervalle
+            nom_sortie = f'extrait_{debut}_{fin}.wav'  # Nom de sortie basé sur l'intervalle
             
             chemin_sortie = os.path.join(dossier_sortie_audio, filename, nom_sortie)  # Chemin complet de sortie
 
@@ -38,7 +38,7 @@ def audioextraits(intervalles, fichier_audio, dossier_sortie_audio):
                 # Extraire l'extrait correspondant à l'intervalle
                 extrait_audio = audio.subclip(debut, fin)
                 # Sauvegarder l'extrait audio
-                extrait_audio.write_audiofile(chemin_sortie, codec='mp3', verbose=False)
+                extrait_audio.write_audiofile(chemin_sortie, codec='pcm_s16le', verbose=False)
                 print(f'ok : {chemin_sortie}')
                 
             else:
@@ -89,7 +89,7 @@ def extraire_extraits_video(intervalles, fichier_video, dossier_sortie_video):
     # Libérer la mémoire en supprimant l'objet VideoFileClip
     video.close()
 
-def process_non_empty_file(prediction_file_path, folder_name, recording_folder_path, folder_path, audio = True, audio_only = True, dossier_sortie_audio = "/media/DOLPHIN/Analyses_alexis/Test"):
+def process_non_empty_file(prediction_file_path, folder_name, recording_folder_path, folder_path, audio = True, audio_only = True, dossier_sortie_audio = "/media/DOLPHIN/Analyses_alexis/MP3extraction"):
     intervalles = lire_csv_extraits(prediction_file_path)
     intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
     # print(intervalles_fusionnes)
