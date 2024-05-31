@@ -147,6 +147,56 @@ def fusionner_intervalles(intervalles, hwindow=4):
     
     return intervalles_fusionnes
 
+
+def fusionner_intervalles_avec_seuil(intervalles, fusion_threshold=3, duration_threshold = 3):
+    # Trier les intervalles par début
+    intervalles.sort(key=lambda x: x[0])
+    
+    # Initialiser la liste résultante
+    intervalles_fusionnes = []
+    
+    # Initialiser le premier intervalle
+    if not intervalles:
+        return intervalles_fusionnes
+    
+    current_debut, current_fin = intervalles[0]
+    
+    # Parcourir les intervalles
+    for intervalle in intervalles[1:]:
+        debut, fin = intervalle
+        
+        # Vérifier si l'intervalle actuel peut être fusionné avec le précédent
+        if debut - current_fin <= fusion_threshold:
+            current_fin = max(current_fin, fin)
+        else:
+            if current_fin - current_debut > duration_threshold:
+                intervalles_fusionnes.append((max(0, current_debut), current_fin))
+            current_debut = debut
+            current_fin = fin
+    
+    # Ajouter le dernier intervalle s'il dure plus de duration_threshold 
+    if current_fin - current_debut > duration_threshold:
+        intervalles_fusionnes.append((max(0, current_debut), current_fin))
+    
+    return intervalles_fusionnes
+
+# # Cas de test
+# test_intervals_1 = [(1, 2), (3, 5), (6, 10)]
+# test_intervals_2 = [(0, 1), (2, 2.5), (3, 5)]
+# test_intervals_3 = [(0, 5), (5, 10), (17, 20)]
+# test_intervals_4 = [(0, 2), (2, 4), (4, 5), (5, 8)]
+# test_intervals_5 = [(0, 3), (3, 6), (6, 9), (9, 12)]
+
+# results_1 = fusionner_intervalles_avec_seuil(test_intervals_1)
+# results_2 = fusionner_intervalles_avec_seuil(test_intervals_2)
+# results_3 = fusionner_intervalles_avec_seuil(test_intervals_3)
+# results_4 = fusionner_intervalles_avec_seuil(test_intervals_4)
+# results_5 = fusionner_intervalles_avec_seuil(test_intervals_5)
+
+# print(results_1, results_2, results_3, results_4, results_5)
+
+
+
 def trouver_fichier_video(fichier_csv, dossier_videos = "/media/DOLPHIN/2023/"):
     # Extraire la date et l'heure du nom de fichier CSV
     elements_nom_csv = fichier_csv.split("_")

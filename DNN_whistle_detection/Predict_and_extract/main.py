@@ -21,6 +21,8 @@ if __name__ == "__main__":
     default_save = False
     default_save_p = True
     default_max_workers = 8
+    default_exit = "/media/DOLPHIN/Analyses_alexis/Extracted_segments/2023/"
+
 
     # Analyse des arguments de la ligne de commande
     parser = argparse.ArgumentParser(description='Description du script')
@@ -36,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_p', type=bool, default=default_save_p, help='Enregistrer ou non Positifs')
     parser.add_argument('--max_workers', type=int, default=default_max_workers, help='Nombre maximal de travailleurs')
     parser.add_argument('--specific_files', help='Chemin vers un fichier contenant la liste des fichiers à traiter')
-
+    parser.add_argument('--audio_only_saving_folder', default=default_exit, help='Enregistrer extraits audios ou ?')
     args = parser.parse_args()
 
     # Lire la liste des fichiers spécifiques si fournie
@@ -44,5 +46,5 @@ if __name__ == "__main__":
 
     # Appel des fonctions avec les paramètres définis
     # process_predict_extract(args.recordings, args.saving_folder, args.start_time, args.end_time, args.batch_size, args.save, args.save_p, args.model_path, args.max_workers, specific_files = specific_files)
-    process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, audio=False, audio_only= True)
+    process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, exit = args.audio_only_saving_folder, audio=False, audio_only= True)
 
