@@ -299,7 +299,7 @@ def move_folders_with_2024(src_directory, dst_directory):
     # Parcourt tous les éléments du répertoire source
     for folder_name in os.listdir(src_directory):
         # Vérifie si l'élément est un dossier et s'il contient "2024"
-        if os.path.isdir(os.path.join(src_directory, folder_name)) and "2019" in folder_name:
+        if os.path.isdir(os.path.join(src_directory, folder_name)) and "2024" in folder_name:
             # Chemin complet du dossier source
             src_folder_path = os.path.join(src_directory, folder_name)
             # Chemin complet du dossier de destination
@@ -312,7 +312,7 @@ def move_folders_with_2024(src_directory, dst_directory):
 # Chemin du répertoire source
 source_directory = '/media/DOLPHIN/Analyses_alexis/2023_analysed'
 # Chemin du répertoire de destination
-destination_directory = '/media/DOLPHIN/Analyses_alexis/2019_analysed'
+destination_directory = '/media/DOLPHIN/Analyses_alexis/2024_analysed'
 
 # Appelle la fonction pour déplacer les dossiers
 move_folders_with_2024(source_directory, destination_directory)
