@@ -70,7 +70,7 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
                     positive_finish.append(image_end_time)
                     class_1_scores.append(prediction[1])
                     if save_p:
-                        if not os.path.exists(saving_folder_file):
+                        if not os.path.exists(saving_positive):
                             os.makedirs(saving_positive)
                         image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
                         cv2.imwrite(image_name, im_cop)
@@ -81,8 +81,10 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
                                    save_p, model, pbar):
     # pbar.set_postfix(file=file_name)
     date_and_channel = os.path.splitext(file_name)[0]
+    
     print("Processing:", date_and_channel) 
     saving_folder_file = os.path.join(saving_folder, f"{date_and_channel}")
+    os.makedirs(saving_folder_file, exist_ok=True)
     prediction_file_path = os.path.join(saving_folder_file, f"{date_and_channel}.wav_predictions.csv")
 
     file_path = os.path.join(recording_folder_path, file_name)
@@ -90,6 +92,7 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
     if not file_name.lower().endswith(".wav") or (os.path.exists(prediction_file_path)) :#or ("channel_2" in file_path): #and os.path.exists(saving_positive)):
         print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
         return
+
     batch_duration = batch_size * 0.4
     record_names, positive_initial, positive_finish, class_1_scores = process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file)
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, prediction_file_path)    
