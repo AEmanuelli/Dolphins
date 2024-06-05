@@ -23,6 +23,20 @@ if __name__ == "__main__":
     default_max_workers = 8
     default_exit = "/media/DOLPHIN/Analyses_alexis/Extracted_segments/2023/"
 
+# ******************FAADIL PC PARAMS
+
+    # # Define default parameters
+    # default_model_path = "DNN_whistle_detection/models/model_vgg.h5"
+    # default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
+    # default_recordings = "/media/DOLPHIN_ALEXIS/2023"#"/media/DOLPHIN_ALEXIS/2023/"
+    # default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/'
+    # default_start_time = 0
+    # default_end_time = None
+    # default_batch_size = 64
+    # default_save = False
+    # default_save_p = True
+    # default_max_workers = 8
+
 
     # Analyse des arguments de la ligne de commande
     parser = argparse.ArgumentParser(description='Description du script')
