@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 # 2. Charger YOLO
-net = cv2.dnn.readNet("/home/alexis/Downloads/yolov3.weights", "/path/to/yolov3.cfg")
+net = cv2.dnn.readNet("/home/alexis/Downloads/yolov3.weights", "/home/alexis/Downloads/yolov3.cfg")
 layer_names = net.getLayerNames()
 output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
