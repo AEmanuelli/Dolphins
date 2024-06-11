@@ -17,12 +17,17 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Ignorer les messages d'information et de débogage de TensorFlow
 
+ 
+
+Newly_path = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/Newly_detected_whistles"
+
 
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
 
 def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file):
+    print("Predicting:", file_path)
     file_name = os.path.basename(file_path)
     transformed_file_name = transform_file_name(file_name)
     fs, x = wavfile.read(file_path)
@@ -41,6 +46,7 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
     for batch in tqdm(range(num_batches), desc=f"Batches for {transformed_file_name}", leave=False, colour='blue'):
         start = batch * batch_duration + start_time
         images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
+        print("flag0")
         saving_positive = os.path.join(saving_folder_file, "positive")
         
         image_batch = []
@@ -59,22 +65,34 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
             time_batch.append((im_cop, image_start_time, image_end_time))
 
         if image_batch:
+            print("flag0.5")
             image_batch = np.vstack(image_batch)
             predictions = model.predict(image_batch, verbose=0)
+            print("flag0.6")
+            print("Predictions:", predictions)
             for idx, prediction in enumerate(predictions):
                 im_cop, image_start_time, image_end_time = time_batch[idx]
+                print("flag0.7")
                 if prediction[1] > prediction[0]:
                     record_names.append(file_name)
                     positive_initial.append(image_start_time)
                     positive_finish.append(image_end_time)
                     class_1_scores.append(prediction[1])
+                    print("flag1")
                     if save_p:
                         if not os.path.exists(saving_positive):
                             os.makedirs(saving_positive)
                         image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
                         if not os.path.exists(image_name):
-                            new_image_name = os.path.join(saving_positive, f"{model}", f"{image_start_time}-{image_end_time}.jpg")
-                            cv2.imwrite(image_name, im_cop)
+
+                            name_saving_folder = saving_folder_file.split("/")[-1]
+                            new_image_name = os.path.join(Newly_path, name_saving_folder, f"{image_start_time}-{image_end_time}.jpg")
+                            try : 
+                                os.makedirs(os.path.join(Newly_path, name_saving_folder), exist_ok=True)
+                                cv2.imwrite(new_image_name, im_cop)
+                                print(f"Saving positive image: {new_image_name}")
+                            except:
+                                print(f"Error saving image: {new_image_name}")
 
     return record_names, positive_initial, positive_finish, class_1_scores
 
@@ -111,6 +129,7 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
 
     mask_count = 0  # Compteur pour les fichiers filtrés par le masque
     model = tf.keras.models.load_model(model_path)
+    print(f"Model loaded from {model}")
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
 
@@ -118,9 +137,7 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
             for file_name in sorted_files:
                 file_path = os.path.join(recording_folder_path, file_name)
                 prediction_file_path = os.path.join(saving_folder, f"{file_name}_predictions.csv")
-                mask = (os.path.isdir(file_path) or 
-                            not file_name.lower().endswith('.wav') or 
-                            os.path.exists(prediction_file_path))
+                mask = not file_name.lower().endswith('.wav')
                     
                 if mask:
                     mask_count += 1
@@ -159,7 +176,7 @@ if __name__ == "__main__":
 # ******************FAADIL PC PARAMS
 
     # Define default parameters
-    default_model_path = "DNN_whistle_detection/models/CNN_Vgg_V2.h5"
+    default_model_path = "/users/zfne/emanuell/Downloads/model_finetuned_vgg.h5"
     default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
     default_recordings = "/media/DOLPHIN_ALEXIS/2023"#"/media/DOLPHIN_ALEXIS/2023/"
     default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/'
@@ -168,7 +185,7 @@ if __name__ == "__main__":
     default_batch_size = 64
     default_save = False
     default_save_p = True
-    default_max_workers = 8
+    default_max_workers = 1
 
 
     # Analyse des arguments de la ligne de commande
