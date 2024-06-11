@@ -1,6 +1,6 @@
 import argparse
 
-from process_predictions import process_prediction_files_in_folder
+# from process_predictions import process_prediction_files_in_folder
 from predict_and_extract_online import process_predict_extract
 
 def read_file_list(file_path):

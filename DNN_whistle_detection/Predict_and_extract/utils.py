@@ -3,7 +3,8 @@ import re
 import numpy as np
 import pandas as pd
 from scipy.io import wavfile
-from scipy.signal import spectrogram, blackman
+from scipy.signal import spectrogram
+from scipy.signal.windows import blackman
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
