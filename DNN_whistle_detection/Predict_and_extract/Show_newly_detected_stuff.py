@@ -32,7 +32,6 @@ Newly_path = os.path.join(Newly_path, model_name)
 # =============================================================================
 
 def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file):
-    print("Predicting:", file_path)
     file_name = os.path.basename(file_path)
     transformed_file_name = transform_file_name(file_name)
     fs, x = wavfile.read(file_path)
@@ -51,7 +50,6 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
     for batch in tqdm(range(num_batches), desc=f"Batches for {transformed_file_name}", leave=False, colour='blue'):
         start = batch * batch_duration + start_time
         images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
-        print("flag0")
         saving_positive = os.path.join(saving_folder_file, "positive")
         
         image_batch = []
@@ -70,20 +68,15 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
             time_batch.append((im_cop, image_start_time, image_end_time))
 
         if image_batch:
-            print("flag0.5")
             image_batch = np.vstack(image_batch)
             predictions = model.predict(image_batch, verbose=0)
-            print("flag0.6")
-            print("Predictions:", predictions)
             for idx, prediction in enumerate(predictions):
                 im_cop, image_start_time, image_end_time = time_batch[idx]
-                print("flag0.7")
                 if prediction[1] > prediction[0]:
                     record_names.append(file_name)
                     positive_initial.append(image_start_time)
                     positive_finish.append(image_end_time)
                     class_1_scores.append(prediction[1])
-                    print("flag1")
                     if save_p:
                         if not os.path.exists(saving_positive):
                             os.makedirs(saving_positive)
@@ -216,6 +209,7 @@ if __name__ == "__main__":
     # Appel des fonctions avec les paramètres définis
     process_predict_extract(args.recordings, args.saving_folder, args.start_time, args.end_time, args.batch_size, args.save, args.save_p, args.model_path, args.max_workers, specific_files = specific_files)
     # process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, exit = args.audio_only_saving_folder, audio=False, audio_only= True)
+
 
 
 
