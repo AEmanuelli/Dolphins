@@ -20,7 +20,12 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
  
 
 Newly_path = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/Newly_detected_whistles"
+model_path = "/users/zfne/emanuell/Downloads/MPFTACC95+.h5"
 
+model_name = os.path.basename(model_path).split(".")[0]
+print(f"Model name: {model_name}")
+
+Newly_path = os.path.join(Newly_path, model_name)
 
 # =============================================================================
 #********************* FUNCTIONS
@@ -102,7 +107,7 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
     date_and_channel = os.path.splitext(file_name)[0]
     
     print("Processing:", date_and_channel) 
-    saving_folder_file = os.path.join(saving_folder, f"{date_and_channel}")
+    saving_folder_file = os.path.join(Newly_path, f"{date_and_channel}")
     os.makedirs(saving_folder_file, exist_ok=True)
     prediction_file_path = os.path.join(saving_folder_file, f"{date_and_channel}.wav_predictions.csv")
 
@@ -176,7 +181,7 @@ if __name__ == "__main__":
 # ******************FAADIL PC PARAMS
 
     # Define default parameters
-    default_model_path = "/users/zfne/emanuell/Downloads/model_finetuned_vgg.h5"
+    default_model_path = model_path
     default_root = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
     default_recordings = "/media/DOLPHIN_ALEXIS/2023"#"/media/DOLPHIN_ALEXIS/2023/"
     default_saving_folder = '/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/'
