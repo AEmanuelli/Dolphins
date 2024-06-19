@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
  
 
 Newly_path = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/Newly_detected_whistles"
-model_path = "/users/zfne/emanuell/Downloads/MPFTACC95+.h5"
+model_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/models/model_vgg.h5"#"/media/DOLPHIN_ALEXIS1/temp_alexis/Augmented_dataset.h5"
 
 model_name = os.path.basename(model_path).split(".")[0]
 print(f"Model name: {model_name}")
@@ -50,7 +50,8 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
     for batch in tqdm(range(num_batches), desc=f"Batches for {transformed_file_name}", leave=False, colour='blue'):
         start = batch * batch_duration + start_time
         images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
-        saving_positive = os.path.join(saving_folder_file, "positive")
+        name_saving_folder = saving_folder_file.split("/")[-1]
+        saving_positive = os.path.join("/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/", name_saving_folder,  "positive")
         
         image_batch = []
         time_batch = []
@@ -70,6 +71,7 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
         if image_batch:
             image_batch = np.vstack(image_batch)
             predictions = model.predict(image_batch, verbose=0)
+            print(predictions)
             for idx, prediction in enumerate(predictions):
                 im_cop, image_start_time, image_end_time = time_batch[idx]
                 if prediction[1] > prediction[0]:
@@ -88,7 +90,6 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
                             try : 
                                 os.makedirs(os.path.join(Newly_path, name_saving_folder), exist_ok=True)
                                 cv2.imwrite(new_image_name, im_cop)
-                                print(f"Saving positive image: {new_image_name}")
                             except:
                                 print(f"Error saving image: {new_image_name}")
 
@@ -106,7 +107,7 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
 
     file_path = os.path.join(recording_folder_path, file_name)
 
-    if not file_name.lower().endswith(".wav")  :#or ("channel_2" in file_path): #and os.path.exists(saving_positive)):
+    if not file_name.lower().endswith(".wav")  or os.path.exists(prediction_file_path): #and os.path.exists(saving_positive)):
         print(f"Non-audio or channel 2 or already predicted : {file_name}. Skipping processing.")
         return
 
@@ -130,9 +131,11 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
     print(f"Model loaded from {model}")
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
-
+        i = 0 
         with tqdm(total=len(files), desc="Files that are not going to be processed right now : ", position=0, leave=True, colour='green') as pbar:
             for file_name in sorted_files:
+                if i>5: 
+                    break
                 file_path = os.path.join(recording_folder_path, file_name)
                 prediction_file_path = os.path.join(saving_folder, f"{file_name}_predictions.csv")
                 mask = not file_name.lower().endswith('.wav')
@@ -146,6 +149,7 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
                                          saving_folder, start_time, end_time, batch_size, save_p, model, pbar)
                 future.add_done_callback(lambda _: pbar.update(1))  # Mettre à jour la barre de progression lorsque le thread termine
                 futures.append(future)
+                i += 1
 
             for future in concurrent.futures.as_completed(futures):
                 future.result()
