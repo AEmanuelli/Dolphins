@@ -462,4 +462,4 @@ with open(results_file, "w") as file:
                     stats.dump_stats(filename.replace('.npy', '.prof'))
 
                     # Écrire les détails des temps de mouvement
-                    file.write(str(mt) + "\n\n")à
+                    file.write(str(mt) + "\n\n")
