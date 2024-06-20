@@ -16,22 +16,33 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Ignorer les messages d'information et de débogage de TensorFlow
-
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
  
 
 Newly_path = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/Newly_detected_whistles"
-model_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/models/model_vgg.h5"#"/media/DOLPHIN_ALEXIS1/temp_alexis/Augmented_dataset.h5"
+# model_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/models/model_vgg.h5"#"/media/DOLPHIN_ALEXIS1/temp_alexis/Augmented_dataset.h5"
+model_path= "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/models/model_finetuned_vgg.h5"
+
+
+
+
+
+
+
 
 model_name = os.path.basename(model_path).split(".")[0]
 print(f"Model name: {model_name}")
 
 Newly_path = os.path.join(Newly_path, model_name)
+os.makedirs(Newly_path, exist_ok=True)
+
+Non_finetuned_dir = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
 
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
 
-def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file):
+def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file, rescale = True):
     file_name = os.path.basename(file_path)
     transformed_file_name = transform_file_name(file_name)
     fs, x = wavfile.read(file_path)
@@ -50,8 +61,7 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
     for batch in tqdm(range(num_batches), desc=f"Batches for {transformed_file_name}", leave=False, colour='blue'):
         start = batch * batch_duration + start_time
         images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
-        name_saving_folder = saving_folder_file.split("/")[-1]
-        saving_positive = os.path.join("/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/", name_saving_folder,  "positive")
+        
         
         image_batch = []
         time_batch = []
@@ -64,6 +74,8 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
             image = cv2.resize(image, (224, 224))
             image = np.expand_dims(image, axis=0)
             image = preprocess_input(image)
+            if rescale : 
+                image = image.astype(float) / 255.0
             
             image_batch.append(image)
             time_batch.append((im_cop, image_start_time, image_end_time))
@@ -71,7 +83,6 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
         if image_batch:
             image_batch = np.vstack(image_batch)
             predictions = model.predict(image_batch, verbose=0)
-            print(predictions)
             for idx, prediction in enumerate(predictions):
                 im_cop, image_start_time, image_end_time = time_batch[idx]
                 if prediction[1] > prediction[0]:
@@ -80,18 +91,18 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
                     positive_finish.append(image_end_time)
                     class_1_scores.append(prediction[1])
                     if save_p:
-                        if not os.path.exists(saving_positive):
-                            os.makedirs(saving_positive)
-                        image_name = os.path.join(saving_positive, f"{image_start_time}-{image_end_time}.jpg")
-                        if not os.path.exists(image_name):
-
-                            name_saving_folder = saving_folder_file.split("/")[-1]
-                            new_image_name = os.path.join(Newly_path, name_saving_folder, f"{image_start_time}-{image_end_time}.jpg")
+                        previous_image_name = os.path.join(Non_finetuned_dir, saving_folder_file, "positive", f"{image_start_time}-{image_end_time}.jpg")
+                        if not os.path.exists(previous_image_name):
+                            positive_folder = os.path.join(Newly_path, saving_folder_file, "positive")
+                            os.makedirs(positive_folder, exist_ok=True)
+                            new_image_name = os.path.join(positive_folder, f"{image_start_time}-{image_end_time}.jpg")
                             try : 
-                                os.makedirs(os.path.join(Newly_path, name_saving_folder), exist_ok=True)
+                                print(f"Saving image: {image_start_time}-{image_end_time}")
                                 cv2.imwrite(new_image_name, im_cop)
                             except:
                                 print(f"Error saving image: {new_image_name}")
+                        else:
+                            print(f"Image already exists: {previous_image_name}")
 
     return record_names, positive_initial, positive_finish, class_1_scores
 
@@ -128,7 +139,6 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
 
     mask_count = 0  # Compteur pour les fichiers filtrés par le masque
     model = tf.keras.models.load_model(model_path)
-    print(f"Model loaded from {model}")
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         i = 0 
@@ -145,7 +155,7 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
                     pbar.update(1)  # Incrémenter la barre de progression pour les fichiers filtrés
                     continue
                 
-                future = executor.submit(process_predict_extract_worker, file_name, recording_folder_path, 
+                future = executor.submit(process_predict_extract_worker, file_path, recording_folder_path, 
                                          saving_folder, start_time, end_time, batch_size, save_p, model, pbar)
                 future.add_done_callback(lambda _: pbar.update(1))  # Mettre à jour la barre de progression lorsque le thread termine
                 futures.append(future)
