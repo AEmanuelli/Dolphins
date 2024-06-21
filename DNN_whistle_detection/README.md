@@ -51,7 +51,7 @@ This project is designed for the extraction, prediction, and analysis of audio s
 ### Root Directory
 - **`__init__.py`**: Initialization file for the package.
 - **`README.md`**: This file, providing an overview and details about the project structure and usage.
-- **`requirements.txt`**: Lists all the dependencies required to run the project.
+- **`requirements.txt`**: Lists all the dependencies required to run the code in this folder.
 
 ### Models Directory
 - **`models/`**: Directory intended for storing trained machine learning models.
@@ -70,11 +70,12 @@ This project is designed for the extraction, prediction, and analysis of audio s
 - **`main.py`**: Main script to run the prediction and extraction pipeline.
 - **`maintenance.py`**: Script for maintaining and updating the dataset and models.
 - **`pipeline.ipynb`**: Jupyter notebook doing what main.py does but without GPU .
-- **`predict_and_extract_online.py`**: Defines the process_and_predict function, which takes a file path and performs audio processing and prediction on it. It extracts audio features, preprocesses them, and uses a pre-trained model to make predictions. It also saves positive predictions as images if specified.
-Defines the process_predict_extract_worker function, which is called by the process_predict_extract function. It processes a single file by calling the process_and_predict function and saves the predictions in a CSV file.
-Defines the process_predict_extract function, which is the main function of the script. It takes a folder path containing audio files, iterates over the files, and processes them in parallel using multiple threads. It calls the process_predict_extract_worker function for each file.
+- **`predict_and_extract_online.py`**: 
+    - Defines the `process_and_predict` function, which takes a file path and performs audio processing and prediction on it. It extracts audio features, preprocesses them, and uses a pre-trained model to make predictions. It also saves positive predictions as images if specified.
+    - Defines the `process_predict_extract_worker` function, which is called by the `process_predict_extract` function. It processes a single file by calling the `process_and_predict` function and saves the predictions in a CSV file.
+    - Defines the `process_predict_extract` function, which is the main function of the script. It takes a folder path containing audio files, iterates over the files, and processes them in parallel using multiple threads. It calls the `process_predict_extract_worker` function for each file.
 - **`predict_online.py`**: I don't remember exactly what this does.
-- **`process_predictions.py`**: Script for processing and analyzing the predictions.
+- **`process_predictions.py`**: Script for processing and analyzing the predictions. ie process the csv file previously produced. This can be done for video files, video and audio (audio = True) or only audio for Wav2vec stuff, (audio_only = True)
 - **`Show_newly_detected_stuff.py`**: Script that contains the entire pipeline, but that is used to compare the outputs of new models with respect to what has previously been extracted (it saves the images that were not previously labelled as positive in a folder that has the name of th model, inside Analyses_Alexis/Newly_extracted_whistles)
 - **`utils.py`**: Utility functions used across the `Predict_and_extract` module.
 - **`vidéoaudio.py`**: Script for extracting video segments and also their associated audio.
@@ -88,7 +89,7 @@ Defines the process_predict_extract function, which is the main function of the 
   - **`timings`**:
     - **`negatives.csv`**: CSV file containing negative samples.
     - **`positives.csv`**: CSV file containing positive samples.
-- **`csv2dataset.py`**: Script to convert CSV data to dataset format.
+- **`csv2dataset.py`**: Script to extract dataset from CSV data.
 - **`dataset2csv.py`**: Script to convert datasets back to CSV format.
 - **`fine-tune2.ipynb`**: Jupyter notebook for fine-tuning the model (version 2).
 - **`fine-tune.ipynb`**: Jupyter notebook for fine-tuning the model.
@@ -98,11 +99,6 @@ Defines the process_predict_extract function, which is the main function of the 
 ## Getting Started
 
 ### Prerequisites
-
-Ensure you have the following installed:
-- Python 3.x
-- Jupyter Notebook
-- All dependencies listed in `requirements.txt`
 
 ### Installation
 
@@ -117,36 +113,9 @@ Ensure you have the following installed:
    pip install -r requirements.txt
    ```
 
-### Usage
+### NOTES 
 
-1. **Data Preparation**:
-   - Use the scripts in `Train_model/Create_dataset` to prepare your dataset.
-   - Ensure your dataset files are correctly formatted and placed in the appropriate directories.
 
-2. **Model Training**:
-   - Use the Jupyter notebooks and scripts in `Train_model` to train your models.
-   - Fine-tune your models as necessary using the provided notebooks.
-
-3. **Prediction and Extraction**:
-   - Run the scripts in `Predict_and_extract` to perform predictions and extract features.
-   - Utilize the provided notebooks to classify and process the extracted data.
-
-4. **Analysis**:
-   - Use the `Models_vs_years_comparison` module to compare model predictions over different years and visualize the results.
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -m 'Add some feature'`).
-4. Push to the branch (`git push origin feature/your-feature`).
-5. Open a pull request.
-
-## License
-
-This project is licensed under the MIT License - see the `LICENSE` file for details.
-
----
-
-For any questions or issues, please open an issue on GitHub or contact the project maintainers.
+The main code you want to look at is 
+- main.py
+- process_predictions.py
