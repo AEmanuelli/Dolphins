@@ -114,9 +114,29 @@ This project is designed for the extraction, prediction, and analysis of audio s
 
 ### NOTES 
 
-The main code you want to look at is:
-- `main.py`: This file is made to run the entire pipeline.
-- `predict_and_extract_online.py`: This file handles the extraction using a neural network and produces a CSV file.
-- `process_predictions.py`: This file takes the previously generated CSV and extracts the desired segments of audiovisual modality.
-- `fine-tune.ipynb`: This Jupyter notebook is used for fine-tuning the model on a dataset.
 
+The main code you want to look at is:
+
+- `main.py`: This file is used to run the entire pipeline.
+
+- `predict_and_extract_online.py`: This file handles the extraction using a neural network and produces a CSV file.
+
+- `process_predictions.py`: This file takes the previously generated CSV and extracts the desired segments of audiovisual modality.
+
+#### Summary of `predict_and_extract_online.py` script:
+
+- `process_and_predict` function: Takes in the path to an audio file, batch duration, start and end times, batch size, model, save flag, and saving folder file path. It processes the audio file, extracts batches of audio data, and predicts the presence of the specific class using the model. It returns a tuple containing lists of record names, positive initial times, positive finish times, and class 1 scores.
+- `process_predict_extract_worker` function: Worker function that processes and predicts whistle detection for a given audio file. It takes in the file name, recording folder path, saving folder path, start and end times, batch size, save flag, model, and a progress bar object. It creates a saving folder for the positive predictions, processes the audio file, and saves the prediction results in a CSV file.
+- `process_predict_extract` function: Main function that processes and extracts predictions from audio files in a given folder. It takes in the recording folder path, saving folder path, start and end times, batch size, save flag, save_p flag, model path, maximum number of worker threads, and a list of specific file names to process. It loads the model, sorts the files in the recording folder, and uses a thread pool executor to process the audio files in parallel.
+
+#### Summary of `process_predictions.py` script:
+
+- `audioextraits` function: Extracts audio clips based on given intervals and saves them as WAV files.
+- `transform_file_name` function: Transforms a file name using regular expressions.
+- `extraire_extraits_video` function: Extracts video clips based on given intervals and saves them as MP4 files.
+- `process_non_empty_file` function: Processes a non-empty prediction file by extracting audio or video clips based on the given parameters.
+- `handle_empty_file` function: Handles an empty prediction file by creating a text file indicating no whistles were detected.
+- `handle_missing_file` function: Handles a missing prediction file by creating a text file indicating no CSV file was found.
+- `process_prediction_file` function: Processes a prediction file by checking if it is empty or missing, and then calling the appropriate functions to process it.
+- `process_folder` function: Processes a folder by finding the corresponding prediction file and calling the `process_prediction_file` function.
+- `process_prediction_files_in_folder` function: Processes all prediction files in a given folder by using multithreading to process each folder concurrently.
