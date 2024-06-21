@@ -56,7 +56,7 @@ This project is designed for the extraction, prediction, and analysis of audio s
 ### Models Directory
 - **`models/`**: Directory intended for storing trained machine learning models.
 
-### Models_vs_years_comparison
+### Models_vs_years_comparison 
 - **`figs/`**: Directory for storing figures and plots generated during model comparison.
 - **`models_vs_years_predictions.ipynb`**: Jupyter notebook for comparing different model predictions across different years.
 
@@ -97,8 +97,6 @@ This project is designed for the extraction, prediction, and analysis of audio s
 - **`Train.py`**: Script to train the machine learning models.
 
 ## Getting Started
-
-### Prerequisites
 
 ### Installation
 

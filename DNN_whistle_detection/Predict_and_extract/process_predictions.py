@@ -102,8 +102,6 @@ def process_non_empty_file(prediction_file_path, folder_name, recording_folder_p
             dossier_sortie_audio = exit
             os.makedirs(dossier_sortie_audio, exist_ok=True)
             audioextraits(intervalles_fusionnes, fichier_audio, dossier_sortie_audio)
-
-
     
     else : 
         intervalles_fusionnes = fusionner_intervalles(intervalles, hwindow=5)
