@@ -102,8 +102,9 @@ This project is designed for the extraction, prediction, and analysis of audio s
 
 1. Clone the repository:
    ```sh
-   git clone <repository_url>
-   cd <repository_directory>
+   git clone https://github.com/AEmanuelli/Dolphins.git
+
+   cd Dolphins/DNN_whistle_detection/
    ```
 
 2. Install the required packages:
