@@ -101,8 +101,8 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
                                 cv2.imwrite(new_image_name, im_cop)
                             except:
                                 print(f"Error saving image: {new_image_name}")
-                        else:
-                            print(f"Image already exists: {previous_image_name}")
+                        # else:
+                        #     print(f"Image already exists: {previous_image_name}")
 
     return record_names, positive_initial, positive_finish, class_1_scores
 
@@ -123,7 +123,7 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
         return
 
     batch_duration = batch_size * 0.4
-    record_names, positive_initial, positive_finish, class_1_scores = process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file)
+    record_names, positive_initial, positive_finish, class_1_scores = process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, date_and_channel)
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, prediction_file_path)    
     # process_prediction_file(prediction_file_path, file_name, recording_folder_path)
     pbar.update()
@@ -144,8 +144,6 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
         i = 0 
         with tqdm(total=len(files), desc="Files that are not going to be processed right now : ", position=0, leave=True, colour='green') as pbar:
             for file_name in sorted_files:
-                if i>5: 
-                    break
                 file_path = os.path.join(recording_folder_path, file_name)
                 prediction_file_path = os.path.join(saving_folder, f"{file_name}_predictions.csv")
                 mask = not file_name.lower().endswith('.wav')
@@ -155,7 +153,7 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
                     pbar.update(1)  # Incrémenter la barre de progression pour les fichiers filtrés
                     continue
                 
-                future = executor.submit(process_predict_extract_worker, file_path, recording_folder_path, 
+                future = executor.submit(process_predict_extract_worker, file_name, recording_folder_path, 
                                          saving_folder, start_time, end_time, batch_size, save_p, model, pbar)
                 future.add_done_callback(lambda _: pbar.update(1))  # Mettre à jour la barre de progression lorsque le thread termine
                 futures.append(future)
@@ -197,7 +195,7 @@ if __name__ == "__main__":
     default_batch_size = 64
     default_save = False
     default_save_p = True
-    default_max_workers = 1
+    default_max_workers = 4
 
 
     # Analyse des arguments de la ligne de commande

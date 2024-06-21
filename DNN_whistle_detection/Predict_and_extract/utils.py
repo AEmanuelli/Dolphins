@@ -466,6 +466,31 @@ def save_csv(record_names, positive_initial, positive_finish, class_1_scores, cs
 def process_audio_file(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
                        nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=20, target_width_px=903,
                        target_height_px=677):
+    """
+    Process an audio file and generate spectrogram images.
+
+    Parameters:
+    - file_path (str): Path to the audio file.
+    - saving_folder (str): Path to the folder where the spectrogram images will be saved. Default is "./images".
+    - batch_size (int): Number of spectrogram images to generate. Default is 50.
+    - start_time (float): Start time in seconds for processing the audio file. Default is 0.
+    - end_time (float): End time in seconds for processing the audio file. Default is None.
+    - save (bool): Whether to save the spectrogram images. Default is False.
+    - wlen (int): Length of the window for spectrogram calculation. Default is 2048.
+    - nfft (int): Number of points for FFT calculation. Default is 2048.
+    - sliding_w (float): Sliding window size in seconds. Default is 0.4.
+    - cut_low_frequency (int): Lower frequency limit for the spectrogram plot. Default is 3.
+    - cut_high_frequency (int): Upper frequency limit for the spectrogram plot. Default is 20.
+    - target_width_px (int): Width of the spectrogram image in pixels. Default is 903.
+    - target_height_px (int): Height of the spectrogram image in pixels. Default is 677.
+
+    Returns:
+    - images (list): List of spectrogram images as numpy arrays.
+
+    Raises:
+    - FileNotFoundError: If the audio file is not found.
+    """
+
     try:
         # Load sound recording
         fs, x = wavfile.read(file_path)
@@ -526,6 +551,16 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
     plt.close('all')  # Close all figures to release memory
 
     return images
+
+
+
+
+
+
+
+
+
+
 
 def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
                                    nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=25, target_width_px=1920,
