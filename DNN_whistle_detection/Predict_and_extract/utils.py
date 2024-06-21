@@ -149,7 +149,23 @@ def fusionner_intervalles(intervalles, hwindow=4):
     return intervalles_fusionnes
 
 
-def fusionner_intervalles_avec_seuil(intervalles, fusion_threshold=3, duration_threshold = 3):
+# FUNCTION TO EXTRACT AUDIO CLIPS FROM A CSV FILE, DEFINED WITH CHIARA FOR WAV2VEC PROJECT
+def fusionner_intervalles_avec_seuil(intervalles, fusion_threshold=3, duration_threshold=3):
+    """
+    Fusionne les intervalles qui se chevauchent avec un seuil de fusion et une durée minimale.
+
+    Args:
+        intervalles (list): Une liste d'intervalles représentés par des tuples (début, fin).
+        fusion_threshold (int, optional): Le seuil de fusion pour déterminer si deux intervalles peuvent être fusionnés. 
+            Les intervalles dont la différence entre le début du deuxième intervalle et la fin du premier intervalle est inférieure ou égale à ce seuil seront fusionnés. 
+            Par défaut, fusion_threshold est de 3.
+        duration_threshold (int, optional): La durée minimale requise pour qu'un intervalle fusionné soit ajouté à la liste résultante. 
+            Les intervalles dont la différence entre le début et la fin est supérieure à ce seuil seront ajoutés. 
+            Par défaut, duration_threshold est de 3.
+
+    Returns:
+        list: Une liste d'intervalles fusionnés qui satisfont les critères de fusion et de durée minimale.
+    """
     # Trier les intervalles par début
     intervalles.sort(key=lambda x: x[0])
     
@@ -181,36 +197,31 @@ def fusionner_intervalles_avec_seuil(intervalles, fusion_threshold=3, duration_t
     
     return intervalles_fusionnes
 
-# # Cas de test
-# test_intervals_1 = [(1, 2), (3, 5), (6, 10)]
-# test_intervals_2 = [(0, 1), (2, 2.5), (3, 5)]
-# test_intervals_3 = [(0, 5), (5, 10), (17, 20)]
-# test_intervals_4 = [(0, 2), (2, 4), (4, 5), (5, 8)]
-# test_intervals_5 = [(0, 3), (3, 6), (6, 9), (9, 12)]
 
-# results_1 = fusionner_intervalles_avec_seuil(test_intervals_1)
-# results_2 = fusionner_intervalles_avec_seuil(test_intervals_2)
-# results_3 = fusionner_intervalles_avec_seuil(test_intervals_3)
-# results_4 = fusionner_intervalles_avec_seuil(test_intervals_4)
-# results_5 = fusionner_intervalles_avec_seuil(test_intervals_5)
+def trouver_fichier_video(fichier_csv, dossier_videos="/media/DOLPHIN/2023/"):
+    """
+    Finds a video file that corresponds to a given CSV file based on their date and time.
 
-# print(results_1, results_2, results_3, results_4, results_5)
+    Args:
+        fichier_csv (str): The name of the CSV file.
+        dossier_videos (str, optional): The directory where the video files are located. Defaults to "/media/DOLPHIN/2023/".
 
-
-
-def trouver_fichier_video(fichier_csv, dossier_videos = "/media/DOLPHIN/2023/"):
+    Returns:
+        str: The path of the video file that corresponds to the given CSV file.
+            Returns None if no corresponding video file is found.
+    """
     # Extraire la date et l'heure du nom de fichier CSV
     elements_nom_csv = fichier_csv.split("_")
-    date_heure_csv = elements_nom_csv[1] + "_"+ elements_nom_csv[2] + "_" + elements_nom_csv[3] + "_"+elements_nom_csv[4]  # Format: "Aug_2023_0845"
+    date_heure_csv = elements_nom_csv[1] + "_" + elements_nom_csv[2] + "_" + elements_nom_csv[3] + "_" + elements_nom_csv[4]  # Format: "Aug_2023_0845"
 
     # Parcourir tous les fichiers vidéo dans le dossier
     for fichier_video in os.listdir(dossier_videos):
         if fichier_video.endswith(".mp4"):
-            try: 
+            try:
                 # Extraire la date et l'heure du nom de fichier vidéo
                 elements_nom_video = fichier_video.split("_")
                 date_heure_video = elements_nom_video[1] + "_" + elements_nom_video[2] + "_" + elements_nom_video[3] + "_" + elements_nom_video[4]  # Format: "Aug_2023_1645"
-            except IndexError: 
+            except IndexError:
                 # print(f"{fichier_video} n'a pas le bon format.")
                 continue
             # Comparer les dates et heures pour trouver une correspondance
@@ -552,76 +563,66 @@ def process_audio_file(file_path, saving_folder="./images", batch_size=50, start
 
     return images
 
-
-
-
-
-
-
-
-
-
-
-def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
-                                   nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=25, target_width_px=1920,
-                                   target_height_px=1080):
-    try:
-        # Load sound recording
-        x, fs = librosa.load(file_path, sr=None)
-        print("zboub")
-    except FileNotFoundError:
-        raise FileNotFoundError(f"File {file_path} not found.")
+# def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=50, start_time=0, end_time=None, save=False, wlen=2048,
+#                                    nfft=2048, sliding_w=0.4, cut_low_frequency=3, cut_high_frequency=25, target_width_px=1920,
+#                                    target_height_px=1080):
+#     try:
+#         # Load sound recording
+#         x, fs = librosa.load(file_path, sr=None)
+#         print("zboub")
+#     except FileNotFoundError:
+#         raise FileNotFoundError(f"File {file_path} not found.")
     
-    # Create the saving folder if it doesn't exist
-    if save and not os.path.exists(saving_folder):
-        os.makedirs(saving_folder)
+#     # Create the saving folder if it doesn't exist
+#     if save and not os.path.exists(saving_folder):
+#         os.makedirs(saving_folder)
     
-    # Calculate the spectrogram parameters
-    hop_length = int(sliding_w * fs)
-    n_mels = 128  # Number of Mel bands
+#     # Calculate the spectrogram parameters
+#     hop_length = int(sliding_w * fs)
+#     n_mels = 128  # Number of Mel bands
     
-    images = []
-    file_name = os.path.splitext(os.path.basename(file_path))[0]
-    N = len(x)  # signal length
+#     images = []
+#     file_name = os.path.splitext(os.path.basename(file_path))[0]
+#     N = len(x)  # signal length
 
-    if end_time is not None:
-        N = min(N, int(end_time * fs))
+#     if end_time is not None:
+#         N = min(N, int(end_time * fs))
 
-    low = int(start_time * fs)
+#     low = int(start_time * fs)
     
-    for _ in range(batch_size):
-        if low + hop_length > N:  # Check if the slice exceeds the signal length
-            break
-        x_w = x[low:low + hop_length]
+#     for _ in range(batch_size):
+#         if low + hop_length > N:  # Check if the slice exceeds the signal length
+#             break
+#         x_w = x[low:low + hop_length]
         
-        # Calculate the Mel spectrogram
-        Sxx = librosa.feature.melspectrogram(y=x_w, sr=fs, n_fft=nfft, hop_length=hop_length, n_mels=n_mels, fmin=cut_low_frequency, fmax=cut_high_frequency)
-        Sxx = librosa.power_to_db(Sxx, ref=np.max)  # Convert to dB
+#         # Calculate the Mel spectrogram
+#         Sxx = librosa.feature.melspectrogram(y=x_w, sr=fs, n_fft=nfft, hop_length=hop_length, n_mels=n_mels, fmin=cut_low_frequency, fmax=cut_high_frequency)
+#         Sxx = librosa.power_to_db(Sxx, ref=np.max)  # Convert to dB
 
-        # Create the spectrogram plot
-        fig, ax = plt.subplots()
-        librosa.display.specshow(Sxx, sr=fs, hop_length=hop_length, cmap='inferno')
-        ax.set_ylim(cut_low_frequency, cut_high_frequency)
+#         # Create the spectrogram plot
+#         fig, ax = plt.subplots()
+#         librosa.display.specshow(Sxx, sr=fs, hop_length=hop_length, cmap='inferno')
+#         ax.set_ylim(cut_low_frequency, cut_high_frequency)
         
-        ax.axis('off')  # Turn off axis
+#         ax.axis('off')  # Turn off axis
         
-        fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
+#         fig.set_size_inches(target_width_px / plt.rcParams['figure.dpi'], target_height_px / plt.rcParams['figure.dpi'])
 
-        # Save the spectrogram as a JPG image without borders
-        if save:
-            image_name = os.path.join(saving_folder, f"{file_name}-{low/fs}.jpg")
-            fig.savefig(image_name, dpi=plt.rcParams['figure.dpi'], bbox_inches='tight', pad_inches=0)  # Save without borders
+#         # Save the spectrogram as a JPG image without borders
+#         if save:
+#             image_name = os.path.join(saving_folder, f"{file_name}-{low/fs}.jpg")
+#             fig.savefig(image_name, dpi=plt.rcParams['figure.dpi'], bbox_inches='tight', pad_inches=0)  # Save without borders
 
-        fig.canvas.draw()
-        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-        images.append(image)
+#         fig.canvas.draw()
+#         image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+#         image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+#         images.append(image)
 
-        low += hop_length
+#         low += hop_length
 
-        plt.close(fig)  # Close figure to release memory
+#         plt.close(fig)  # Close figure to release memory
 
-    return images
+#     return images
 
 
 
@@ -664,90 +665,6 @@ fichier_csv = "/media/DOLPHIN_ALEXIS/temp_alexis/Label_01_Aug_2023_0845_channel_
 
 # # Call a MATLAB function
 # result = eng.my_matlab_function(arg1, arg2)
-
-
-import os
-import matplotlib.pyplot as plt
-import numpy as np
-
-def save_spectrogram(specgram, freqs, times, image_saving_path, ms=False, log=True, eps=1e-14):
-    """
-    Save the spectrogram image.
-
-    Parameters
-    ----------
-    specgram : 2D array
-        The spectrogram data.
-    freqs : array
-        Array of frequencies.
-    times : array
-        Array of times.
-    image_saving_path : str
-        Path to the image file where the spectrogram will be saved.
-    ms : bool, optional
-        Plot with the time in milliseconds. The default is False.
-    log : bool, optional
-        Whether to use logarithmic scale. The default is True.
-    eps : float, optional
-        Epsilon value. The default is 1e-14.
-
-    Returns
-    -------
-    None
-    """
-    # Ensure the directory structure exists
-    os.makedirs(os.path.dirname(image_saving_path), exist_ok=True)
-
-    # Determine time units for the x-axis
-    if ms:
-        times *= 1000  # Convert time to milliseconds
-
-    # Create a figure and axis
-    fig, ax = plt.subplots(figsize=(10, 5), dpi=100)  # Adjust DPI for better resolution
-
-    # Plot the spectrogram
-    if log:
-        specgram = np.log(specgram + eps)
-    mesh = ax.pcolormesh(times, freqs, specgram, shading='auto', cmap='viridis')
-
-    # Remove axis labels and ticks
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_xlabel('')
-    ax.set_ylabel('')
-
-    # Remove colorbar
-    plt.colorbar(mesh, ax=ax).remove()
-
-    # Save the image with tight layout and transparent background
-    plt.savefig(image_saving_path, bbox_inches='tight', pad_inches=0, transparent=True)
-
-    # Close the figure to release memory
-    plt.close(fig)
-
-
-
-def process_audio_file_alternative(file_path, saving_folder="./images", batch_size=5, start_time=0, end_time=None, save=True, 
-                                   cut_low_frequency=3000, cut_high_frequency=25000):
-    for i in tqdm(range(batch_size), desc="Generating Images"):
-        file_name = os.path.splitext(os.path.basename(file_path))[0]
-        window_size_seconds = .4
-        try:
-            # Move start and end time by the window size
-            start_time += window_size_seconds
-            image_name = os.path.join(saving_folder, f"{file_name}-{round(start_time, 1)}.jpg")
-            print("Image name:", image_name)  # Debugging statement
-            if end_time is not None:
-                if start_time>= end_time:
-                    break
-            
-            Sxx, f, t = wav_to_spec_librosa(file_path, stride_ms=5.0, window_ms=10.0, max_freq=cut_high_frequency, min_freq=cut_low_frequency, cut=(start_time, end_time))
-            print("Spectrogram shape before saving:", Sxx.shape)
-            save_spectrogram(Sxx, f, t, image_saving_path=image_name)
-            print("Image saved successfully.")  # Debugging statement
-        except Exception as e:
-            print("Error while processing:", e)  # Debugging statement
-            continue
 
 
         

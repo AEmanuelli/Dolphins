@@ -24,6 +24,26 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # =============================================================================
 
 def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file):
+    """
+    Process an audio file, extract batches of audio data, and predict the presence of a specific class using a given model.
+
+    Args:
+        file_path (str): The path to the audio file.
+        batch_duration (float): The duration of each batch in seconds.
+        start_time (float): The start time in seconds from which to process the audio file.
+        end_time (float): The end time in seconds until which to process the audio file. If None, process until the end of the file.
+        batch_size (int): The number of audio samples in each batch.
+        model (object): The model used for prediction.
+        save_p (bool): Whether to save positive predictions as images.
+        saving_folder_file (str): The path to the folder where positive prediction images will be saved.
+
+    Returns:
+        tuple: A tuple containing the following lists:
+            - record_names (list): The names of the audio files.
+            - positive_initial (list): The initial times of positive predictions.
+            - positive_finish (list): The finish times of positive predictions.
+            - class_1_scores (list): The scores of positive predictions.
+    """
     file_name = os.path.basename(file_path)
     transformed_file_name = transform_file_name(file_name)
     fs, x = wavfile.read(file_path)
@@ -79,6 +99,23 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
 
 def process_predict_extract_worker(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, 
                                    save_p, model, pbar):
+    """
+    Process and predict whistle detection for a given audio file.
+
+    Args:
+        file_name (str): The name of the audio file.
+        recording_folder_path (str): The path to the folder containing the audio file.
+        saving_folder (str): The path to the folder where the prediction results will be saved.
+        start_time (float): The start time of the segment to process and predict.
+        end_time (float): The end time of the segment to process and predict.
+        batch_size (int): The batch size for processing the audio file.
+        save_p (bool): Flag indicating whether to save the positive predictions.
+        model: The trained model for whistle detection.
+        pbar: The progress bar object for tracking the processing progress.
+
+    Returns:
+        None
+    """
     # pbar.set_postfix(file=file_name)
     date_and_channel = os.path.splitext(file_name)[0]
     
@@ -101,6 +138,24 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
 
 def process_predict_extract(recording_folder_path, saving_folder, start_time=0, end_time=1800, batch_size=50, 
                             save=False, save_p=True, model_path="models/model_vgg.h5", max_workers = 16, specific_files = None):
+    """
+    Process and extract predictions from audio files in a given folder.
+
+    Args:
+        recording_folder_path (str): The path to the folder containing the audio files.
+        saving_folder (str): The path to the folder where the predictions will be saved.
+        start_time (int, optional): The start time in seconds for processing the audio files. Defaults to 0.
+        end_time (int, optional): The end time in seconds for processing the audio files. Defaults to 1800.
+        batch_size (int, optional): The batch size for processing the audio files. Defaults to 50.
+        save (bool, optional): Flag indicating whether to save the predictions. Defaults to False.
+        save_p (bool, optional): Flag indicating whether to save the processed audio files. Defaults to True.
+        model_path (str, optional): The path to the trained model file. Defaults to "models/model_vgg.h5".
+        max_workers (int, optional): The maximum number of worker threads to use for processing. Defaults to 16.
+        specific_files (list, optional): A list of specific file names to process. Defaults to None.
+
+    Returns:
+        None
+    """
     files = os.listdir(recording_folder_path)
     sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(recording_folder_path, x)), reverse=False)
     
