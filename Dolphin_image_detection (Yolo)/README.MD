@@ -15,7 +15,7 @@ To use this code, follow these steps:
 
 1. Navigate to the project directory:
 ```
-cd /users/zfne/emanuell/Documents/GitHub/Dolphins/Dolphin_image_detection\ \(Yolo\)/
+cd /users/zfne/emanuell/Documents/GitHub/Dolphins/Dolphin_image_detection (Yolo)/
 ```
 2. Install requirements
 ```
