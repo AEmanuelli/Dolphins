@@ -114,7 +114,9 @@ This project is designed for the extraction, prediction, and analysis of audio s
 
 ### NOTES 
 
+The main code you want to look at is:
+- `main.py`: This file contains the entire pipeline. If you have any questions or concerns, please let me know.
+- `predict_and_extract_online.py`: This file handles the extraction using a neural network and produces a CSV file.
+- `process_predictions.py`: This file takes the previously generated CSV and extracts the desired segments of audiovisual modality.
+- `fine-tune.ipynb`: This Jupyter notebook is used for fine-tuning the model on a dataset.
 
-The main code you want to look at is 
-- main.py
-- process_predictions.py
