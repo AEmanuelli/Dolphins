@@ -134,9 +134,9 @@ The main code you want to look at is:
 - `audioextraits` function: Extracts audio clips based on given intervals and saves them as WAV files.
 - `transform_file_name` function: Transforms a file name using regular expressions.
 - `extraire_extraits_video` function: Extracts video clips based on given intervals and saves them as MP4 files.
-- `process_non_empty_file` function: Processes a non-empty prediction file by extracting audio or video clips based on the given parameters.
+- `process_non_empty_file` function:
 - `handle_empty_file` function: Handles an empty prediction file by creating a text file indicating no whistles were detected.
 - `handle_missing_file` function: Handles a missing prediction file by creating a text file indicating no CSV file was found.
-- `process_prediction_file` function: Processes a prediction file by checking if it is empty or missing, and then calling the appropriate functions to process it.
+- `process_prediction_file` function: Processes a non-empty file based on given parameters. It reads intervals from a CSV file, merges them with a threshold, and checks if it should process audio only or both audio and video. Depending on the flags, it either extracts audio or video or both.
 - `process_folder` function: Processes a folder by finding the corresponding prediction file and calling the `process_prediction_file` function.
 - `process_prediction_files_in_folder` function: Processes all prediction files in a given folder by using multithreading to process each folder concurrently.
