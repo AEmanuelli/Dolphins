@@ -96,6 +96,8 @@ This project is designed for the extraction, prediction, and analysis of audio s
 - **`__init__.py`**: Initialization file for the `Train_model` module.
 - **`Train.py`**: Script to train the machine learning models.
 
+also cf [https://www.kaggle.com/code/alexisemanuelli/whistles-detection-transfer-learning-0-95]
+
 ## Getting Started
 
 ### Installation
