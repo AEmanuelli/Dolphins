@@ -92,7 +92,7 @@ This project is designed for the extraction, prediction, and analysis of audio s
 - **`csv2dataset.py`**: Script to extract dataset from CSV data.
 - **`dataset2csv.py`**: Script to convert datasets back to CSV format.
 - **`fine-tune2.ipynb`**: Jupyter notebook for fine-tuning the model (version 2).
-- **`fine-tune.ipynb`**: Jupyter notebook for fine-tuning the model.
+- **`fine-tune.ipynb`**: Jupyter notebook for fine-tuning the model. [https://www.kaggle.com/alexisemanuelli/fine-tune]
 - **`__init__.py`**: Initialization file for the `Train_model` module.
 - **`Train.py`**: Script to train the machine learning models.
 
