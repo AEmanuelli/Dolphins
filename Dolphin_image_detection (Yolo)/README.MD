@@ -7,6 +7,7 @@ This repository is dedicated to the detection of dolphins in camera images. It c
 
 2. Finetune YOLO : 
     This folder contains the code for fine-tuning the YOLO v5 object detection model specifically for dolphin detection. It provides instructions and code for training the model on dolphin image datasets to improve its accuracy and performance. The code includes data preprocessing, model configuration, training, and evaluation steps.
+images where labelled using cvat : https://app.cvat.ai/tasks/730822/jobs/941778
 
 The goal of the code in this folder is to develop an accurate and efficient dolphin video detection system.
 
@@ -35,3 +36,7 @@ pip install -r requirements.txt
 
 ## Variance based with thresholding methods (unsuccessful)
 Mainly code I made a long time ago and not useful one, maybe one day I'll get back to it but not today 
+
+
+
+
