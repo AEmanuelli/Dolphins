@@ -19,16 +19,9 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
  
 
-Newly_path = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/Newly_detected_whistles"
+Newly_path = "/media/DOLPHIN_ALEXIS/Analyses_alexis/Newly_detected_whistles" # Where to save the difference with the basic model
 # model_path = "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/models/model_vgg.h5"#"/media/DOLPHIN_ALEXIS1/temp_alexis/Augmented_dataset.h5"
-model_path= "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/models/model_finetuned_vgg.h5"
-
-
-
-
-
-
-
+model_path= "/users/zfne/emanuell/Documents/GitHub/Dolphins/DNN_whistle_detection/models/model_finetuned_vgg.h5" #which model to use to compare 
 
 model_name = os.path.basename(model_path).split(".")[0]
 print(f"Model name: {model_name}")
@@ -36,13 +29,30 @@ print(f"Model name: {model_name}")
 Newly_path = os.path.join(Newly_path, model_name)
 os.makedirs(Newly_path, exist_ok=True)
 
-Non_finetuned_dir = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/"
+Non_finetuned_dir = "/media/DOLPHIN_ALEXIS/Analyses_alexis/2023_analysed/" # which year you want to compare with 
 
 # =============================================================================
 #********************* FUNCTIONS
 # =============================================================================
 
 def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file, rescale = True):
+    """
+    Process and predict on an audio file.
+
+    Args:
+        file_path (str): Path to the audio file.
+        batch_duration (float): Duration of each batch in seconds.
+        start_time (float): Start time of the audio segment to process.
+        end_time (float): End time of the audio segment to process.
+        batch_size (int): Number of images to process in each batch.
+        model (tf.keras.Model): Pre-trained model for prediction.
+        save_p (bool): Whether to save positive predictions or not.
+        saving_folder_file (str): Path to the folder for saving positive predictions.
+        rescale (bool): Whether to rescale the images or not.
+
+    Returns:
+        tuple: A tuple containing the record names, positive initial times, positive finish times, and class 1 scores.
+    """
     file_name = os.path.basename(file_path)
     transformed_file_name = transform_file_name(file_name)
     fs, x = wavfile.read(file_path)
@@ -108,6 +118,20 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
 
 def process_predict_extract_worker(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, 
                                    save_p, model, pbar):
+    """
+    Worker function for processing, predicting, and extracting from a single audio file.
+
+    Args:
+        file_name (str): Name of the audio file.
+        recording_folder_path (str): Path to the folder containing the audio files.
+        saving_folder (str): Path to the folder for saving predictions.
+        start_time (float): Start time of the audio segment to process.
+        end_time (float): End time of the audio segment to process.
+        batch_size (int): Number of images to process in each batch.
+        save_p (bool): Whether to save positive predictions or not.
+        model (tf.keras.Model): Pre-trained model for prediction.
+        pbar (tqdm.tqdm): Progress bar for tracking the processing progress.
+    """
     # pbar.set_postfix(file=file_name)
     date_and_channel = os.path.splitext(file_name)[0]
     
@@ -130,6 +154,21 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
 
 def process_predict_extract(recording_folder_path, saving_folder, start_time=0, end_time=1800, batch_size=50, 
                             save=False, save_p=True, model_path="models/model_vgg.h5", max_workers = 16, specific_files = None):
+    """
+    Process, predict, and extract from audio files in a folder.
+
+    Args:
+        recording_folder_path (str): Path to the folder containing the audio files.
+        saving_folder (str): Path to the folder for saving predictions.
+        start_time (float, optional): Start time of the audio segment to process. Defaults to 0.
+        end_time (float, optional): End time of the audio segment to process. Defaults to 1800.
+        batch_size (int, optional): Number of images to process in each batch. Defaults to 50.
+        save (bool, optional): Whether to save predictions or not. Defaults to False.
+        save_p (bool, optional): Whether to save positive predictions or not. Defaults to True.
+        model_path (str, optional): Path to the pre-trained model for prediction. Defaults to "models/model_vgg.h5".
+        max_workers (int, optional): Maximum number of worker threads. Defaults to 16.
+        specific_files (list, optional): List of specific files to process. Defaults to None.
+    """
     files = os.listdir(recording_folder_path)
     sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(recording_folder_path, x)), reverse=False)
     
@@ -164,7 +203,15 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
 
 
 def read_file_list(file_path):
-    """Read a list of files from a text file."""
+    """
+    Read a list of files from a text file.
+
+    Args:
+        file_path (str): Path to the text file.
+
+    Returns:
+        list: List of files read from the text file.
+    """
     with open(file_path, 'r') as file:
         files = file.read().splitlines()
     return files
