@@ -62,7 +62,7 @@ This project is designed for the extraction, prediction, and analysis of audio s
 
 ### Predict_and_extract
 - **`Extraction_with_kaggle`**: Directory for whistke extraction using kaggle (to accelerate global extraction)
-  - **`create_batch_data.py`**: Script that split a year of recording into batches of zips file of 80gb to be uploaded on Kaggle for analysis.
+  - **`create_batch_data.py`**: This script recursively scans all files in the specified source directory. It groups the files into batches where the total size does not exceed 80 GB and creates ZIP archives for each batch. The relative directory structure is preserved within each ZIP file, and the archives are stored in the specified destination directory.
   - **`classify_again.ipynb`**: Jupyter notebook for classifying images again using a model.
   - **`utility_script (extraction_using_kaggle).py`**: Python script containing utility functions for extraction.
   - **`Whistle_pipeline_(extraction_with_kaggle).ipynb`**: Jupyter notebook for the whistle extraction pipeline using Kaggle.
