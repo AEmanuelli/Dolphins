@@ -23,7 +23,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 #********************* FUNCTIONS
 # =============================================================================
 
-def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file):
+def process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file, CLF, CHF, image_norm):
     """
     Process an audio file, extract batches of audio data, and predict the presence of a specific class using a given model.
 
@@ -61,7 +61,7 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
 
     for batch in tqdm(range(num_batches), desc=f"Batches for {transformed_file_name}", leave=False, colour='blue'):
         start = batch * batch_duration + start_time
-        images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time)
+        images = process_audio_file(file_path, saving_folder_file, batch_size=batch_size, start_time=start, end_time=end_time, cut_low_frequency=CLF, cut_high_frequency=CHF)
         saving_positive = os.path.join(saving_folder_file, "positive")
         
         image_batch = []
@@ -75,7 +75,8 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
             image = cv2.resize(image, (224, 224))
             image = np.expand_dims(image, axis=0)
             image = preprocess_input(image)
-            
+            if image_norm : 
+                image = image/255
             image_batch.append(image)
             time_batch.append((im_cop, image_start_time, image_end_time))
 
@@ -97,8 +98,8 @@ def process_and_predict(file_path, batch_duration, start_time, end_time, batch_s
 
     return record_names, positive_initial, positive_finish, class_1_scores
 
-def process_predict_extract_worker(file_name, recording_folder_path, saving_folder, start_time, end_time, batch_size, 
-                                   save_p, model, pbar):
+def process_predict_extract_worker(file_name, recording_folder_path, saving_folder, start_time, end_time, CLF, CHF, image_norm,
+                                batch_size, save_p, model, pbar):
     """
     Process and predict whistle detection for a given audio file.
 
@@ -131,12 +132,12 @@ def process_predict_extract_worker(file_name, recording_folder_path, saving_fold
         return
 
     batch_duration = batch_size * 0.4
-    record_names, positive_initial, positive_finish, class_1_scores = process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file)
+    record_names, positive_initial, positive_finish, class_1_scores = process_and_predict(file_path, batch_duration, start_time, end_time, batch_size, model, save_p, saving_folder_file, CLF=CLF, CHF=CHF, image_norm=image_norm)
     save_csv(record_names, positive_initial, positive_finish, class_1_scores, prediction_file_path)    
     # process_prediction_file(prediction_file_path, file_name, recording_folder_path)
     pbar.update()
 
-def process_predict_extract(recording_folder_path, saving_folder, start_time=0, end_time=1800, batch_size=50, 
+def process_predict_extract(recording_folder_path, saving_folder, CLF = 3, CHF = 20, image_norm = False, start_time=0, end_time=1800, batch_size=50, 
                             save=False, save_p=True, model_path="models/model_vgg.h5", max_workers = 16, specific_files = None):
     """
     Process and extract predictions from audio files in a given folder.
@@ -182,7 +183,7 @@ def process_predict_extract(recording_folder_path, saving_folder, start_time=0, 
                     continue
                 
                 future = executor.submit(process_predict_extract_worker, file_name, recording_folder_path, 
-                                         saving_folder, start_time, end_time, batch_size, save_p, model, pbar)
+                                         saving_folder, start_time, end_time, CLF, CHF, image_norm, batch_size, save_p, model, pbar)
                 future.add_done_callback(lambda _: pbar.update(1))  # Mettre à jour la barre de progression lorsque le thread termine
                 futures.append(future)
 

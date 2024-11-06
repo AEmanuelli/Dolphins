@@ -36,7 +36,9 @@ if __name__ == "__main__":
     default_save = False
     default_save_p = True
     default_max_workers = 8
-
+    default_CLF = 3
+    default_CHF = 20
+    default_image_norm = False
 
     # Analyse des arguments de la ligne de commande
     parser = argparse.ArgumentParser(description='Description du script')
@@ -44,7 +46,6 @@ if __name__ == "__main__":
     parser.add_argument('--root', default=default_root, help='Chemin vers le répertoire racine')
     parser.add_argument('--recordings', default=default_recordings, help='Chemin vers les enregistrements')
     parser.add_argument('--saving_folder', default=default_saving_folder, help='Dossier de sauvegarde')
-
     parser.add_argument('--start_time', type=int, default=default_start_time, help='Temps de début')
     parser.add_argument('--end_time', type=int, default=default_end_time, help='Temps de fin')
     parser.add_argument('--batch_size', type=int, default=default_batch_size, help='Taille du lot')
@@ -52,13 +53,27 @@ if __name__ == "__main__":
     parser.add_argument('--save_p', type=bool, default=default_save_p, help='Enregistrer ou non Positifs')
     parser.add_argument('--max_workers', type=int, default=default_max_workers, help='Nombre maximal de travailleurs')
     parser.add_argument('--specific_files', help='Chemin vers un fichier contenant la liste des fichiers à traiter')
-    
+    parser.add_argument('--CLF', type=int, default=default_CLF, help='Cuut low frequency')
+    parser.add_argument('--CHF', type=int, default=default_CHF, help='Cut high frequency')
+    parser.add_argument('--image_norm', type=bool, default=default_image_norm, help='Normalisation de l\'image ? /255')
     args = parser.parse_args()
 
     # Lire la liste des fichiers spécifiques si fournie
     specific_files = read_file_list(args.specific_files) if args.specific_files else None
 
     # Appel des fonctions avec les paramètres définis
-    process_predict_extract(args.recordings, args.saving_folder, args.start_time, args.end_time, args.batch_size, args.save, args.save_p, args.model_path, args.max_workers, specific_files = specific_files)
+    process_predict_extract(recording_folder_path=args.recordings, 
+                            saving_folder=args.saving_folder, 
+                            CLF=args.CLF, 
+                            CHF=args.CHF, 
+                            image_norm=args.image_norm, 
+                            start_time=args.start_time, 
+                            end_time=args.end_time, 
+                            batch_size=args.batch_size, 
+                            save=args.save, 
+                            save_p=args.save_p, 
+                            model_path=args.model_path, 
+                            max_workers=args.max_workers, 
+                            specific_files=specific_files)
     # process_prediction_files_in_folder(args.root, args.recordings, args.max_workers, exit = args.audio_only_saving_folder, audio=False, audio_only= True)
 
